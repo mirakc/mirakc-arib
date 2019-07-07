@@ -1,0 +1,34 @@
+name: Linux
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-8 libtool make ninja-build pkg-config
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 80
+      - uses: actions/checkout@v1
+      - name: Generate project files
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON ..
+      - name: Build vendor libraries
+        run: |
+          ninja -C build vendor
+      - name: Build
+        run: |
+          ninja -C build
+      - name: Show help
+        run: |
+          build/bin/mirakc-arib -h
+      - name: Run test
+        run: |
+          ninja -C build test
+        env:
+          MIRAKC_ARIB_CI: YES

@@ -1,0 +1,6 @@
+/build/
+/compile_commands.json
+.ccls
+.ccls-cache/
+.envrc
+.DS_Store
