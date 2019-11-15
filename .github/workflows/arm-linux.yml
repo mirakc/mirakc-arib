@@ -7,9 +7,12 @@ jobs:
     strategy:
       matrix:
         arch:
+          - armel
           - armhf
           - arm64
         include:
+          - arch: armel
+            host-triple: arm-linux-gnueabi
           - arch: armhf
             host-triple: arm-linux-gnueabihf
           - arch: arm64
