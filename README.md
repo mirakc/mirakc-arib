@@ -108,8 +108,13 @@ mirakc-arib is static-linked against the following libraries:
 * [fmtlib/fmt] (MIT)
 * [gabime/spdlog] (MIT)
 * [Tencent/rapidjson] (MIT)
-* [masnagam/tsduck-arib] forked from [tsduck/tsduck] (BSD)
+* [masnagam/tsduck-arib] forked from [tsduck/tsduck] (BSD 2-Clause)
 * [masnagam/aribb24] forked from [nkoriyama/aribb24] (LGPL-3.0)
+
+The following libraries are used for testing purposes:
+
+* [google/googletest] (BSD 3-Clause)
+* [google/benchmark] (Apache-2.0)
 
 ## TODO
 
@@ -156,6 +161,8 @@ shall be dual licensed as above, without any additional terms or conditions.
 [tsduck/tsduck]: https://github.com/tsduck/tsduck
 [masnagam/aribb24]: https://github.com/masnagam/aribb24
 [nkoriyama/aribb24]: https://github.com/nkoriyama/aribb24
+[google/googletest]: https://github.com/google/googletest
+[google/benchmark]: https://github.com/google/benchmark
 [node-aribts]: https://github.com/rndomhack/node-aribts
 [epgdump]: https://github.com/Piro77/epgdump
 [ariblib]: https://github.com/youzaka/ariblib
