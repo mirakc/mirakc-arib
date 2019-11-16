@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v1
       - name: Generate project files
         run: |
-          cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_TOOLCHAIN_FILE=${{ github.GITHUB_WORKSPACE }}/toolchain.cmake.d/debian-${{ matrix.host-triple }}.cmake .
+          cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_TOOLCHAIN_FILE=${{ github.GITHUB_WORKSPACE }}/toolchain.cmake.d/debian-${{ matrix.arch }}.cmake .
       - name: Build vendor libraries
         run: |
           ninja vendor
