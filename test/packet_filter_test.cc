@@ -649,9 +649,8 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
 }
 
 TEST(PacketFilterTest, TimeLimitTot) {
-  ts::Time time_limit(2019, 1, 2, 3, 4, 5);
   auto option = kServiceFilterOption;
-  option.WithTimeLimit(time_limit);
+  option.time_limit = ts::Time(2019, 1, 2, 3, 4, 5);
 
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(option);
@@ -684,9 +683,8 @@ TEST(PacketFilterTest, TimeLimitTot) {
 }
 
 TEST(PacketFilterTest, TimeLimitTdt) {
-  ts::Time time_limit(2019, 1, 2, 3, 4, 5);
   auto option = kServiceFilterOption;
-  option.WithTimeLimit(time_limit);
+  option.time_limit = ts::Time(2019, 1, 2, 3, 4, 5);
 
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(option);

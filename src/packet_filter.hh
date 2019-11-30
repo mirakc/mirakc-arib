@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 
@@ -16,24 +17,7 @@ namespace {
 struct PacketFilterOption final {
   uint16_t sid = 0;
   uint16_t eid = 0;
-  bool has_time_limit = false;
-  ts::Time time_limit;  // JST
-
-  inline PacketFilterOption& WithSid(uint16_t sid_) {
-    sid = sid_;
-    return *this;
-  }
-
-  inline PacketFilterOption& WithEid(uint16_t eid_) {
-    eid = eid_;
-    return *this;
-  }
-
-  inline PacketFilterOption& WithTimeLimit(ts::Time& time_limit_) {
-    has_time_limit = true;
-    time_limit = time_limit_;
-    return *this;
-  }
+  std::optional<ts::Time> time_limit = std::nullopt;  // JST
 };
 
 class PacketFilter final : public PacketSink,
@@ -53,7 +37,7 @@ class PacketFilter final : public PacketSink,
       demux_.addPID(ts::PID_EIT);
       MIRAKC_ARIB_DEBUG("Demux EIT for detecting the start of PES");
     }
-    if (option_.has_time_limit) {
+    if (option_.time_limit.has_value()) {
       demux_.addPID(ts::PID_TOT);
       MIRAKC_ARIB_DEBUG("Demux TOT/TDT for checking the time limit");
     }
@@ -376,7 +360,7 @@ class PacketFilter final : public PacketSink,
   }
 
   void CheckTimeLimit(const ts::Time& jst_time) {
-    if (jst_time < option_.time_limit) {
+    if (jst_time < option_.time_limit.value()) {
       return;
     }
 
