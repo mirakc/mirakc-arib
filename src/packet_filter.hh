@@ -323,9 +323,8 @@ class PacketFilter final : public PacketSink,
       return;
     }
 
-    const auto& event = eit.events[0];
-
-    if (event.event_id == option_.eid) {
+    const auto& present_event = eit.events[0];
+    if (present_event.event_id == option_.eid) {
       if (!content_ready_) {
         content_ready_ = true;
         MIRAKC_ARIB_INFO("Ready to stream for eid#{:04X}", option_.eid);
@@ -336,6 +335,18 @@ class PacketFilter final : public PacketSink,
     if (content_ready_) {
       done_ = true;
       MIRAKC_ARIB_INFO("The next program will be started soon, stop streaming");
+      return;
+    }
+
+    if (eit.events.size() < 2) {
+      return;
+    }
+
+    const auto& following_event = eit.events[1];
+    if (following_event.event_id != option_.eid) {
+      done_ = true;
+      MIRAKC_ARIB_ERROR(
+          "The next program's EID is NOT matched with eid#{:04X}", option_.eid);
       return;
     }
 

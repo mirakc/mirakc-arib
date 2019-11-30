@@ -409,6 +409,73 @@ TEST(PacketFilterTest, StopProgramStreamWhenNextProgramHasStarted) {
   EXPECT_TRUE(src.FeedPackets());
 }
 
+TEST(PacketFilterTest, StopProgramStreamWhenEitDoesNotContainEid) {
+  TableSource src;
+  auto filter = std::make_unique<PacketFilter>(kProgramFilterOption);
+  auto sink = std::make_unique<MockSink>();
+
+  // TDT tables are used for emulating PES packets.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+        <service service_id="0x0002" program_map_PID="0x0102" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x901"
+           test-pid="0x0101">
+        <component elementary_PID="0x0301" stream_type="0x02" />
+        <component elementary_PID="0x0302" stream_type="0x0F" />
+      </PMT>
+      <PMT version="1" current="true" service_id="0x0002" PCR_PID="0x902"
+           test-pid="0x0102">
+        <component elementary_PID="0x0311" stream_type="0x02" />
+        <component elementary_PID="0x0312" stream_type="0x0F" />
+      </PMT>
+      <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" />
+      <EIT type="pf" version="1" current="true" actual="true"
+           service_id="0x0001" transport_stream_id="0x1234"
+           original_network_id="0x0001" last_table_id="0x4E"
+           test-pid="0x0012">
+        <event event_id="0x4001" start_time="2019-01-02 03:00:00"
+               duration="01:00:00" running_status="starting" CA_mode="true" />
+        <event event_id="0x5001" start_time="2019-01-02 03:00:00"
+               duration="01:00:00" running_status="starting" CA_mode="true" />
+      </EIT>
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0311" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0312" />
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_PAT, packet.getPID());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0101, packet.getPID());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_TOT, packet.getPID());
+          return true;
+        });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_TRUE(src.FeedPackets());
+}
+
 TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(kServiceFilterOption);
