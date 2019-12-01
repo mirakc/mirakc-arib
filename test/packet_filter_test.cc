@@ -17,7 +17,7 @@ const PacketFilterOption kProgramFilterOption { 0x0001, 0x1001 };
 TEST(PacketFilterTest, NoPacket) {
   MockSource src;
   auto filter = std::make_unique<PacketFilter>(kServiceFilterOption);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   {
     testing::InSequence seq;
@@ -26,7 +26,7 @@ TEST(PacketFilterTest, NoPacket) {
     EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
   }
 
-  EXPECT_CALL(*sink, HandlePacket).Times(0);
+  EXPECT_CALL(*sink, Write).Times(0);
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
@@ -36,7 +36,7 @@ TEST(PacketFilterTest, NoPacket) {
 TEST(PacketFilterTest, NullPacket) {
   MockSource src;
   auto filter = std::make_unique<PacketFilter>(kServiceFilterOption);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   {
     testing::InSequence seq;
@@ -50,7 +50,7 @@ TEST(PacketFilterTest, NullPacket) {
     EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
   }
 
-  EXPECT_CALL(*sink, HandlePacket).Times(0);
+  EXPECT_CALL(*sink, Write).Times(0);
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
@@ -60,7 +60,7 @@ TEST(PacketFilterTest, NullPacket) {
 TEST(PacketFilterTest, NoSidInPat) {
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(kServiceFilterOption);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -78,7 +78,7 @@ TEST(PacketFilterTest, NoSidInPat) {
     EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
   }
 
-  EXPECT_CALL(*sink, HandlePacket).Times(0);
+  EXPECT_CALL(*sink, Write).Times(0);
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
@@ -88,7 +88,7 @@ TEST(PacketFilterTest, NoSidInPat) {
 TEST(PacketFilterTest, ServiceStream) {
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(kServiceFilterOption);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   // TDT tables are used for emulating PES packets.
   src.LoadXml(R"(
@@ -135,8 +135,10 @@ TEST(PacketFilterTest, ServiceStream) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
           TableValidator<ts::PAT> validator(ts::PID_PAT);
           EXPECT_CALL(validator, Validate).WillOnce(
@@ -148,8 +150,10 @@ TEST(PacketFilterTest, ServiceStream) {
           validator.FeedPacket(packet);
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
           TableValidator<ts::PMT> validator(0x0101);
           EXPECT_CALL(validator, Validate).WillOnce(
@@ -162,31 +166,41 @@ TEST(PacketFilterTest, ServiceStream) {
           validator.FeedPacket(packet);
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TOT, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
           EXPECT_EQ(1, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
           EXPECT_EQ(1, packet.getCC());
           return true;
@@ -202,7 +216,7 @@ TEST(PacketFilterTest, ServiceStream) {
 TEST(PacketFilterTest, ProgramStream) {
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(kProgramFilterOption);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   // TDT tables are used for emulating PES packets.
   src.LoadXml(R"(
@@ -256,29 +270,39 @@ TEST(PacketFilterTest, ProgramStream) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TOT, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
           EXPECT_EQ(2, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
           EXPECT_EQ(2, packet.getCC());
           return true;
@@ -294,7 +318,7 @@ TEST(PacketFilterTest, ProgramStream) {
 TEST(PacketFilterTest, StopProgramStreamWhenNextProgramHasStarted) {
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(kProgramFilterOption);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   // TDT tables are used for emulating PES packets.
   src.LoadXml(R"(
@@ -362,41 +386,55 @@ TEST(PacketFilterTest, StopProgramStreamWhenNextProgramHasStarted) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TOT, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
           EXPECT_EQ(1, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
           EXPECT_EQ(1, packet.getCC());
           return true;
@@ -412,7 +450,7 @@ TEST(PacketFilterTest, StopProgramStreamWhenNextProgramHasStarted) {
 TEST(PacketFilterTest, StopProgramStreamWhenEitDoesNotContainEid) {
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(kProgramFilterOption);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   // TDT tables are used for emulating PES packets.
   src.LoadXml(R"(
@@ -453,18 +491,24 @@ TEST(PacketFilterTest, StopProgramStreamWhenEitDoesNotContainEid) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TOT, packet.getPID());
           return true;
         });
@@ -479,7 +523,7 @@ TEST(PacketFilterTest, StopProgramStreamWhenEitDoesNotContainEid) {
 TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(kServiceFilterOption);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   // TDT tables are used for emulating PES packets.
   src.LoadXml(R"(
@@ -520,43 +564,59 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0102, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0303, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0304, packet.getPID());
           return true;
         });
@@ -571,7 +631,7 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
 TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(kServiceFilterOption);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   // TDT tables are used for emulating PES packets.
   src.LoadXml(R"(
@@ -603,40 +663,54 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
           EXPECT_EQ(1, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0303, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(0x0304, packet.getPID());
           return true;
         });
@@ -654,7 +728,7 @@ TEST(PacketFilterTest, TimeLimitTot) {
 
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(option);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -668,8 +742,10 @@ TEST(PacketFilterTest, TimeLimitTot) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TOT, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;
@@ -688,7 +764,7 @@ TEST(PacketFilterTest, TimeLimitTdt) {
 
   TableSource src;
   auto filter = std::make_unique<PacketFilter>(option);
-  auto sink = std::make_unique<MockSink>();
+  auto sink = std::make_unique<MockStreamSink>();
 
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -702,8 +778,10 @@ TEST(PacketFilterTest, TimeLimitTdt) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
+    EXPECT_CALL(*sink, Write).WillOnce(
+        [](const uint8_t* data, size_t size) {
+          ts::TSPacket packet;
+          packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TDT, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;

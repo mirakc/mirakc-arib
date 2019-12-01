@@ -10,6 +10,7 @@
 #include "jsonl_sink.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
+#include "stream_sink.hh"
 
 namespace {
 
@@ -37,6 +38,16 @@ class MockSink final : public PacketSink {
   MOCK_METHOD(void, Start, (), (override));
   MOCK_METHOD(bool, End, (), (override));
   MOCK_METHOD(bool, HandlePacket, (const ts::TSPacket&), (override));
+};
+
+class MockStreamSink final : public StreamSink {
+ public:
+  MockStreamSink() {}
+  ~MockStreamSink() override {}
+
+  MOCK_METHOD(void, Start, (), (override));
+  MOCK_METHOD(bool, End, (), (override));
+  MOCK_METHOD(bool, Write, (const uint8_t*, size_t), (override));
 };
 
 class TableSource final : public PacketSource {

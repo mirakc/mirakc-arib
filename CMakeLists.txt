@@ -488,6 +488,7 @@ add_executable(mirakc-arib
   src/packet_sink.hh
   src/packet_source.hh
   src/service_scanner.hh
+  src/stream_sink.hh
 )
 
 target_link_libraries(mirakc-arib

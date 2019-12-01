@@ -11,6 +11,7 @@
 #include "logging.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
+#include "stream_sink.hh"
 
 namespace {
 
@@ -48,9 +49,9 @@ class PacketFilter final : public PacketSink,
     MIRAKC_ARIB_DEBUG("PSI/SI filter += PAT CAT TOT/TDT");
   }
 
-  virtual ~PacketFilter() override {}
+  ~PacketFilter() override {}
 
-  void Connect(std::unique_ptr<PacketSink>&& sink) {
+  void Connect(std::unique_ptr<StreamSink>&& sink) {
     sink_ = std::move(sink);
   }
 
@@ -96,17 +97,17 @@ class PacketFilter final : public PacketSink,
       // Feed a modified PAT packet
       ts::TSPacket pat_packet;
       pat_packetizer_.getNextPacket(pat_packet);
-      return sink_->HandlePacket(pat_packet);
+      return sink_->Write(pat_packet.b, ts::PKT_SIZE);
     }
 
     if (pid == pmt_pid_) {
       // Feed a modified PMT packet
       ts::TSPacket pmt_packet;
       pmt_packetizer_.getNextPacket(pmt_packet);
-      return sink_->HandlePacket(pmt_packet);
+      return sink_->Write(pmt_packet.b, ts::PKT_SIZE);
     }
 
-    return sink_->HandlePacket(packet);
+    return sink_->Write(packet.b, ts::PKT_SIZE);
   }
 
  private:
@@ -373,7 +374,7 @@ class PacketFilter final : public PacketSink,
   ts::SectionDemux demux_;
   ts::CyclingPacketizer pat_packetizer_;
   ts::CyclingPacketizer pmt_packetizer_;
-  std::unique_ptr<PacketSink> sink_;
+  std::unique_ptr<StreamSink> sink_;
   std::unordered_set<ts::PID> psi_filter_;
   std::unordered_set<ts::PID> content_filter_;
   std::unordered_set<ts::PID> emm_filter_;

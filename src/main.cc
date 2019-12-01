@@ -16,6 +16,7 @@
 #include "packet_sink.hh"
 #include "packet_source.hh"
 #include "service_scanner.hh"
+#include "stream_sink.hh"
 
 namespace {
 
