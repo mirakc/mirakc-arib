@@ -30,7 +30,7 @@ Usage:
   {0} --version
   {0} scan-services [--xsid=<SID>...] [FILE]
   {0} collect-eits [--xsid=<SID>...] [FILE]
-  {0} filter-packets --sid=<SID> [--eid=<EID>] [--until=<UNIX-TIME>] [FILE]
+  {0} filter-packets --sid=<SID> [--eid=<EID>] [--until=<UNIX-TIME>] [--buffer=<SIZE>] [FILE]
 
 Options:
   -h --help            Print help.
@@ -39,6 +39,7 @@ Options:
   --sid=<SID>          Service ID.
   --eid=<EID>          Event ID.
   --until=<UNIX-TIME>  Time to stop streaming.
+  --buffer=<SIZE>      Buffer size in MiB (Default: 6MiB).
 
 Arguments:
   FILE                 Path to a TS file.
@@ -175,8 +176,10 @@ Commands:
     * DCM-CC for BML (PID specified in PMT)
     * PES private data (PID specified in PMT)
 
-  Same as Mirakurun, PES packets are dropped until EID matches the event ID of
-  the first event in EIT (TID=0x4E) when EID is specified.
+  Same as Mirakurun, `filter-packets` with the `--eid` option doesn't output any
+  data until detecting an EIT (TID=0x4E) which contains EID in the first event.
+  TS packets before the EIT are held in a ring buffer whose size is calculated
+  from the `--buffer` option value.
 
   The streaming is stopped when any of the following conditions are met:
 
@@ -278,6 +281,7 @@ void set_options(const Args& args, PacketFilterOption* opt) {
   static const std::string kSid = "--sid";
   static const std::string kEid = "--eid";
   static const std::string kUntil = "--until";
+  static const std::string kBuffer = "--buffer";
 
   if (args.at(kSid)) {
     opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
@@ -299,6 +303,15 @@ void set_options(const Args& args, PacketFilterOption* opt) {
     MIRAKC_ARIB_INFO(
         "Filter packets until {} in JST", opt->time_limit->format().toUTF8());
   }
+
+  if (args.at(kBuffer)) {
+    auto mib = static_cast<size_t>(args.at(kBuffer).asLong());
+    opt->buffer_size = RoundDown(mib * 1000 * 1000, ts::PKT_SIZE);
+  }
+  MIRAKC_ARIB_INFO(
+      "Hold up to {:.0f} MiB ({} packets) until ready",
+      static_cast<double>(opt->buffer_size) / (1000 * 1000),
+      opt->buffer_size / ts::PKT_SIZE);
 }
 
 std::unique_ptr<PacketSink> make_sink(const Args& args) {

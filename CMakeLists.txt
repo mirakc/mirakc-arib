@@ -484,6 +484,7 @@ add_executable(mirakc-arib
   src/jsonl_source.hh
   src/logging.hh
   src/main.cc
+  src/packet_buffer.hh
   src/packet_filter.hh
   src/packet_sink.hh
   src/packet_source.hh
@@ -511,6 +512,7 @@ if(MIRAKC_ARIB_TEST)
 
   add_executable(mirakc-arib-test
     test/eit_collector_test.cc
+    test/packet_buffer_test.cc
     test/packet_filter_test.cc
     test/packet_source_test.cc
     test/service_scanner_test.cc

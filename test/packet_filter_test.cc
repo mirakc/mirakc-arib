@@ -14,6 +14,14 @@ const PacketFilterOption kServiceFilterOption { 0x0001 };
 const PacketFilterOption kProgramFilterOption { 0x0001, 0x1001 };
 }
 
+constexpr void StaticTestRoundDown() {
+  static_assert(0 == RoundDown(0, ts::PKT_SIZE));
+  static_assert(0 == RoundDown(1, ts::PKT_SIZE));
+  static_assert(0 == RoundDown(ts::PKT_SIZE - 1, ts::PKT_SIZE));
+  static_assert(ts::PKT_SIZE == RoundDown(ts::PKT_SIZE, ts::PKT_SIZE));
+  static_assert(ts::PKT_SIZE == RoundDown(ts::PKT_SIZE + 1, ts::PKT_SIZE));
+}
+
 TEST(PacketFilterTest, NoPacket) {
   MockSource src;
   auto filter = std::make_unique<PacketFilter>(kServiceFilterOption);
@@ -137,6 +145,7 @@ TEST(PacketFilterTest, ServiceStream) {
     EXPECT_CALL(*sink, Start).Times(1);
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -152,6 +161,7 @@ TEST(PacketFilterTest, ServiceStream) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
@@ -168,6 +178,7 @@ TEST(PacketFilterTest, ServiceStream) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TOT, packet.getPID());
@@ -175,6 +186,7 @@ TEST(PacketFilterTest, ServiceStream) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
@@ -183,6 +195,7 @@ TEST(PacketFilterTest, ServiceStream) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
@@ -191,6 +204,7 @@ TEST(PacketFilterTest, ServiceStream) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
@@ -199,6 +213,7 @@ TEST(PacketFilterTest, ServiceStream) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
@@ -272,27 +287,37 @@ TEST(PacketFilterTest, ProgramStream) {
     EXPECT_CALL(*sink, Start).Times(1);
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(7 * ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, Write).WillOnce(
-        [](const uint8_t* data, size_t size) {
-          ts::TSPacket packet;
+          data += ts::PKT_SIZE;
           packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, Write).WillOnce(
-        [](const uint8_t* data, size_t size) {
-          ts::TSPacket packet;
+          data += ts::PKT_SIZE;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TOT, packet.getPID());
+          data += ts::PKT_SIZE;
+          packet.copyFrom(data);
+          EXPECT_EQ(0x0301, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          data += ts::PKT_SIZE;
+          packet.copyFrom(data);
+          EXPECT_EQ(0x0302, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          data += ts::PKT_SIZE;
+          packet.copyFrom(data);
+          EXPECT_EQ(0x0301, packet.getPID());
+          EXPECT_EQ(1, packet.getCC());
+          data += ts::PKT_SIZE;
+          packet.copyFrom(data);
+          EXPECT_EQ(0x0302, packet.getPID());
+          EXPECT_EQ(1, packet.getCC());
           return true;
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
@@ -301,6 +326,7 @@ TEST(PacketFilterTest, ProgramStream) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
@@ -388,27 +414,21 @@ TEST(PacketFilterTest, StopProgramStreamWhenNextProgramHasStarted) {
     EXPECT_CALL(*sink, Start).Times(1);
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(3 * ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, Write).WillOnce(
-        [](const uint8_t* data, size_t size) {
-          ts::TSPacket packet;
+          data += ts::PKT_SIZE;
           packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, Write).WillOnce(
-        [](const uint8_t* data, size_t size) {
-          ts::TSPacket packet;
+          data += ts::PKT_SIZE;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TOT, packet.getPID());
           return true;
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
@@ -417,6 +437,7 @@ TEST(PacketFilterTest, StopProgramStreamWhenNextProgramHasStarted) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
@@ -425,6 +446,7 @@ TEST(PacketFilterTest, StopProgramStreamWhenNextProgramHasStarted) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
@@ -433,6 +455,7 @@ TEST(PacketFilterTest, StopProgramStreamWhenNextProgramHasStarted) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
@@ -491,29 +514,10 @@ TEST(PacketFilterTest, StopProgramStreamWhenEitDoesNotContainEid) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, Write).WillOnce(
-        [](const uint8_t* data, size_t size) {
-          ts::TSPacket packet;
-          packet.copyFrom(data);
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, Write).WillOnce(
-        [](const uint8_t* data, size_t size) {
-          ts::TSPacket packet;
-          packet.copyFrom(data);
-          EXPECT_EQ(0x0101, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, Write).WillOnce(
-        [](const uint8_t* data, size_t size) {
-          ts::TSPacket packet;
-          packet.copyFrom(data);
-          EXPECT_EQ(ts::PID_TOT, packet.getPID());
-          return true;
-        });
     EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
   }
+
+  EXPECT_CALL(*sink, Write).Times(0);
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
@@ -529,6 +533,13 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
+      <EIT type="pf" version="1" current="true" actual="true"
+           service_id="0x0001" transport_stream_id="0x1234"
+           original_network_id="0x0001" last_table_id="0x4E"
+           test-pid="0x0012" test-cc="1">
+        <event event_id="0x1001" start_time="2019-01-02 03:00:00"
+               duration="01:00:00" running_status="starting" CA_mode="true" />
+      </EIT>
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -566,6 +577,7 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
     EXPECT_CALL(*sink, Start).Times(1);
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -573,6 +585,7 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
@@ -580,6 +593,7 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
@@ -587,6 +601,7 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
@@ -594,6 +609,7 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -601,6 +617,7 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0102, packet.getPID());
@@ -608,6 +625,7 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0303, packet.getPID());
@@ -615,6 +633,7 @@ TEST(PacketFilterTest, ResetFilterDueToPatChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0304, packet.getPID());
@@ -637,6 +656,13 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
+      <EIT type="pf" version="1" current="true" actual="true"
+           service_id="0x0001" transport_stream_id="0x1234"
+           original_network_id="0x0001" last_table_id="0x4E"
+           test-pid="0x0012" test-cc="1">
+        <event event_id="0x1001" start_time="2019-01-02 03:00:00"
+               duration="01:00:00" running_status="starting" CA_mode="true" />
+      </EIT>
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -665,6 +691,7 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
     EXPECT_CALL(*sink, Start).Times(1);
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -672,6 +699,7 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
@@ -680,6 +708,7 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0301, packet.getPID());
@@ -687,6 +716,7 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0302, packet.getPID());
@@ -694,6 +724,7 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0101, packet.getPID());
@@ -702,6 +733,7 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0303, packet.getPID());
@@ -709,6 +741,7 @@ TEST(PacketFilterTest, ResetFilterDueToPmtChanged) {
         });
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(0x0304, packet.getPID());
@@ -733,6 +766,13 @@ TEST(PacketFilterTest, TimeLimitTot) {
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
+      <EIT type="pf" version="1" current="true" actual="true"
+           service_id="0x0001" transport_stream_id="0x1234"
+           original_network_id="0x0001" last_table_id="0x4E"
+           test-pid="0x0012" test-cc="1">
+        <event event_id="0x1001" start_time="2019-01-02 03:00:00"
+               duration="01:00:00" running_status="starting" CA_mode="true" />
+      </EIT>
       <TOT UTC_time="2019-01-02 03:04:04" test-pid="0x0014" test-cc="0" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="1" />
       <TOT UTC_time="2019-01-02 03:04:06" test-pid="0x0014" test-cc="2" />
@@ -744,6 +784,7 @@ TEST(PacketFilterTest, TimeLimitTot) {
     EXPECT_CALL(*sink, Start).Times(1);
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TOT, packet.getPID());
@@ -769,6 +810,13 @@ TEST(PacketFilterTest, TimeLimitTdt) {
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
+      <EIT type="pf" version="1" current="true" actual="true"
+           service_id="0x0001" transport_stream_id="0x1234"
+           original_network_id="0x0001" last_table_id="0x4E"
+           test-pid="0x0012" test-cc="1">
+        <event event_id="0x1001" start_time="2019-01-02 03:00:00"
+               duration="01:00:00" running_status="starting" CA_mode="true" />
+      </EIT>
       <TDT UTC_time="2019-01-02 03:04:04" test-pid="0x0014" test-cc="0" />
       <TDT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="1" />
       <TDT UTC_time="2019-01-02 03:04:06" test-pid="0x0014" test-cc="2" />
@@ -780,6 +828,7 @@ TEST(PacketFilterTest, TimeLimitTdt) {
     EXPECT_CALL(*sink, Start).Times(1);
     EXPECT_CALL(*sink, Write).WillOnce(
         [](const uint8_t* data, size_t size) {
+          EXPECT_EQ(ts::PKT_SIZE, size);
           ts::TSPacket packet;
           packet.copyFrom(data);
           EXPECT_EQ(ts::PID_TDT, packet.getPID());

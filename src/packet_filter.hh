@@ -9,16 +9,22 @@
 
 #include "base.hh"
 #include "logging.hh"
+#include "packet_buffer.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
 #include "stream_sink.hh"
 
 namespace {
 
+constexpr size_t RoundDown(size_t n, size_t m) {
+  return n - n % m;
+}
+
 struct PacketFilterOption final {
   uint16_t sid = 0;
   uint16_t eid = 0;
   std::optional<ts::Time> time_limit = std::nullopt;  // JST
+  size_t buffer_size = RoundDown(6 * 1000 * 1000, ts::PKT_SIZE);  // 6MiB
 };
 
 class PacketFilter final : public PacketSink,
@@ -35,6 +41,7 @@ class PacketFilter final : public PacketSink,
     demux_.addPID(ts::PID_CAT);
     MIRAKC_ARIB_DEBUG("Demux CAT for detecting EMM PIDs");
     if (option_.eid != 0) {
+      buffer_ = std::make_unique<PacketBuffer>(option_.buffer_size);
       demux_.addPID(ts::PID_EIT);
       MIRAKC_ARIB_DEBUG("Demux EIT for detecting the start of PES");
     }
@@ -97,25 +104,23 @@ class PacketFilter final : public PacketSink,
       // Feed a modified PAT packet
       ts::TSPacket pat_packet;
       pat_packetizer_.getNextPacket(pat_packet);
-      return sink_->Write(pat_packet.b, ts::PKT_SIZE);
+      return WritePacket(pat_packet);
     }
 
     if (pid == pmt_pid_) {
       // Feed a modified PMT packet
       ts::TSPacket pmt_packet;
       pmt_packetizer_.getNextPacket(pmt_packet);
-      return sink_->Write(pmt_packet.b, ts::PKT_SIZE);
+      return WritePacket(pmt_packet);
     }
 
-    return sink_->Write(packet.b, ts::PKT_SIZE);
+    return WritePacket(packet);
   }
 
  private:
   inline bool CheckFilterForDrop(ts::PID pid) const {
-    if (content_ready_) {
-      if (content_filter_.find(pid) != content_filter_.end()) {
-        return false;
-      }
+    if (content_filter_.find(pid) != content_filter_.end()) {
+      return false;
     }
     if (psi_filter_.find(pid) != psi_filter_.end()) {
       return false;
@@ -311,6 +316,12 @@ class PacketFilter final : public PacketSink,
     const auto& present_event = eit.events[0];
     if (present_event.event_id == option_.eid) {
       if (!content_ready_) {
+        if (!buffer_->Flush(sink_.get())) {
+          done_ = true;
+          MIRAKC_ARIB_ERROR("Failed to flush buffer");
+          return;
+        }
+        buffer_.reset(nullptr);
         content_ready_ = true;
         MIRAKC_ARIB_INFO("Ready to stream for eid#{:04X}", option_.eid);
       }
@@ -369,12 +380,20 @@ class PacketFilter final : public PacketSink,
     MIRAKC_ARIB_INFO("Over the time limit, stop streaming");
   }
 
+  bool WritePacket(const ts::TSPacket& packet) {
+    if (buffer_) {
+      return buffer_->Write(packet.b, ts::PKT_SIZE);
+    }
+    return sink_->Write(packet.b, ts::PKT_SIZE);
+  }
+
   const PacketFilterOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
   ts::CyclingPacketizer pat_packetizer_;
   ts::CyclingPacketizer pmt_packetizer_;
   std::unique_ptr<StreamSink> sink_;
+  std::unique_ptr<PacketBuffer> buffer_;
   std::unordered_set<ts::PID> psi_filter_;
   std::unordered_set<ts::PID> content_filter_;
   std::unordered_set<ts::PID> emm_filter_;
