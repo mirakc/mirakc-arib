@@ -323,6 +323,7 @@ class PacketFilter final : public PacketSink,
     const auto& present_event = eit.events[0];
     if (present_event.event_id == option_.eid) {
       if (!content_ready_) {
+        // TODO: Should seek PAT before flushing?
         if (!buffer_->Flush(sink_.get())) {
           done_ = true;
           MIRAKC_ARIB_ERROR("Failed to flush buffer");
