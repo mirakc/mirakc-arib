@@ -151,7 +151,13 @@ Commands:
 
     * PAT (PID=0x0000)
     * CAT (PID=0x0001)
+    * NIT (PID=0x0010)
+    * SDT (PID=0x0011)
+    * EIT (PID=0x0012)
+    * RST (PID=0x0013)
     * TOT/TDT (PID=0x0014)
+    * BIT (PID=0x0024)
+    * CDT (PID=0x0029)
     * PMT (PID specified in PAT)
     * EMM (PID specified in CAT)
     * PCR (PID specified in PMT)
@@ -166,13 +172,7 @@ Commands:
 
   Unlike Mirakurun, packets listed below are always dropped:
 
-    * NIT (PID=0x0010)
-    * SDT (PID=0x0011)
-    * EIT (PID=0x0012)
-    * RST (PID=0x0013)
     * SDTT (PID=0x0023,0x0028)
-    * BIT (PID=0x0024)
-    * CDT (PID=0x0029)
     * DCM-CC for BML (PID specified in PMT)
     * PES private data (PID specified in PMT)
 

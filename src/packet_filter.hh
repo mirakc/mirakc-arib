@@ -49,11 +49,6 @@ class PacketFilter final : public PacketSink,
       demux_.addPID(ts::PID_TOT);
       MIRAKC_ARIB_DEBUG("Demux TOT/TDT for checking the time limit");
     }
-
-    psi_filter_.insert(ts::PID_PAT);
-    psi_filter_.insert(ts::PID_CAT);
-    psi_filter_.insert(ts::PID_TOT);
-    MIRAKC_ARIB_DEBUG("PSI/SI filter += PAT CAT TOT/TDT");
   }
 
   ~PacketFilter() override {}
@@ -98,12 +93,11 @@ class PacketFilter final : public PacketSink,
       return true;
     }
 
-    MIRAKC_ARIB_ASSERT(pid != ts::PID_NULL);
-
     if (pid == ts::PID_PAT) {
       // Feed a modified PAT packet
       ts::TSPacket pat_packet;
       pat_packetizer_.getNextPacket(pat_packet);
+      MIRAKC_ARIB_ASSERT(pat_packet.getPID() == ts::PID_PAT);
       return WritePacket(pat_packet);
     }
 
@@ -111,9 +105,11 @@ class PacketFilter final : public PacketSink,
       // Feed a modified PMT packet
       ts::TSPacket pmt_packet;
       pmt_packetizer_.getNextPacket(pmt_packet);
+      MIRAKC_ARIB_ASSERT(pmt_packet.getPID() == pmt_pid_);
       return WritePacket(pmt_packet);
     }
 
+    MIRAKC_ARIB_ASSERT(pid != ts::PID_NULL);
     return WritePacket(packet);
   }
 
@@ -170,13 +166,14 @@ class PacketFilter final : public PacketSink,
       return;
     }
 
+    psi_filter_.clear();
+    MIRAKC_ARIB_DEBUG("Clear PSI/SI filter");
+
     auto new_pmt_pid = pat.pmts[option_.sid];
 
     if (pmt_pid_ != ts::PID_NULL) {
       MIRAKC_ARIB_INFO("PID of PMT has been changed: {:04X} -> {:04X}",
                        pmt_pid_, new_pmt_pid);
-      psi_filter_.erase(pmt_pid_);
-      MIRAKC_ARIB_DEBUG("PSI/SI filter -= PMT#{:04X}", pmt_pid_);
       demux_.removePID(pmt_pid_);
       MIRAKC_ARIB_DEBUG("Stop to demux PMT#{:04X}", pmt_pid_);
       pmt_pid_ = ts::PID_NULL;
@@ -188,8 +185,6 @@ class PacketFilter final : public PacketSink,
     pmt_pid_ = new_pmt_pid;
     demux_.addPID(pmt_pid_);
     MIRAKC_ARIB_DEBUG("Demux PMT#{:04X}", pmt_pid_);
-    psi_filter_.insert(pmt_pid_);
-    MIRAKC_ARIB_DEBUG("PSI/SI filter += PMT#{:04X}", pmt_pid_);
 
     // Remove other services from PAT.
     for (auto it = pat.pmts.begin(); it != pat.pmts.end(); ) {
@@ -202,12 +197,21 @@ class PacketFilter final : public PacketSink,
     MIRAKC_ARIB_ASSERT(pat.pmts.size() == 1);
     MIRAKC_ARIB_ASSERT(pat.pmts.find(option_.sid) != pat.pmts.end());
 
-    // NIT packets are always dropped.
-    pat.nit_pid = ts::PID_NULL;
-
     // Prepare packetizer for modified PAT.
     pat_packetizer_.removeAll();
     pat_packetizer_.addTable(context_, pat);
+
+    psi_filter_.insert(ts::PID_PAT);
+    psi_filter_.insert(ts::PID_CAT);
+    psi_filter_.insert(ts::PID_NIT);
+    psi_filter_.insert(ts::PID_SDT);
+    psi_filter_.insert(ts::PID_EIT);
+    psi_filter_.insert(ts::PID_RST);
+    psi_filter_.insert(ts::PID_TOT);
+    psi_filter_.insert(ts::PID_BIT);
+    psi_filter_.insert(ts::PID_CDT);
+    MIRAKC_ARIB_DEBUG(
+        "PSI/SI filter += PAT CAT NIT SDT EIT RST TOT/TDT BIT CDT");
   }
 
   void HandleCat(const ts::BinaryTable& table) {
@@ -290,6 +294,9 @@ class PacketFilter final : public PacketSink,
     pmt_packetizer_.removeAll();
     pmt_packetizer_.setPID(pmt_pid_);
     pmt_packetizer_.addTable(context_, pmt);
+
+    psi_filter_.insert(pmt_pid_);
+    MIRAKC_ARIB_DEBUG("PSI/SI filter += PMT#{:04X}", pmt_pid_);
 
     if (option_.eid == 0) {
       content_ready_ = true;
