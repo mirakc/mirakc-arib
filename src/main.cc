@@ -39,7 +39,7 @@ Options:
   --sid=<SID>          Service ID.
   --eid=<EID>          Event ID.
   --until=<UNIX-TIME>  Time to stop streaming.
-  --buffer=<SIZE>      Buffer size in MiB (Default: 6MiB).
+  --buffer=<SIZE>      Buffer size in MiB (Default: 8MiB).
 
 Arguments:
   FILE                 Path to a TS file.
@@ -178,8 +178,10 @@ Commands:
 
   Same as Mirakurun, `filter-packets` with the `--eid` option doesn't output any
   data until detecting an EIT (TID=0x4E) which contains EID in the first event.
+
   TS packets before the EIT are held in a ring buffer whose size is calculated
-  from the `--buffer` option value.
+  from the `--buffer` option value.  In many cases, 3MiB for GR and 8MiB for BS
+  are enough.
 
   The streaming is stopped when any of the following conditions are met:
 

@@ -24,7 +24,7 @@ struct PacketFilterOption final {
   uint16_t sid = 0;
   uint16_t eid = 0;
   std::optional<ts::Time> time_limit = std::nullopt;  // JST
-  size_t buffer_size = RoundDown(6 * 1000 * 1000, ts::PKT_SIZE);  // 6MiB
+  size_t buffer_size = RoundDown(8 * 1000 * 1000, ts::PKT_SIZE);  // 8MiB
 };
 
 class PacketFilter final : public PacketSink,

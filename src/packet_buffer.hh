@@ -56,7 +56,9 @@ class PacketBuffer final {
       return true;
     }
 
-    MIRAKC_ARIB_DEBUG("Flush buffered {} bytes data to the packet sink", size_);
+    MIRAKC_ARIB_DEBUG(
+        "Flush buffered {:.2f} MiB ({} packets) to the packet sink",
+        static_cast<double>(size_) / (1000 * 1000), size_ / ts::PKT_SIZE);
 
     MIRAKC_ARIB_ASSERT(start_ < buffer_size_);
     if (start_ + size_ < buffer_size_) {
