@@ -575,7 +575,7 @@ class EitCollector final : public PacketSink,
 
     has_timestamp_ = true;
     timestamp_ = tdt.utc_time;
-    MIRAKC_ARIB_INFO("TDT: {}", timestamp_.format().toUTF8());
+    MIRAKC_ARIB_INFO("TDT: {}", timestamp_);
   }
 
   inline void HandleTot(const ts::BinaryTable& table) {
@@ -588,7 +588,7 @@ class EitCollector final : public PacketSink,
 
     has_timestamp_ = true;
     timestamp_ = tot.utc_time;
-    MIRAKC_ARIB_INFO("TOT: {}", timestamp_.format().toUTF8());
+    MIRAKC_ARIB_INFO("TOT: {}", timestamp_);
   }
 
   inline bool CheckCollected(const EitData& eit) const {

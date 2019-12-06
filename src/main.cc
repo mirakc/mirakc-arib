@@ -302,8 +302,7 @@ void set_options(const Args& args, PacketFilterOption* opt) {
   if (args.at(kUntil)) {
     opt->time_limit = ts::Time::UnixTimeToUTC(
         static_cast<uint64_t>(args.at(kUntil).asLong())) + kJstTzOffset;  // JST
-    MIRAKC_ARIB_INFO(
-        "Filter packets until {} in JST", opt->time_limit->format().toUTF8());
+    MIRAKC_ARIB_INFO("Filter packets until {} in JST", opt->time_limit.value());
   }
 
   if (args.at(kBuffer)) {
