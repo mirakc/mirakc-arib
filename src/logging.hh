@@ -39,4 +39,7 @@ inline void InitLogger(const char* name) {
   ((cond) ? (void)0 : (MIRAKC_ARIB_LOG( \
       spdlog::level::critical, "Assertion failed: " #cond), std::abort()))
 
+#define MIRAKC_ARIB_NEVER_REACH(...) \
+  (MIRAKC_ARIB_LOG(spdlog::level::critical, __VA_ARGS__), std::abort())
+
 }  // namespace

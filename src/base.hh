@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 #include <unordered_set>
 
@@ -26,15 +25,22 @@ inline std::string& trim(std::string& str) {
 using Args = std::map<std::string, docopt::value>;
 
 constexpr ts::MilliSecond kJstTzOffset = 9 * ts::MilliSecPerHour;
+constexpr int64_t kMaxPcrTicks = (static_cast<int64_t>(1) << 42);
+constexpr int64_t kPcrTicksPerSec = 27 * 1000 * 1000;  // 27MHz
+constexpr int64_t kPcrTicksPerMs = kPcrTicksPerSec / ts::MilliSecPerSec;
 
-class ExcludedSidSet {
+class SidSet {
  public:
-  ExcludedSidSet() = default;
-  ~ExcludedSidSet() = default;
+  SidSet() = default;
+  ~SidSet() = default;
 
-  explicit ExcludedSidSet(const ExcludedSidSet& set) : set_(set.set_) {}
+  explicit SidSet(const SidSet& set) : set_(set.set_) {}
 
-  void Add(const std::vector<std::string>& sids) {
+  inline bool IsEmpty() const {
+    return set_.empty();
+  }
+
+  inline void Add(const std::vector<std::string>& sids) {
     for (const auto& str : sids) {
       size_t pos;
       uint16_t sid = static_cast<uint16_t>(std::stoi(str, &pos));
@@ -55,7 +61,7 @@ class ExcludedSidSet {
   }
 
  private:
-  explicit ExcludedSidSet(ExcludedSidSet&& set) = delete;
+  explicit SidSet(SidSet&& set) = delete;
 
   std::unordered_set<uint16_t> set_;
 };

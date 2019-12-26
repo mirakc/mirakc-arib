@@ -25,7 +25,10 @@ class PacketSource {
 
   bool FeedPackets() {
     MIRAKC_ARIB_INFO("Feed packets...");
-    sink_->Start();
+    if (!sink_->Start()) {
+      MIRAKC_ARIB_ERROR("Failed to start");
+      return false;
+    }
     ts::TSPacket packet;
     while (GetNextPacket(&packet)) {
       if (!sink_->HandlePacket(packet)) {

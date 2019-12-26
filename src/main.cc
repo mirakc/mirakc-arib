@@ -12,11 +12,12 @@
 #include "file.hh"
 #include "jsonl_sink.hh"
 #include "logging.hh"
-#include "packet_filter.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
+#include "pcr_synchronizer.hh"
+#include "program_filter.hh"
+#include "service_filter.hh"
 #include "service_scanner.hh"
-#include "stream_sink.hh"
 
 namespace {
 
@@ -30,25 +31,33 @@ Usage:
   {0} --version
   {0} scan-services [--xsid=<SID>...] [FILE]
   {0} collect-eits [--xsid=<SID>...] [FILE]
-  {0} filter-packets --sid=<SID> [--eid=<EID>] [--until=<UNIX-TIME>] [--buffer=<SIZE>] [FILE]
+  {0} filter-service --sid=<SID> [FILE]
+  {0} filter-program --sid=<SID> --eid=<EID>
+        --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
+        [--start-margin=<MS>] [--end-margin=<MS>] [FILE]
+  {0} sync-clock [FILE]
 
 Options:
-  -h --help            Print help.
-  --version            Print version.
-  --xsid=<SID>         Excluded service ID.
-  --sid=<SID>          Service ID.
-  --eid=<EID>          Event ID.
-  --until=<UNIX-TIME>  Time to stop streaming.
-  --buffer=<SIZE>      Buffer size in MiB (Default: 8MiB).
+  -h --help                    Print help.
+  --version                    Print version.
+  --xsid=<SID>                 Excluded service ID.
+  --sid=<SID>                  Service ID.
+  --eid=<EID>                  Event ID of a TV program.
+  --clock-pcr=<PCR>            27MHz, 42bits PCR value.
+  --clock-time=<UNIX-TIME-MS>  UNIX time (ms) correspoinding to the PCR value.
+  --start-margin=<MS>          Offset (ms) from the start time of the event
+                               toward the past.
+  --end-margin=<MS>            Offset (ms) from the end time of the event
+                               toward the future.
 
 Arguments:
-  FILE                 Path to a TS file.
+  FILE                         Path to a TS file.
 
-Commands:
+scan-services:
   `scan-services` scans services in a TS stream.  Results will be output to
   STDOUT in the following JSON format:
 
-    $ recdvb 27 - - 2>/dev/null | {0} scan-services 2>/dev/null | jq .[0]
+    $ recdvb 27 - - 2>/dev/null | {0} scan-services | jq .[0]
     {{
       "nid": 32736,
       "tsid": 32736,
@@ -62,10 +71,11 @@ Commands:
   Scanning logo data has not been supported at this moment.  So, values of the
   `logoId` and `hasLogoData` are always `-1` and `false` respectively.
 
+collect-eits:
   `collect-eits` collects EIT sections from a TS stream.  Results will be output
   to STDOUT in the following JSONL format:
 
-    $ recdvb 27 10 - 2>/dev/null | {0} collect-eits 2>/dev/null | head -1 | jq .
+    $ recdvb 27 10 - 2>/dev/null | {0} collect-eits | head -1 | jq .
     {{
       "originalNetworkId": 32736,
       "transportStreamId": 32736,
@@ -144,8 +154,9 @@ Commands:
       ]
     }}
 
-  `filter-packets` drops packets in a TS stream, which are not related to the
-  specified service ID (SID) and event ID (EID).
+filter-service:
+  `filter-service` drops packets in a TS stream, which are not related to the
+  specified service ID (SID).
 
   Packets other than listed below are dropped:
 
@@ -155,7 +166,7 @@ Commands:
     * SDT (PID=0x0011)
     * EIT (PID=0x0012)
     * RST (PID=0x0013)
-    * TOT/TDT (PID=0x0014)
+    * TDT/TOT (PID=0x0014)
     * BIT (PID=0x0024)
     * CDT (PID=0x0029)
     * PMT (PID specified in PAT)
@@ -164,10 +175,10 @@ Commands:
     * ECM (PID specified in PMT)
     * PES for video/audio/subtitles (PID specified in PMT)
 
-  `filter-packets` modifies PAT so that its service map contains only the
+  `filter-service` modifies PAT so that its service map contains only the
   specified SID.
 
-  `filter-packets` modifies PMT so that its stream map contains only PES's PIDs
+  `filter-service` modifies PMT so that its stream map contains only PES's PIDs
   which are needed for playback.
 
   Unlike Mirakurun, packets listed below are always dropped:
@@ -176,23 +187,54 @@ Commands:
     * DCM-CC for BML (PID specified in PMT)
     * PES private data (PID specified in PMT)
 
-  Same as Mirakurun, `filter-packets` with the `--eid` option doesn't output any
-  data until detecting an EIT (TID=0x4E) which contains EID in the first event.
+filter-program:
+  `filter-program` performs the same processing as `filter-service`, but also
+  outputs packets only while a specified TV program is being broadcast.
 
-  TS packets before the EIT are held in a ring buffer whose size is calculated
-  from the `--buffer` option value.  In many cases, 3MiB for GR and 8MiB for BS
-  are enough.
+  Unlike Mirakurun, `filter-program` calculates the start and end times of
+  streaming based on PCR.  The `--start-margin` and `--end-margin` adjust these
+  times like below:
 
-  The streaming is stopped when any of the following conditions are met:
+          start-margin                         end-margin
+    ----|<============|-----------------------|==========>|----
+        |             |                       |           |
+      start-time    start-time         end-time           end-time
+      of streaming  of the TV program  of the TV program  of streaming
 
-    * The input TS stream reaches EOF.
-    * The event ID of the first event in EIT (TID=0x4E) is changed from EID to
-      another (only when EID is specified).
-    * The time in TOT/TDT is over a time limit which is specified in the
-      `--until` option.
+sync-clock:
+  `sync-clock` synchronizes PCR for each service and TDT/TOT with accuracy
+  within 1 second.
 
-  TOT seems to be sent every 5 seconds in Japan.  Therefore, the maximum delay
-  between the time limit and an actual stop time is about 5 seconds.
+  `sync-clock` outputs the result in the following JSON format:
+
+    $ recdvb 27 - - 2>/dev/null | {0} sync-clock | jq .[0]
+    {{
+      "nid": 32736,
+      "tsid": 32736,
+      "sid": 1024,
+      "clock": {{
+        "pcr": 744077003262,
+        "time": 1576398518000
+      }}
+    }}
+
+  where:
+
+    clock.pcr
+      27MHz, 42 bits PCR value correspoinding to `clock.time`
+
+    clock.time
+      TDT/TOT time in the 64 bits UNIX time format in milliseconds
+
+  `sync-clock` collects PCR for each service whose type is included in the
+  following list:
+
+    * 0x01 (Digital television service)
+    * 0x02 (Digital audio service)
+    * 0xA1 (Special video service)
+    * 0xA2 (Special audio service)
+    * 0xA5 (Promotion video service)
+    * 0xA6 (Promotion audio service)
 
 Logging:
   {0} doesn't output any log message by default.  The MIRAKC_ARIB_LOG
@@ -254,8 +296,12 @@ void init(const Args& args) {
     InitLogger("scan-services");
   } else if (args.at("collect-eits").asBool()) {
     InitLogger("collect-eits");
-  } else if (args.at("filter-packets").asBool()) {
-    InitLogger("filter-packets");
+  } else if (args.at("filter-service").asBool()) {
+    InitLogger("filter-service");
+  } else if (args.at("filter-program").asBool()) {
+    InitLogger("filter-program");
+  } else if (args.at("sync-clock").asBool()) {
+    InitLogger("sync-clock");
   }
 
   ts::DVBCharset::EnableARIBMode();
@@ -269,73 +315,93 @@ std::unique_ptr<PacketSource> make_source(const Args& args) {
   return std::make_unique<FileSource>(std::move(file));
 }
 
-void set_option(const Args& args, ExcludedSidSet* xsids) {
-  static const std::string kXsid = "--xsid";
-
-  if (args.at(kXsid)) {
-    auto sids = args.at(kXsid).asStringList();
-    xsids->Add(sids);
-    MIRAKC_ARIB_INFO("Excluded SIDs: {}", fmt::join(sids, ", "));
+void set_option(const Args& args, const std::string& name, SidSet* sids) {
+  if (args.at(name)) {
+    auto list = args.at(name).asStringList();
+    sids->Add(list);
+    MIRAKC_ARIB_INFO("{} SIDs: {}", name, fmt::join(list, ", "));
   }
 }
 
-void set_options(const Args& args, PacketFilterOption* opt) {
+ts::Time ConvertUnixTimeToJstTime(ts::MilliSecond unix_time_ms) {
+  return ts::Time::UnixEpoch + unix_time_ms + kJstTzOffset;
+}
+
+void set_options(const Args& args, ServiceFilterOption* opt) {
   static const std::string kSid = "--sid";
-  static const std::string kEid = "--eid";
-  static const std::string kUntil = "--until";
-  static const std::string kBuffer = "--buffer";
 
   if (args.at(kSid)) {
     opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
     if (opt->sid != 0) {
-      MIRAKC_ARIB_INFO("Filter packets by sid#{}", opt->sid);
+      MIRAKC_ARIB_INFO("Service Filter: SID#{:04X}", opt->sid);
     }
   }
+}
 
-  if (args.at(kEid)) {
-    opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
-    if (opt->sid != 0) {
-      MIRAKC_ARIB_INFO("Filter packets by eid#{}", opt->eid);
-    }
+void load_option(const Args& args, ProgramFilterOption* opt) {
+  static const std::string kSid = "--sid";
+  static const std::string kEid = "--eid";
+  static const std::string kClockPcr = "--clock-pcr";
+  static const std::string kClockTime = "--clock-time";
+  static const std::string kStartMargin = "--start-margin";
+  static const std::string kEndMargin = "--end-margin";
+
+  opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
+  opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
+  opt->clock_pcr = static_cast<uint64_t>(args.at(kClockPcr).asLong());
+  opt->clock_time = ConvertUnixTimeToJstTime(
+      static_cast<ts::MilliSecond>(args.at(kClockTime).asLong()));
+  if (args.at(kStartMargin)) {
+    opt->start_margin =
+        static_cast<ts::MilliSecond>(args.at(kStartMargin).asLong());
   }
-
-  if (args.at(kUntil)) {
-    opt->time_limit = ts::Time::UnixTimeToUTC(
-        static_cast<uint64_t>(args.at(kUntil).asLong())) + kJstTzOffset;  // JST
-    MIRAKC_ARIB_INFO("Filter packets until {} in JST", opt->time_limit.value());
-  }
-
-  if (args.at(kBuffer)) {
-    auto mib = static_cast<size_t>(args.at(kBuffer).asLong());
-    opt->buffer_size = RoundDown(mib * 1000 * 1000, ts::PKT_SIZE);
+  if (args.at(kEndMargin)) {
+    opt->end_margin =
+        static_cast<ts::MilliSecond>(args.at(kEndMargin).asLong());
   }
   MIRAKC_ARIB_INFO(
-      "Hold up to {:.0f} MiB ({} packets) until ready",
-      static_cast<double>(opt->buffer_size) / (1000 * 1000),
-      opt->buffer_size / ts::PKT_SIZE);
+      "Program Filter: SID#{:04X} EID#{:04X} Clock({:011X}, {}) Margin({}, {})",
+      opt->sid, opt->eid, opt->clock_pcr, opt->clock_time,
+      opt->start_margin, opt->end_margin);
 }
 
 std::unique_ptr<PacketSink> make_sink(const Args& args) {
   if (args.at("scan-services").asBool()) {
     ServiceScannerOption option;
-    set_option(args, &option.xsids);
+    set_option(args, "--xsid", &option.xsids);
     auto scanner = std::make_unique<ServiceScanner>(option);
     scanner->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return scanner;
   }
   if (args.at("collect-eits").asBool()) {
     EitCollectorOption option;
-    set_option(args, &option.xsids);
+    set_option(args, "--xsid", &option.xsids);
     auto collector = std::make_unique<EitCollector>(option);
     collector->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return collector;
   }
-  if (args.at("filter-packets").asBool()) {
-    PacketFilterOption option;
-    set_options(args, &option);
-    auto filter = std::make_unique<PacketFilter>(option);
+  if (args.at("filter-service").asBool()) {
+    ServiceFilterOption service_option;
+    set_options(args, &service_option);
+    auto filter = std::make_unique<ServiceFilter>(service_option);
     filter->Connect(std::make_unique<StdoutSink>());
     return filter;
+  }
+  if (args.at("filter-program").asBool()) {
+    ServiceFilterOption service_option;
+    set_options(args, &service_option);
+    auto filter = std::make_unique<ServiceFilter>(service_option);
+    ProgramFilterOption program_option;
+    load_option(args, &program_option);
+    auto program_filter = std::make_unique<ProgramFilter>(program_option);
+    program_filter->Connect(std::make_unique<StdoutSink>());
+    filter->Connect(std::move(program_filter));
+    return filter;
+  }
+  if (args.at("sync-clock").asBool()) {
+    auto sync = std::make_unique<PcrSynchronizer>();
+    sync->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
+    return sync;
   }
   return std::unique_ptr<PacketSink>();
 }

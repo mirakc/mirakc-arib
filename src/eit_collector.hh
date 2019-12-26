@@ -18,7 +18,7 @@
 namespace {
 
 struct EitCollectorOption final {
-  ExcludedSidSet xsids;
+  SidSet xsids;
 };
 
 struct EitData {
@@ -489,8 +489,9 @@ class EitCollector final : public PacketSink,
 
   ~EitCollector() override {}
 
-  void Start() override {
+  bool Start() override {
     start_time_ = ts::Time::CurrentUTC();
+    return true;
   }
 
   bool End() override {

@@ -16,7 +16,7 @@
 namespace {
 
 struct ServiceScannerOption final {
-  ExcludedSidSet xsids;
+  SidSet xsids;
 };
 
 // The implementation is based on tsTSScanner.cpp.  Unlike the ts::TSScanner

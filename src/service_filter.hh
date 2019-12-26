@@ -9,28 +9,20 @@
 
 #include "base.hh"
 #include "logging.hh"
-#include "packet_buffer.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
-#include "stream_sink.hh"
 
 namespace {
 
-constexpr size_t RoundDown(size_t n, size_t m) {
-  return n - n % m;
-}
-
-struct PacketFilterOption final {
+struct ServiceFilterOption final {
   uint16_t sid = 0;
-  uint16_t eid = 0;
   std::optional<ts::Time> time_limit = std::nullopt;  // JST
-  size_t buffer_size = RoundDown(8 * 1000 * 1000, ts::PKT_SIZE);  // 8MiB
 };
 
-class PacketFilter final : public PacketSink,
+class ServiceFilter final : public PacketSink,
                            public ts::TableHandlerInterface {
  public:
-  explicit PacketFilter(const PacketFilterOption& option)
+  explicit ServiceFilter(const ServiceFilterOption& option)
       : option_(option),
         demux_(context_),
         pat_packetizer_(ts::PID_PAT, ts::CyclingPacketizer::ALWAYS),
@@ -40,30 +32,26 @@ class PacketFilter final : public PacketSink,
     MIRAKC_ARIB_DEBUG("Demux PAT");
     demux_.addPID(ts::PID_CAT);
     MIRAKC_ARIB_DEBUG("Demux CAT for detecting EMM PIDs");
-    if (option_.eid != 0) {
-      buffer_ = std::make_unique<PacketBuffer>(option_.buffer_size);
-      demux_.addPID(ts::PID_EIT);
-      MIRAKC_ARIB_DEBUG("Demux EIT for detecting the start of PES");
-    }
     if (option_.time_limit.has_value()) {
       demux_.addPID(ts::PID_TOT);
-      MIRAKC_ARIB_DEBUG("Demux TOT/TDT for checking the time limit");
+      MIRAKC_ARIB_DEBUG("Demux TDT/TOT for checking the time limit");
     }
   }
 
-  ~PacketFilter() override {}
+  virtual ~ServiceFilter() override {}
 
-  void Connect(std::unique_ptr<StreamSink>&& sink) {
+  void Connect(std::unique_ptr<PacketSink>&& sink) {
     sink_ = std::move(sink);
   }
 
-  void Start() override {
+  bool Start() override {
     if (!sink_) {
       MIRAKC_ARIB_ERROR("No sink has not been connected");
-      return;
+      return false;
     }
 
     sink_->Start();
+    return true;
   }
 
   bool End() override {
@@ -98,7 +86,7 @@ class PacketFilter final : public PacketSink,
       ts::TSPacket pat_packet;
       pat_packetizer_.getNextPacket(pat_packet);
       MIRAKC_ARIB_ASSERT(pat_packet.getPID() == ts::PID_PAT);
-      return WritePacket(pat_packet);
+      return sink_->HandlePacket(pat_packet);
     }
 
     if (pid == pmt_pid_) {
@@ -106,11 +94,11 @@ class PacketFilter final : public PacketSink,
       ts::TSPacket pmt_packet;
       pmt_packetizer_.getNextPacket(pmt_packet);
       MIRAKC_ARIB_ASSERT(pmt_packet.getPID() == pmt_pid_);
-      return WritePacket(pmt_packet);
+      return sink_->HandlePacket(pmt_packet);
     }
 
     MIRAKC_ARIB_ASSERT(pid != ts::PID_NULL);
-    return WritePacket(packet);
+    return sink_->HandlePacket(packet);
   }
 
  private:
@@ -138,9 +126,6 @@ class PacketFilter final : public PacketSink,
       case ts::TID_PMT:
         HandlePmt(table);
         break;
-      case ts::TID_EIT_PF_ACT:
-        HandleEit(table);
-        break;
       case ts::TID_TDT:
         HandleTdt(table);
         break;
@@ -161,7 +146,7 @@ class PacketFilter final : public PacketSink,
     }
 
     if (pat.pmts.find(option_.sid) == pat.pmts.end()) {
-      MIRAKC_ARIB_ERROR("No sid#{:04X} in PAT, stop streaming", option_.sid);
+      MIRAKC_ARIB_ERROR("SID#{:04X} not found in PAT", option_.sid);
       done_ = true;
       return;
     }
@@ -211,7 +196,7 @@ class PacketFilter final : public PacketSink,
     psi_filter_.insert(ts::PID_BIT);
     psi_filter_.insert(ts::PID_CDT);
     MIRAKC_ARIB_DEBUG(
-        "PSI/SI filter += PAT CAT NIT SDT EIT RST TOT/TDT BIT CDT");
+        "PSI/SI filter += PAT CAT NIT SDT EIT RST TDT/TOT BIT CDT");
   }
 
   void HandleCat(const ts::BinaryTable& table) {
@@ -297,64 +282,6 @@ class PacketFilter final : public PacketSink,
 
     psi_filter_.insert(pmt_pid_);
     MIRAKC_ARIB_DEBUG("PSI/SI filter += PMT#{:04X}", pmt_pid_);
-
-    if (option_.eid == 0) {
-      content_ready_ = true;
-      MIRAKC_ARIB_INFO("Ready to stream for sid#{:04X}", option_.sid);
-    }
-  }
-
-  void HandleEit(const ts::BinaryTable& table) {
-    ts::EIT eit(context_, table);
-
-    if (!eit.isValid()) {
-      MIRAKC_ARIB_WARN("Broken EIT, skip");
-      return;
-    }
-
-    if (eit.service_id != option_.sid) {
-      return;
-    }
-
-    if (eit.events.size() == 0) {
-      return;
-    }
-
-    const auto& present_event = eit.events[0];
-    if (present_event.event_id == option_.eid) {
-      if (!content_ready_) {
-        // TODO: Should seek PAT before flushing?
-        if (!buffer_->Flush(sink_.get())) {
-          done_ = true;
-          MIRAKC_ARIB_ERROR("Failed to flush buffer");
-          return;
-        }
-        buffer_.reset(nullptr);
-        content_ready_ = true;
-        MIRAKC_ARIB_INFO("Ready to stream for eid#{:04X}", option_.eid);
-      }
-      return;
-    }
-
-    if (content_ready_) {
-      done_ = true;
-      MIRAKC_ARIB_INFO("The next program will be started soon, stop streaming");
-      return;
-    }
-
-    if (eit.events.size() < 2) {
-      return;
-    }
-
-    const auto& following_event = eit.events[1];
-    if (following_event.event_id != option_.eid) {
-      done_ = true;
-      MIRAKC_ARIB_ERROR(
-          "The next program's EID is NOT matched with eid#{:04X}", option_.eid);
-      return;
-    }
-
-    return;
   }
 
   void HandleTdt(const ts::BinaryTable& table) {
@@ -388,28 +315,19 @@ class PacketFilter final : public PacketSink,
     MIRAKC_ARIB_INFO("Over the time limit, stop streaming");
   }
 
-  bool WritePacket(const ts::TSPacket& packet) {
-    if (buffer_) {
-      return buffer_->Write(packet.b, ts::PKT_SIZE);
-    }
-    return sink_->Write(packet.b, ts::PKT_SIZE);
-  }
-
-  const PacketFilterOption option_;
+  const ServiceFilterOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
   ts::CyclingPacketizer pat_packetizer_;
   ts::CyclingPacketizer pmt_packetizer_;
-  std::unique_ptr<StreamSink> sink_;
-  std::unique_ptr<PacketBuffer> buffer_;
+  std::unique_ptr<PacketSink> sink_;
   std::unordered_set<ts::PID> psi_filter_;
   std::unordered_set<ts::PID> content_filter_;
   std::unordered_set<ts::PID> emm_filter_;
   ts::PID pmt_pid_ = ts::PID_NULL;
-  bool content_ready_ = false;
   bool done_ = false;
 
-  MIRAKC_ARIB_NON_COPYABLE(PacketFilter);
+  MIRAKC_ARIB_NON_COPYABLE(ServiceFilter);
 };
 
 }  // namespace

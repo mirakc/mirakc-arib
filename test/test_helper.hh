@@ -10,7 +10,6 @@
 #include "jsonl_sink.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
-#include "stream_sink.hh"
 
 namespace {
 
@@ -35,19 +34,9 @@ class MockSink final : public PacketSink {
   MockSink() {}
   ~MockSink() override {}
 
-  MOCK_METHOD(void, Start, (), (override));
+  MOCK_METHOD(bool, Start, (), (override));
   MOCK_METHOD(bool, End, (), (override));
   MOCK_METHOD(bool, HandlePacket, (const ts::TSPacket&), (override));
-};
-
-class MockStreamSink final : public StreamSink {
- public:
-  MockStreamSink() {}
-  ~MockStreamSink() override {}
-
-  MOCK_METHOD(void, Start, (), (override));
-  MOCK_METHOD(bool, End, (), (override));
-  MOCK_METHOD(bool, Write, (const uint8_t*, size_t), (override));
 };
 
 class TableSource final : public PacketSource {
@@ -66,36 +55,47 @@ class TableSource final : public PacketSource {
       ts::PID pid;
       node->getIntAttribute<ts::PID>(pid, u"test-pid", true, 0, 0x0000, 0x1FFF);
 
-      uint8_t cc;
-      node->getIntAttribute<uint8_t>(cc, u"test-cc", false, 0, 0x0000, 0x000F);
-
       ts::BinaryTable table;
       table.fromXML(context_, node);
       table.setSourcePID(pid);
 
       auto packetizer = std::make_unique<ts::CyclingPacketizer>(pid);
       packetizer->addTable(table);
-      packetizer->setNextContinuityCounter(cc);
 
-      packetizers_.push(std::move(packetizer));
+      ts::TSPacket packet;
+      packetizer->getNextPacket(packet);
+
+      if (node->hasAttribute(u"test-cc")) {
+        uint8_t cc;
+        node->getIntAttribute<uint8_t>(cc, u"test-cc", false, 0, 0x00, 0x0F);
+        packet.setCC(cc);
+      }
+
+      if (node->hasAttribute(u"test-pcr")) {
+        uint64_t pcr;
+        node->getIntAttribute<uint64_t>(pcr, u"test-pcr", false);
+        packet.setPayloadSize(0);
+        packet.setPCR(pcr);
+      }
+
+      packets_.push(std::move(packet));
     }
   }
 
   bool GetNextPacket(ts::TSPacket* packet) override {
-    if (packetizers_.empty()) {
+    if (packets_.empty()) {
       return false;
     }
 
-    auto& packetizer = packetizers_.front();
-    packetizer->getNextPacket(*packet);
-    packetizers_.pop();
+    ts::TSPacket::Copy(packet, &packets_.front());
+    packets_.pop();
     return true;
   }
 
  private:
   ts::DuckContext context_;
   ts::SectionFile section_file_;
-  std::queue<std::unique_ptr<ts::Packetizer>> packetizers_;
+  std::queue<ts::TSPacket> packets_;
 };
 
 template <class T>

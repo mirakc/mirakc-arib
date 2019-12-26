@@ -13,7 +13,7 @@ TEST(PacketSourceTest, EmptyFile) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
     EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
   }
@@ -31,7 +31,7 @@ TEST(PacketSourceTest, OneByteFile) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(1));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
     EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
@@ -50,7 +50,7 @@ TEST(PacketSourceTest, OnePacketFile) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(
         [](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
@@ -72,7 +72,7 @@ TEST(PacketSourceTest, Resync) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(
         [](uint8_t* buf, size_t) {
           buf[0] = 0;
@@ -103,7 +103,7 @@ TEST(PacketSourceTest, ResyncFailedWithEOF) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(
         [](uint8_t* buf, size_t) {
           buf[0] = 0;
@@ -126,7 +126,7 @@ TEST(PacketSourceTest, ResyncFailedWithNoSyncByte) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(
         [](uint8_t* buf, size_t) {
           buf[0] = 0;
@@ -153,7 +153,7 @@ TEST(PacketSourceTest, Successfully) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
     EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
   }
@@ -171,7 +171,7 @@ TEST(PacketSourceTest, Unsuccessfully) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
     EXPECT_CALL(*sink, End).WillOnce(testing::Return(false));
   }
