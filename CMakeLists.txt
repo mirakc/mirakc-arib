@@ -63,7 +63,6 @@ message(STATUS "  CMAKE_CXX_STANDARD            : ${CMAKE_CXX_STANDARD}")
 message(STATUS "  CMAKE_CXX_STANDARD_REQUIRED   : ${CMAKE_CXX_STANDARD_REQUIRED}")
 message(STATUS "  CMAKE_CXX_EXTENSIONS          : ${CMAKE_CXX_EXTENSIONS}")
 message(STATUS "  MIRAKC_ARIB_TEST              : ${MIRAKC_ARIB_TEST}")
-message(STATUS "  MIRAKC_ARIB_TSDUCK_DEFS_EXTRA : ${MIRAKC_ARIB_TSDUCK_DEFS_EXTRA}")
 message(STATUS "  NPROC                         : ${NPROC}")
 
 # a thread library is required
