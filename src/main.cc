@@ -68,6 +68,16 @@ scan-services:
       "remoteControlKeyId": 1
     }}
 
+  `scan-services` collects services whose type is included in the following
+  list:
+
+    * 0x01 (Digital television service)
+    * 0x02 (Digital audio service)
+    * 0xA1 (Special video service)
+    * 0xA2 (Special audio service)
+    * 0xA5 (Promotion video service)
+    * 0xA6 (Promotion audio service)
+
   Scanning logo data has not been supported at this moment.  So, values of the
   `logoId` and `hasLogoData` are always `-1` and `false` respectively.
 

@@ -148,7 +148,9 @@ class ServiceScanner final : public PacketSink,
       }
 
       const uint8_t type = svit->second.serviceType(context_);
-      if (type == 0) {
+      if (type != 0x01 && type != 0x02 &&
+          type != 0xA1 && type != 0xA2 &&
+          type != 0xA5 && type != 0xA6) {
         continue;
       }
 
