@@ -83,6 +83,19 @@ class ProgramFilter final : public PacketSink,
   }
 
  private:
+  // Compares two PCR values taking into account the PCR wrap around.
+  //
+  // Assumed that the real interval time between the PCR values is less than
+  // half of kPcrUpperBound.
+  int64_t ComparePcr(int64_t lhs, int64_t rhs) {
+    auto a = lhs - rhs;
+    auto b = lhs - (kPcrUpperBound + rhs);
+    if (std::abs(a) < std::abs(b)) {
+      return a;
+    }
+    return b;
+  }
+
   bool WaitReady(const ts::TSPacket& packet) {
     if (!pcr_pid_ready_ || !pcr_range_ready_) {
       return true;
@@ -102,13 +115,15 @@ class ProgramFilter final : public PacketSink,
 
     auto pcr = packet.getPCR();
 
-    if (pcr >= end_pcr_) {
+    // We can implement the comparison below using operator>=() defined in the
+    // Pcr class.  This coding style looks elegant, but requires more typing.
+    if (ComparePcr(pcr, end_pcr_) >= 0) {  // pcr >= end_pcr_
       MIRAKC_ARIB_INFO("Reached the end PCR");
       state_ = kDone;
       return false;
     }
 
-    if (pcr >= start_pcr_) {
+    if (ComparePcr(pcr, start_pcr_) >= 0) {  // pcr >= start_pcr_
       MIRAKC_ARIB_INFO("Reached the start PCR");
       state_ = kSeekPat;
       return true;
@@ -291,8 +306,11 @@ class ProgramFilter final : public PacketSink,
 
   int64_t ConvertTimeToPcr(const ts::Time& time) {
     auto ms = time - option_.clock_time;  // may be a negative value
-    auto ticks = (ms * kPcrTicksPerMs) % kMaxPcrTicks;
-    return (option_.clock_pcr + ticks) % kMaxPcrTicks;
+    auto pcr = option_.clock_pcr + ms * kPcrTicksPerMs;
+    while (pcr < 0) {
+      pcr += kPcrUpperBound;
+    }
+    return pcr % kPcrUpperBound;
   }
 
   enum State {

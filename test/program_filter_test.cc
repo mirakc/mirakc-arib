@@ -583,3 +583,151 @@ TEST(ProgramFilterTest, NoFollowingEventInEit) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
 }
+
+TEST(ProgramFilterTest, StartPcrUnderflow) {
+  TableSource src;
+  ProgramFilterOption option = kOption;
+  auto ms = 3 * ts::MilliSecPerHour;  // wrap around time: 03:00:00
+  option.clock_time = ts::Time::UnixEpoch + ms;
+  option.clock_pcr = 0;
+  auto filter = std::make_unique<ProgramFilter>(option);
+  auto sink = std::make_unique<MockSink>();
+
+  // TDT tables are used for emulating PES and PCR packets.
+  src.LoadXml(fmt::format(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x0901"
+           test-pid="0x0101">
+        <component elementary_PID="0x0301" stream_type="0x02" />
+      </PMT>
+      <EIT type="pf" version="1" current="true" actual="true"
+           service_id="0x0001" transport_stream_id="0x1234"
+           original_network_id="0x0001" last_table_id="0x4E"
+           test-pid="0x0012">
+        <event event_id="0x1001" start_time="1970-01-01 01:00:00"
+               duration="01:00:00" running_status="undefined" CA_mode="true" />
+        <event event_id="0x1002" start_time="1970-01-01 02:00:00"
+               duration="01:00:00" running_status="undefined" CA_mode="true" />
+      </EIT>
+      <TDT UTC_time="1970-01-01 01:00:00" test-pid="0x0901" test-pcr="{}" />
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000" test-cc="1">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x0901"
+           test-pid="0x0101" test-cc="1">
+        <component elementary_PID="0x0301" stream_type="0x02" />
+      </PMT>
+      <TDT UTC_time="1970-01-01 01:00:00" test-pid="0x0301" />
+   </tsduck>
+  )",
+  kPcrUpperBound - (2 * ts::MilliSecPerHour * kPcrTicksPerMs)  // 01:00:00
+  ));
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_PAT, packet.getPID());
+          EXPECT_EQ(1, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0101, packet.getPID());
+          EXPECT_EQ(1, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0301, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_TRUE(src.FeedPackets());
+}
+
+TEST(ProgramFilterTest, EndPcrOverflow) {
+  TableSource src;
+  ProgramFilterOption option = kOption;
+  auto ms = 2 * ts::MilliSecPerHour;  // wrap around time: 02:00:00
+  option.clock_time = ts::Time::UnixEpoch + ms;
+  option.clock_pcr = 0;
+  auto filter = std::make_unique<ProgramFilter>(option);
+  auto sink = std::make_unique<MockSink>();
+
+  // TDT tables are used for emulating PES and PCR packets.
+  src.LoadXml(fmt::format(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x0901"
+           test-pid="0x0101">
+        <component elementary_PID="0x0301" stream_type="0x02" />
+      </PMT>
+      <EIT type="pf" version="1" current="true" actual="true"
+           service_id="0x0001" transport_stream_id="0x1234"
+           original_network_id="0x0001" last_table_id="0x4E"
+           test-pid="0x0012">
+        <event event_id="0x1001" start_time="1970-01-01 01:00:00"
+               duration="01:00:00" running_status="undefined" CA_mode="true" />
+        <event event_id="0x1002" start_time="1970-01-01 02:00:00"
+               duration="01:00:00" running_status="undefined" CA_mode="true" />
+      </EIT>
+      <TDT UTC_time="1970-01-01 01:00:00" test-pid="0x0901" test-pcr="{}" />
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000" test-cc="1">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x0901"
+           test-pid="0x0101" test-cc="1">
+        <component elementary_PID="0x0301" stream_type="0x02" />
+      </PMT>
+      <TDT UTC_time="1970-01-01 01:00:00" test-pid="0x0301" />
+   </tsduck>
+  )",
+  kPcrUpperBound - (1 * ts::MilliSecPerHour * kPcrTicksPerMs)  // 01:00:00
+  ));
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_PAT, packet.getPID());
+          EXPECT_EQ(1, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0101, packet.getPID());
+          EXPECT_EQ(1, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0301, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_TRUE(src.FeedPackets());
+}
