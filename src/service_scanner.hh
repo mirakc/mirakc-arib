@@ -15,19 +15,14 @@
 
 namespace {
 
-struct ServiceScannerOption final {
-  SidSet xsids;
-};
-
 // The implementation is based on tsTSScanner.cpp.  Unlike the ts::TSScanner
 // class, this class reads data from the PacketSink class.
 class ServiceScanner final : public PacketSink,
                              public JsonlSource,
                              public ts::TableHandlerInterface {
  public:
-  explicit ServiceScanner(const ServiceScannerOption& option)
-      : option_(option),
-        demux_(context_) {
+  explicit ServiceScanner()
+      : demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
     demux_.addPID(ts::PID_NIT);
@@ -138,10 +133,6 @@ class ServiceScanner final : public PacketSink,
     for (auto it = pat_->pmts.begin(); it != pat_->pmts.end(); ++it) {
       uint16_t sid = it->first;
 
-      if (option_.xsids.Contain(sid)) {
-        continue;
-      }
-
       const auto svit = sdt_->services.find(sid);
       if (svit == sdt_->services.end()) {
         continue;
@@ -208,7 +199,6 @@ class ServiceScanner final : public PacketSink,
     return 0;
   }
 
-  const ServiceScannerOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
   ts::SafePtr<ts::PAT> pat_;

@@ -29,7 +29,7 @@ Tools to process ARIB TS streams.
 Usage:
   {0} -h | --help
   {0} --version
-  {0} scan-services [--xsid=<SID>...] [FILE]
+  {0} scan-services [FILE]
   {0} collect-eits [--xsid=<SID>...] [FILE]
   {0} filter-service --sid=<SID> [FILE]
   {0} filter-program --sid=<SID> --eid=<EID>
@@ -377,9 +377,7 @@ void load_option(const Args& args, ProgramFilterOption* opt) {
 
 std::unique_ptr<PacketSink> make_sink(const Args& args) {
   if (args.at("scan-services").asBool()) {
-    ServiceScannerOption option;
-    set_option(args, "--xsid", &option.xsids);
-    auto scanner = std::make_unique<ServiceScanner>(option);
+    auto scanner = std::make_unique<ServiceScanner>();
     scanner->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return scanner;
   }
