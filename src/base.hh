@@ -25,9 +25,8 @@ inline std::string& trim(std::string& str) {
 using Args = std::map<std::string, docopt::value>;
 
 constexpr ts::MilliSecond kJstTzOffset = 9 * ts::MilliSecPerHour;
-constexpr int64_t kMaxPcr = ((static_cast<int64_t>(1) << 33) - 1) * 300
-                            + (static_cast<int64_t>(1) << 9) - 1;
-static_assert(kMaxPcr == static_cast<int64_t>(2576980377811));
+constexpr int64_t kMaxPcr = ((static_cast<int64_t>(1) << 33) - 1) * 300 + 299;
+static_assert(kMaxPcr == static_cast<int64_t>(2576980377599));
 constexpr int64_t kPcrUpperBound = kMaxPcr + 1;
 constexpr int64_t kPcrTicksPerSec = 27 * 1000 * 1000;  // 27MHz
 constexpr int64_t kPcrTicksPerMs = kPcrTicksPerSec / ts::MilliSecPerSec;
