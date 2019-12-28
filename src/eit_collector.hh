@@ -21,7 +21,7 @@ struct EitCollectorOption final {
   SidSet xsids;
 };
 
-struct EitData {
+struct EitSection {
   uint16_t pid;
   uint16_t sid;
   uint16_t tid;
@@ -40,8 +40,8 @@ struct EitData {
   static constexpr size_t EIT_PAYLOAD_FIXED_SIZE = 6;
   static constexpr size_t EIT_EVENT_FIXED_SIZE = 12;
 
-  EitData(const ts::Section& section, bool has_timestamp,
-          const ts::Time& timestamp) {
+  EitSection(const ts::Section& section, bool has_timestamp,
+             const ts::Time& timestamp) {
     const auto* data = section.payload();
     auto size = section.payloadSize();
 
@@ -123,7 +123,7 @@ class TableProgress {
     completed_ = true;
   }
 
-  void Update(const EitData& eit) {
+  void Update(const EitSection& eit) {
     if (!CheckConsistency(eit)) {
       Reset();
     }
@@ -155,7 +155,7 @@ class TableProgress {
     completed_ = CheckCompleted();
   }
 
-  bool CheckCollected(const EitData& eit) const {
+  bool CheckCollected(const EitSection& eit) const {
     for (size_t i = eit.section_index(); i < eit.last_section_index(); ++i) {
       if (section_versions_[i] == 0xFF) {
         return false;
@@ -212,7 +212,7 @@ class TableProgress {
   static constexpr size_t kNumSections = 256;
   static constexpr size_t kNumSegments = kNumSections / 8;
 
-  bool CheckConsistency(const EitData& eit) {
+  bool CheckConsistency(const EitSection& eit) {
     // NOTE:
     //
     // Many implementations processing tables assume that the version number of
@@ -280,7 +280,7 @@ class TableGroupProgress {
   TableGroupProgress() = default;
   ~TableGroupProgress() = default;
 
-  void Update(const EitData& eit) {
+  void Update(const EitSection& eit) {
     if (!CheckConsistency(eit)) {
       for (size_t i = 0; i < kNumTables; ++i) {
         tables_[i].Reset();
@@ -297,7 +297,7 @@ class TableGroupProgress {
     completed_ = CheckCompleted();
   }
 
-  bool CheckCollected(const EitData& eit) const {
+  bool CheckCollected(const EitSection& eit) const {
     if (last_table_index_ < 0) {
       return false;
     }
@@ -336,7 +336,7 @@ class TableGroupProgress {
  private:
   static constexpr size_t kNumTables = 8;
 
-  bool CheckConsistency(const EitData& eit) {
+  bool CheckConsistency(const EitSection& eit) {
     if (last_table_index_ < 0) {
       return false;
     }
@@ -371,7 +371,7 @@ class ServiceProgress {
   ServiceProgress() = default;
   ~ServiceProgress() = default;
 
-  void Update(const EitData& eit) {
+  void Update(const EitSection& eit) {
     if (eit.IsBasic()) {
       basic_.Update(eit);
     } else {
@@ -379,7 +379,7 @@ class ServiceProgress {
     }
   }
 
-  bool CheckCollected(const EitData& eit) const {
+  bool CheckCollected(const EitSection& eit) const {
     if (eit.IsBasic()) {
       return basic_.CheckCollected(eit);
     }
@@ -416,12 +416,12 @@ class CollectProgress {
   CollectProgress() = default;
   ~CollectProgress() = default;
 
-  void Update(const EitData& eit) {
+  void Update(const EitSection& eit) {
     services_[eit.service_triple()].Update(eit);
     completed_ = CheckCompleted();
   }
 
-  bool CheckCollected(const EitData& eit) const {
+  bool CheckCollected(const EitSection& eit) const {
     if (services_.find(eit.service_triple()) == services_.end()) {
       return false;
     }
@@ -536,11 +536,11 @@ class EitCollector final : public PacketSink,
       return;
     }
 
-    if (section.payloadSize() < EitData::EIT_PAYLOAD_FIXED_SIZE) {
+    if (section.payloadSize() < EitSection::EIT_PAYLOAD_FIXED_SIZE) {
       return;
     }
 
-    EitData eit(section, has_timestamp_, timestamp_);
+    EitSection eit(section, has_timestamp_, timestamp_);
     if (CheckCollected(eit)) {
       return;
     }
@@ -596,19 +596,19 @@ class EitCollector final : public PacketSink,
     MIRAKC_ARIB_INFO("TOT: {}", timestamp_);
   }
 
-  inline bool CheckCollected(const EitData& eit) const {
+  inline bool CheckCollected(const EitSection& eit) const {
     if (option_.xsids.Contain(eit.sid)) {
       return true;
     }
     return progress_.CheckCollected(eit);
   }
 
-  void WriteEitSection(const EitData& eit) {
+  void WriteEitSection(const EitSection& eit) {
     auto json = MakeJsonValue(eit);
     FeedDocument(json);
   }
 
-  rapidjson::Document MakeJsonValue(const EitData& eit) {
+  rapidjson::Document MakeJsonValue(const EitSection& eit) {
     const auto* data = eit.events_data;
     auto remain = eit.events_size;
 
@@ -617,7 +617,7 @@ class EitCollector final : public PacketSink,
 
     rapidjson::Value events(rapidjson::kArrayType);
 
-    while (remain >= EitData::EIT_EVENT_FIXED_SIZE) {
+    while (remain >= EitSection::EIT_EVENT_FIXED_SIZE) {
       const auto eid = ts::GetUInt16(data);
 
       ts::Time start_time;
@@ -637,8 +637,8 @@ class EitCollector final : public PacketSink,
       const bool ca_controlled = (data[10] >> 4) & 0x01;
 
       size_t info_length = ts::GetUInt16(data + 10) & 0x0FFF;
-      data += EitData::EIT_EVENT_FIXED_SIZE;
-      remain -= EitData::EIT_EVENT_FIXED_SIZE;
+      data += EitSection::EIT_EVENT_FIXED_SIZE;
+      remain -= EitSection::EIT_EVENT_FIXED_SIZE;
 
       info_length = std::min(info_length, remain);
       ts::DescriptorList descs(nullptr);
@@ -846,7 +846,7 @@ class EitCollector final : public PacketSink,
     return json;
   }
 
-  void UpdateProgress(const EitData& eit) {
+  void UpdateProgress(const EitSection& eit) {
     progress_.Update(eit);
     if (show_progress_) {
       progress_.Show();
