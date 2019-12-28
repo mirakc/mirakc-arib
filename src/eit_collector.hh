@@ -61,8 +61,12 @@ struct EitData {
     this->timestamp = timestamp;
   }
 
-  inline uint32_t id() const {
-    return (static_cast<uint32_t>(nid) << 16) | static_cast<uint32_t>(sid);
+  inline uint64_t service_triple() const {
+    // service triple
+    return
+        static_cast<uint64_t>(nid)  << 48 |
+        static_cast<uint64_t>(tsid) << 32 |
+        static_cast<uint32_t>(sid)  << 16;
   }
 
   inline size_t table_index() const {
@@ -413,15 +417,15 @@ class CollectProgress {
   ~CollectProgress() = default;
 
   void Update(const EitData& eit) {
-    services_[eit.id()].Update(eit);
+    services_[eit.service_triple()].Update(eit);
     completed_ = CheckCompleted();
   }
 
   bool CheckCollected(const EitData& eit) const {
-    if (services_.find(eit.id()) == services_.end()) {
+    if (services_.find(eit.service_triple()) == services_.end()) {
       return false;
     }
-    return services_.at(eit.id()).CheckCollected(eit);
+    return services_.at(eit.service_triple()).CheckCollected(eit);
   }
 
   bool IsCompleted() const {
@@ -463,7 +467,7 @@ class CollectProgress {
     return true;
   }
 
-  std::map<uint32_t, ServiceProgress> services_;
+  std::map<uint64_t, ServiceProgress> services_;
   bool completed_ = false;
 
   MIRAKC_ARIB_NON_COPYABLE(CollectProgress);
