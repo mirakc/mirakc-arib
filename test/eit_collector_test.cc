@@ -8,13 +8,9 @@
 
 #include "test_helper.hh"
 
-namespace {
-const EitCollectorOption kEmptyOption {};
-}
-
 TEST(EitCollectorTest, NoPacket) {
   MockSource src;
-  auto collector = std::make_unique<EitCollector>(kEmptyOption);
+  auto collector = std::make_unique<EitCollector>();
   auto sink = std::make_unique<MockJsonlSink>();
 
   EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false));  // EOF

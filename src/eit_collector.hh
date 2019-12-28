@@ -17,10 +17,6 @@
 
 namespace {
 
-struct EitCollectorOption final {
-  SidSet xsids;
-};
-
 struct EitSection {
   uint16_t pid;
   uint16_t sid;
@@ -478,9 +474,8 @@ class EitCollector final : public PacketSink,
                            public ts::SectionHandlerInterface,
                            public ts::TableHandlerInterface {
  public:
-  explicit EitCollector(const EitCollectorOption& option)
-      : option_(option),
-        demux_(context_) {
+  explicit EitCollector()
+      : demux_(context_) {
     if (GetLogLevel() == spdlog::level::debug) {
       EnableShowProgress();
     }
@@ -597,9 +592,6 @@ class EitCollector final : public PacketSink,
   }
 
   inline bool CheckCollected(const EitSection& eit) const {
-    if (option_.xsids.Contain(eit.sid)) {
-      return true;
-    }
     return progress_.CheckCollected(eit);
   }
 
@@ -861,7 +853,6 @@ class EitCollector final : public PacketSink,
     show_progress_ = true;
   }
 
-  const EitCollectorOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
   bool has_timestamp_ = false;

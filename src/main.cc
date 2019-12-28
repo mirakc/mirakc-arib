@@ -30,7 +30,7 @@ Usage:
   {0} -h | --help
   {0} --version
   {0} scan-services [FILE]
-  {0} collect-eits [--xsid=<SID>...] [FILE]
+  {0} collect-eits [FILE]
   {0} filter-service --sid=<SID> [FILE]
   {0} filter-program --sid=<SID> --eid=<EID>
         --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
@@ -40,7 +40,6 @@ Usage:
 Options:
   -h --help                    Print help.
   --version                    Print version.
-  --xsid=<SID>                 Excluded service ID.
   --sid=<SID>                  Service ID.
   --eid=<EID>                  Event ID of a TV program.
   --clock-pcr=<PCR>            27MHz, 42bits PCR value.
@@ -325,14 +324,6 @@ std::unique_ptr<PacketSource> make_source(const Args& args) {
   return std::make_unique<FileSource>(std::move(file));
 }
 
-void set_option(const Args& args, const std::string& name, SidSet* sids) {
-  if (args.at(name)) {
-    auto list = args.at(name).asStringList();
-    sids->Add(list);
-    MIRAKC_ARIB_INFO("{} SIDs: {}", name, fmt::join(list, ", "));
-  }
-}
-
 ts::Time ConvertUnixTimeToJstTime(ts::MilliSecond unix_time_ms) {
   return ts::Time::UnixEpoch + unix_time_ms + kJstTzOffset;
 }
@@ -382,9 +373,7 @@ std::unique_ptr<PacketSink> make_sink(const Args& args) {
     return scanner;
   }
   if (args.at("collect-eits").asBool()) {
-    EitCollectorOption option;
-    set_option(args, "--xsid", &option.xsids);
-    auto collector = std::make_unique<EitCollector>(option);
+    auto collector = std::make_unique<EitCollector>();
     collector->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return collector;
   }
