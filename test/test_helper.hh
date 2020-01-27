@@ -78,18 +78,34 @@ class TableSource final : public PacketSource {
         packet.setPCR(pcr);
       }
 
+      if (node->hasAttribute(u"test-sleep")) {
+        uint8_t sleep_ms;
+        node->getIntAttribute<uint8_t>(sleep_ms, u"test-sleep", false);
+        packet.setPayloadSize(0);
+        packet.setPrivateData(&sleep_ms, 1);
+      }
+
       packets_.push(std::move(packet));
     }
   }
 
   bool GetNextPacket(ts::TSPacket* packet) override {
-    if (packets_.empty()) {
-      return false;
-    }
+    for (;;) {
+      if (packets_.empty()) {
+        return false;
+      }
 
-    ts::TSPacket::Copy(packet, &packets_.front());
-    packets_.pop();
-    return true;
+      if (packets_.front().hasPrivateData()) {
+        auto sleep_ms = *packets_.front().getPrivateData();
+        ts::SleepThread(sleep_ms);
+        packets_.pop();
+        continue;
+      }
+
+      ts::TSPacket::Copy(packet, &packets_.front());
+      packets_.pop();
+      return true;
+    }
   }
 
  private:

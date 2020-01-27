@@ -34,7 +34,7 @@ Usage:
   {0} filter-service --sid=<SID> [FILE]
   {0} filter-program --sid=<SID> --eid=<EID>
         --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
-        [--start-margin=<MS>] [--end-margin=<MS>] [FILE]
+        [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
   {0} sync-clock [FILE]
 
 Options:
@@ -48,6 +48,7 @@ Options:
                                toward the past.
   --end-margin=<MS>            Offset (ms) from the end time of the event
                                toward the future.
+  --pre-streaming              Output PSI/SI packets before start.
 
 Arguments:
   FILE                         Path to a TS file.
@@ -346,6 +347,7 @@ void load_option(const Args& args, ProgramFilterOption* opt) {
   static const std::string kClockTime = "--clock-time";
   static const std::string kStartMargin = "--start-margin";
   static const std::string kEndMargin = "--end-margin";
+  static const std::string kPreStreaming = "--pre-streaming";
 
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
@@ -360,10 +362,12 @@ void load_option(const Args& args, ProgramFilterOption* opt) {
     opt->end_margin =
         static_cast<ts::MilliSecond>(args.at(kEndMargin).asLong());
   }
+  opt->pre_streaming = args.at(kPreStreaming).asBool();
   MIRAKC_ARIB_INFO(
-      "Program Filter: SID#{:04X} EID#{:04X} Clock({:011X}, {}) Margin({}, {})",
-      opt->sid, opt->eid, opt->clock_pcr, opt->clock_time,
-      opt->start_margin, opt->end_margin);
+      "Program Filter: SID#{:04X} EID#{:04X} Clock({:011X}, {}) Margin({}, {})"
+      " Pre-Streaming({})",
+      opt->sid, opt->eid, opt->clock_pcr, opt->clock_time, opt->start_margin,
+      opt->end_margin, opt->pre_streaming);
 }
 
 std::unique_ptr<PacketSink> make_sink(const Args& args) {

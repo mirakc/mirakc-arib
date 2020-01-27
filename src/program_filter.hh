@@ -21,6 +21,7 @@ struct ProgramFilterOption final {
   ts::Time clock_time;  // JST
   ts::MilliSecond start_margin = 0;  // ms
   ts::MilliSecond end_margin = 0;  // ms
+  bool pre_streaming = false;  // disabled
 };
 
 class ProgramFilter final : public PacketSink,
@@ -97,6 +98,13 @@ class ProgramFilter final : public PacketSink,
   }
 
   bool WaitReady(const ts::TSPacket& packet) {
+    if (option_.pre_streaming) {
+      if (!PreStreamingPackets(packet)) {
+          state_ = kDone;
+          return false;
+        }
+    }
+
     if (!pcr_pid_ready_ || !pcr_range_ready_) {
       return true;
     }
@@ -125,7 +133,13 @@ class ProgramFilter final : public PacketSink,
 
     if (ComparePcr(pcr, start_pcr_) >= 0) {  // pcr >= start_pcr_
       MIRAKC_ARIB_INFO("Reached the start PCR");
-      state_ = kSeekPat;
+      if (option_.pre_streaming) {
+        MIRAKC_ARIB_INFO("Start streaming");
+        state_ = kStreaming;
+      } else {
+        MIRAKC_ARIB_INFO("Seek PAT");
+        state_ = kSeekPat;
+      }
       return true;
     }
 
@@ -232,6 +246,14 @@ class ProgramFilter final : public PacketSink,
       return;
     }
 
+    ecm_pids_.clear();
+    auto i = pmt.descs.search(ts::DID_CA);
+    while (i < pmt.descs.size()) {
+      ts::CADescriptor desc(context_, *pmt.descs[i]);
+      ecm_pids_.insert(desc.ca_pid);
+      i = pmt.descs.search(ts::DID_CA, i + 1);
+    }
+
     pcr_pid_ = pmt.pcr_pid;
     MIRAKC_ARIB_DEBUG("PCR#{:04X}", pcr_pid_);
 
@@ -313,6 +335,22 @@ class ProgramFilter final : public PacketSink,
     return pcr % kPcrUpperBound;
   }
 
+  bool PreStreamingPackets(const ts::TSPacket& packet) {
+    auto pid = packet.getPID();
+    bool do_send = false;
+    if (pid == ts::PID_PAT) {
+      do_send = true;
+    } else if (pmt_pid_ != ts::PID_NULL && pid == pmt_pid_) {
+      do_send = true;
+    } else if (ecm_pids_.find(pid) != ecm_pids_.end()) {
+      do_send = true;
+    }
+    if (do_send) {
+      return sink_->HandlePacket(packet);
+    }
+    return true;
+  }
+
   enum State {
     kWaitReady,
     kSeekPat,
@@ -325,6 +363,7 @@ class ProgramFilter final : public PacketSink,
   ts::SectionDemux demux_;
   std::unique_ptr<PacketSink> sink_;
   State state_ = kWaitReady;
+  std::unordered_set<ts::PID> ecm_pids_;
   ts::PID pmt_pid_ = ts::PID_NULL;
   ts::PID pcr_pid_ = ts::PID_NULL;
   int64_t start_pcr_ = 0;
