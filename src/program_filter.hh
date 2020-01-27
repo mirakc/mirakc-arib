@@ -144,7 +144,7 @@ class ProgramFilter final : public PacketSink,
 
       auto pcr = packet.getPCR();
 
-      if (pcr >= end_pcr_) {
+      if (ComparePcr(pcr, end_pcr_) >= 0) {  // pcr >= end_pcr_
         MIRAKC_ARIB_INFO("Reached the end PCR");
         state_ = kDone;
         return false;
@@ -175,7 +175,7 @@ class ProgramFilter final : public PacketSink,
 
       auto pcr = packet.getPCR();
 
-      if (pcr >= end_pcr_) {
+      if (ComparePcr(pcr, end_pcr_) >= 0) {  // pcr >= end_pcr_
         MIRAKC_ARIB_INFO("Reached the end PCR");
         state_ = kDone;
         return false;
