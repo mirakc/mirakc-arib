@@ -133,7 +133,7 @@ ExternalProject_Add(vendor-fmt
   GIT_REPOSITORY
     https://github.com/fmtlib/fmt.git
   GIT_TAG
-    6.0.0
+    6.1.2
   GIT_SHALLOW
     YES
   CMAKE_ARGS
@@ -176,7 +176,7 @@ ExternalProject_Add(vendor-spdlog
   GIT_REPOSITORY
     https://github.com/gabime/spdlog.git
   GIT_TAG
-    v1.3.1
+    v1.5.0
   GIT_SHALLOW
     YES
   CMAKE_ARGS
@@ -388,7 +388,7 @@ if(MIRAKC_ARIB_TEST)
     GIT_REPOSITORY
       https://github.com/google/googletest.git
     GIT_TAG
-      master
+      release-1.10.0
     GIT_SHALLOW
       YES
     CMAKE_ARGS
