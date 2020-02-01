@@ -92,14 +92,14 @@ class FileSource final : public PacketSource {
       return true;
     }
 
-    if (fill_bytes() < min_bytes) {
-      std::memmove(&buf_[pos_], &buf_[0], avail_bytes);
+    if (max_available_bytes() < min_bytes) {
+      std::memmove(&buf_[0], &buf_[pos_], avail_bytes);
       pos_ = 0;
       end_ = avail_bytes;
     }
 
     while (available_bytes() < min_bytes) {
-      size_t fill_size = kBufferSize - end_;
+      size_t fill_size = free_bytes();
       auto nread = file_->Read(&buf_[end_], fill_size);
       if (nread <= 0) {
         eof_ = true;
@@ -151,7 +151,7 @@ class FileSource final : public PacketSource {
     return end_ - pos_;
   }
 
-  inline size_t fill_bytes() const {
+  inline size_t max_available_bytes() const {
     return kBufferSize - pos_;
   }
 

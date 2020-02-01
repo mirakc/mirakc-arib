@@ -99,6 +99,78 @@ TEST(PacketSourceTest, Resync) {
   src.FeedPackets();
 }
 
+TEST(PacketSourceTest, ResyncFailure) {
+  auto file = std::make_unique<MockFile>();
+  auto sink = std::make_unique<MockSink>();
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*file, Read).WillOnce(
+        [](uint8_t* buf, size_t) {
+          static constexpr size_t kNBytes = 10 * ts::PKT_SIZE;
+          memset(buf, 0, kNBytes);
+          return kNBytes;
+        });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+  }
+
+  EXPECT_CALL(*sink, HandlePacket).Times(0);  // Never called
+
+  FileSource src(std::move(file));
+  src.Connect(std::move(sink));
+  src.FeedPackets();
+}
+
+TEST(PacketSourceTest, WrapAroundWhileResync) {
+  auto file = std::make_unique<MockFile>();
+  auto sink = std::make_unique<MockSink>();
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*file, Read).WillOnce(
+        [](uint8_t* buf, size_t size) {
+          auto nread = size - 2 * ts::PKT_SIZE;
+          for (auto* p = buf; p < buf + nread; p += ts::PKT_SIZE) {
+            ts::NullPacket.copyTo(p);
+          }
+          return nread;
+        });
+    EXPECT_CALL(*sink, HandlePacket)
+        .Times(FileSource::kNumPackets - 2)
+        .WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*file, Read).WillOnce(
+        [](uint8_t* buf, size_t) {
+          buf[0] = 0;
+          buf[1] = ts::SYNC_BYTE;
+          buf[2] = 0;
+          return 3;
+        });
+    EXPECT_CALL(*file, Read).WillOnce(
+        [](uint8_t* buf, size_t) {
+          ts::NullPacket.copyTo(buf);
+          return ts::PKT_SIZE;
+        });
+    EXPECT_CALL(*file, Read).WillOnce(
+        [](uint8_t* buf, size_t) {
+          static constexpr size_t kNBytes = 4 * ts::PKT_SIZE;
+          for (auto* p = buf; p < buf + kNBytes; p += ts::PKT_SIZE) {
+            ts::NullPacket.copyTo(p);
+          }
+          return kNBytes;
+        });
+    EXPECT_CALL(*sink, HandlePacket)
+        .Times(5).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+  }
+
+  FileSource src(std::move(file));
+  src.Connect(std::move(sink));
+  src.FeedPackets();
+}
+
 TEST(PacketSourceTest, ResyncFailedWithEOF) {
   auto file = std::make_unique<MockFile>();
   auto sink = std::make_unique<MockSink>();
