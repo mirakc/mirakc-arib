@@ -72,26 +72,24 @@ class FileSource final : public PacketSource {
       if (!Resync()) {
         return false;
       }
+      MIRAKC_ARIB_ASSERT(buf_[pos_] == ts::SYNC_BYTE);
     }
 
     std::memcpy(packet->b, &buf_[pos_], ts::PKT_SIZE);
     pos_ += ts::PKT_SIZE;
+
+    MIRAKC_ARIB_ASSERT(packet->hasValidSync());
     return true;
   }
 
   inline bool FillBuffer(size_t min_bytes) {
-    // ASSERT(!eof_);
-    // ASSERT(pos_ == end_);
-    // ASSERT(end_ <= kBufferSize);
+    MIRAKC_ARIB_ASSERT(!eof_);
+    MIRAKC_ARIB_ASSERT(pos_ <= end_);
+    MIRAKC_ARIB_ASSERT(end_ <= kBufferSize);
 
     auto avail_bytes = available_bytes();
     if (avail_bytes >= min_bytes) {
       return true;
-    }
-
-    if (eof_) {
-      MIRAKC_ARIB_INFO("Reached EOF");
-      return false;
     }
 
     if (fill_bytes() < min_bytes) {
@@ -105,6 +103,7 @@ class FileSource final : public PacketSource {
       auto nread = file_->Read(&buf_[end_], fill_size);
       if (nread <= 0) {
         eof_ = true;
+        MIRAKC_ARIB_INFO("EOF reached");
         return false;
       }
       end_ += nread;
@@ -117,21 +116,22 @@ class FileSource final : public PacketSource {
     static constexpr size_t kMaxDropBytes = 2 * ts::PKT_SIZE;
     static constexpr size_t kRequiredBytes = kMaxDropBytes + 3 * ts::PKT_SIZE;
 
-    MIRAKC_ARIB_WARN(
-        "Try resync by dropping bytes until a sync byte is found");
+    MIRAKC_ARIB_WARN("Resync...");
 
     if (!FillBuffer(kRequiredBytes)) {
       return false;
     }
 
+    size_t resync_start = pos_;
     size_t resync_end = pos_ + kMaxDropBytes;
+
     while (pos_ < resync_end) {
       if (buf_[pos_] != ts::SYNC_BYTE) {
         pos_++;
         continue;
       }
       if (ValidateResync()) {
-        MIRAKC_ARIB_WARN("Resynced, {} bytes dropped", pos_);
+        MIRAKC_ARIB_WARN("Resynced, {} bytes dropped", pos_ - resync_start);
         return true;
       }
       pos_++;
