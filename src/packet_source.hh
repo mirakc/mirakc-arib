@@ -134,6 +134,7 @@ class FileSource final : public PacketSource {
         MIRAKC_ARIB_WARN("Resynced, {} bytes dropped", pos_);
         return true;
       }
+      pos_++;
     }
 
     MIRAKC_ARIB_ERROR("Resync failed");

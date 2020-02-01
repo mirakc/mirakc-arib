@@ -76,7 +76,9 @@ TEST(PacketSourceTest, Resync) {
     EXPECT_CALL(*file, Read).WillOnce(
         [](uint8_t* buf, size_t) {
           buf[0] = 0;
-          return 1;
+          buf[1] = ts::SYNC_BYTE;
+          buf[2] = 0;
+          return 3;
         });
     EXPECT_CALL(*file, Read).WillOnce(
         [](uint8_t* buf, size_t) {
