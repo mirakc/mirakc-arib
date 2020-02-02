@@ -35,7 +35,7 @@ Usage:
   {0} filter-program --sid=<SID> --eid=<EID>
         --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
         [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
-  {0} sync-clock [FILE]
+  {0} sync-clocks [FILE]
 
 Options:
   -h --help                    Print help.
@@ -211,13 +211,13 @@ filter-program:
       start-time    start-time         end-time           end-time
       of streaming  of the TV program  of the TV program  of streaming
 
-sync-clock:
-  `sync-clock` synchronizes PCR for each service and TDT/TOT with accuracy
+sync-clocks:
+  `sync-clocks` synchronizes PCR for each service and TDT/TOT with accuracy
   within 1 second.
 
-  `sync-clock` outputs the result in the following JSON format:
+  `sync-clocks` outputs the result in the following JSON format:
 
-    $ recdvb 27 - - 2>/dev/null | {0} sync-clock | jq .[0]
+    $ recdvb 27 - - 2>/dev/null | {0} sync-clocks | jq .[0]
     {{
       "nid": 32736,
       "tsid": 32736,
@@ -236,7 +236,7 @@ sync-clock:
     clock.time
       TDT/TOT time in the 64 bits UNIX time format in milliseconds
 
-  `sync-clock` collects PCR for each service whose type is included in the
+  `sync-clocks` collects PCR for each service whose type is included in the
   following list:
 
     * 0x01 (Digital television service)
@@ -310,8 +310,8 @@ void init(const Args& args) {
     InitLogger("filter-service");
   } else if (args.at("filter-program").asBool()) {
     InitLogger("filter-program");
-  } else if (args.at("sync-clock").asBool()) {
-    InitLogger("sync-clock");
+  } else if (args.at("sync-clocks").asBool()) {
+    InitLogger("sync-clocks");
   }
 
   ts::DVBCharset::EnableARIBMode();
@@ -399,7 +399,7 @@ std::unique_ptr<PacketSink> make_sink(const Args& args) {
     filter->Connect(std::move(program_filter));
     return filter;
   }
-  if (args.at("sync-clock").asBool()) {
+  if (args.at("sync-clocks").asBool()) {
     auto sync = std::make_unique<PcrSynchronizer>();
     sync->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return sync;
