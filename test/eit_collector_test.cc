@@ -22,7 +22,30 @@ TEST(EitCollectorTest, NoPacket) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  src.FeedPackets();
+  EXPECT_FALSE(src.FeedPackets());
+}
+
+TEST(EitCollectorTest, TimedOut) {
+  EitCollectorOption option;
+  option.time_limit = 5000;
+
+  TableSource src;
+  auto collector = std::make_unique<EitCollector>(kEmptyOption);
+  auto sink = std::make_unique<MockJsonlSink>();
+
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <TOT UTC_time="2020-02-05 00:00:00" test-pid="0x0014" test-cc="0" />
+      <TOT UTC_time="2020-02-05 00:00:05" test-pid="0x0014" test-cc="1" />
+    </tsduck>
+  )");
+
+  EXPECT_CALL(*sink, HandleDocument).Times(0);
+
+  collector->Connect(std::move(sink));
+  src.Connect(std::move(collector));
+  EXPECT_FALSE(src.FeedPackets());
 }
 
 // TODO: Add more tests here.

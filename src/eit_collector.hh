@@ -20,6 +20,7 @@ namespace {
 struct EitCollectorOption final {
   SidSet sids;
   SidSet xsids;
+  ts::MilliSecond time_limit = 30 * ts::MilliSecPerSec;  // 30s
 };
 
 struct EitSection {
@@ -35,14 +36,11 @@ struct EitSection {
   uint8_t version;
   const uint8_t* events_data;
   size_t events_size;
-  bool has_timestamp;
-  ts::Time timestamp;
 
   static constexpr size_t EIT_PAYLOAD_FIXED_SIZE = 6;
   static constexpr size_t EIT_EVENT_FIXED_SIZE = 12;
 
-  EitSection(const ts::Section& section, bool has_timestamp,
-             const ts::Time& timestamp) {
+  EitSection(const ts::Section& section) {
     const auto* data = section.payload();
     auto size = section.payloadSize();
 
@@ -58,8 +56,6 @@ struct EitSection {
     version = section.version();
     events_data = data + EIT_PAYLOAD_FIXED_SIZE;
     events_size = size - EIT_PAYLOAD_FIXED_SIZE;
-    this->has_timestamp = has_timestamp;
-    this->timestamp = timestamp;
   }
 
   inline uint64_t service_triple() const {
@@ -128,12 +124,6 @@ class TableProgress {
     if (!CheckConsistency(eit)) {
       Reset();
     }
-    if (eit.table_index() == 0 && eit.has_timestamp) {
-      size_t segment = ((ts::Time::Fields)(eit.timestamp)).hour / 3;
-      for (size_t i = 0; i < segment; ++i) {
-        unused_[i] = 0xFF;
-      }
-    }
 
     for (auto i = eit.last_segment_index() + 1; i < kNumSegments; ++i) {
       unused_[i] = 0xFF;
@@ -154,6 +144,13 @@ class TableProgress {
     }
 
     completed_ = CheckCompleted();
+  }
+
+  void UpdateUnused(const ts::Time& timestamp) {
+    size_t segment = ((ts::Time::Fields)(timestamp)).hour / 3;
+    for (size_t i = 0; i < segment; ++i) {
+      unused_[i] = 0xFF;
+    }
   }
 
   bool CheckCollected(const EitSection& eit) const {
@@ -298,6 +295,10 @@ class TableGroupProgress {
     completed_ = CheckCompleted();
   }
 
+  inline void UpdateUnused(const ts::Time& timestamp) {
+    tables_[0].UpdateUnused(timestamp);
+  }
+
   bool CheckCollected(const EitSection& eit) const {
     if (last_table_index_ < 0) {
       return false;
@@ -380,6 +381,11 @@ class ServiceProgress {
     }
   }
 
+  inline void UpdateUnused(const ts::Time& timestamp) {
+    basic_.UpdateUnused(timestamp);
+    extra_.UpdateUnused(timestamp);
+  }
+
   bool CheckCollected(const EitSection& eit) const {
     if (eit.IsBasic()) {
       return basic_.CheckCollected(eit);
@@ -420,6 +426,12 @@ class CollectProgress {
   void Update(const EitSection& eit) {
     services_[eit.service_triple()].Update(eit);
     completed_ = CheckCompleted();
+  }
+
+  void UpdateUnused(const ts::Time& timestamp) {
+    for (auto& pair : services_) {
+      pair.second.UpdateUnused(timestamp);
+    }
   }
 
   bool CheckCollected(const EitSection& eit) const {
@@ -507,13 +519,17 @@ class EitCollector final : public PacketSink,
     MIRAKC_ARIB_INFO(
         "Collected {} services, {} sections, {}:{:02d}.{:03d} elapsed",
         progress_.CountServices(), progress_.CountSections(), min, sec, ms);
-    return true;
+    return IsCompleted();
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {
     demux_.feedPacket(packet);
     if (IsCompleted()) {
       MIRAKC_ARIB_INFO("Completed");
+      return false;
+    }
+    if (CheckTimeout()) {
+      MIRAKC_ARIB_ERROR("Timed out");
       return false;
     }
     return true;
@@ -541,7 +557,7 @@ class EitCollector final : public PacketSink,
       return;
     }
 
-    EitSection eit(section, has_timestamp_, timestamp_);
+    EitSection eit(section);
     if (!option_.sids.IsEmpty() && !option_.sids.Contain(eit.sid)) {
       MIRAKC_ARIB_DEBUG(
           "Ignore SID#{:04X} according to the inclusion list", eit.sid);
@@ -589,9 +605,10 @@ class EitCollector final : public PacketSink,
       return;
     }
 
-    has_timestamp_ = true;
     timestamp_ = tdt.utc_time;
     MIRAKC_ARIB_INFO("TDT: {}", timestamp_);
+
+    progress_.UpdateUnused(timestamp_);
   }
 
   inline void HandleTot(const ts::BinaryTable& table) {
@@ -602,9 +619,10 @@ class EitCollector final : public PacketSink,
       return;
     }
 
-    has_timestamp_ = true;
     timestamp_ = tot.utc_time;
     MIRAKC_ARIB_INFO("TOT: {}", timestamp_);
+
+    progress_.UpdateUnused(timestamp_);
   }
 
   inline bool CheckCollected(const EitSection& eit) const {
@@ -855,6 +873,7 @@ class EitCollector final : public PacketSink,
   }
 
   void UpdateProgress(const EitSection& eit) {
+    last_updated_ = timestamp_;
     progress_.Update(eit);
     if (show_progress_) {
       progress_.Show();
@@ -865,6 +884,11 @@ class EitCollector final : public PacketSink,
     return progress_.IsCompleted();
   }
 
+  inline bool CheckTimeout() const {
+    auto elapsed = last_updated_ - timestamp_;
+    return elapsed >= option_.time_limit;
+  }
+
   inline void EnableShowProgress() {
     show_progress_ = true;
   }
@@ -872,11 +896,11 @@ class EitCollector final : public PacketSink,
   const EitCollectorOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
-  bool has_timestamp_ = false;
   ts::Time timestamp_;  // JST
+  ts::Time last_updated_;  // JST
   CollectProgress progress_;
   bool show_progress_ = false;
-  ts::Time start_time_;
+  ts::Time start_time_;  // UTC
 
   MIRAKC_ARIB_NON_COPYABLE(EitCollector);
 };

@@ -32,7 +32,8 @@ Usage:
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
-  mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...] [FILE]
+  mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...]
+                           [--time-limit=<MS>] [FILE]
   mirakc-arib filter-service --sid=<SID> [FILE]
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
               --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
@@ -176,7 +177,8 @@ static const std::string kCollectEitsHelp = R"(
 Collect EIT sections
 
 Usage:
-  mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...] [FILE]
+  mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...]
+                           [--time-limit=<MS>] [FILE]
 
 Options:
   -h --help
@@ -187,6 +189,13 @@ Options:
 
   --xsids=<SID>
     Service ID which must be excluded.
+
+  --time-limit=<MS> [default: 30000]
+    Stop collecting if there is no progress for the specified time (ms).
+    Elapsed time is computed using TDT/TOT.
+
+    It makes no sence to specify a time limit less than 5 seconds.  Because TOT
+    comes every 5 seconds in Japan.
 
 Arguments:
   FILE
@@ -355,10 +364,10 @@ Options:
   --clock-time=<UNIX-TIME-MS>
     UNIX time (ms) correspoinding to the PCR value.
 
-  --start-margin=<MS>
+  --start-margin=<MS> [default: 0]
     Offset (ms) from the start time of the event toward the past.
 
-  --end-margin=<MS>
+  --end-margin=<MS> [default: 0]
     Offset (ms) from the end time of the event toward the future.
 
   --pre-streaming
@@ -455,7 +464,7 @@ void LoadSidSet(const Args& args, const std::string& name, SidSet* sids) {
   }
 }
 
-void LoadOptions(const Args& args, ServiceFilterOption* opt) {
+void LoadOption(const Args& args, ServiceFilterOption* opt) {
   static const std::string kSid = "--sid";
 
   if (args.at(kSid)) {
@@ -464,6 +473,18 @@ void LoadOptions(const Args& args, ServiceFilterOption* opt) {
       MIRAKC_ARIB_INFO("Service Filter: SID#{:04X}", opt->sid);
     }
   }
+}
+
+void LoadOption(const Args& args, EitCollectorOption* opt) {
+  static const std::string kTimeLimit = "--time-limit";
+
+  LoadSidSet(args, "--sids", &opt->sids);
+  LoadSidSet(args, "--xsids", &opt->xsids);
+  if (args.at(kTimeLimit)) {
+    opt->time_limit =
+        static_cast<ts::MilliSecond>(args.at(kTimeLimit).asLong());
+  }
+  MIRAKC_ARIB_INFO("Time-Limit: {}", opt->time_limit);
 }
 
 void LoadOption(const Args& args, ProgramFilterOption* opt) {
@@ -515,22 +536,21 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
   }
   if (args.at(kCollectEits).asBool()) {
     EitCollectorOption option;
-    LoadSidSet(args, "--sids", &option.sids);
-    LoadSidSet(args, "--xsids", &option.xsids);
+    LoadOption(args, &option);
     auto collector = std::make_unique<EitCollector>(option);
     collector->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return collector;
   }
   if (args.at(kFilterService).asBool()) {
     ServiceFilterOption service_option;
-    LoadOptions(args, &service_option);
+    LoadOption(args, &service_option);
     auto filter = std::make_unique<ServiceFilter>(service_option);
     filter->Connect(std::make_unique<StdoutSink>());
     return filter;
   }
   if (args.at(kFilterProgram).asBool()) {
     ServiceFilterOption service_option;
-    LoadOptions(args, &service_option);
+    LoadOption(args, &service_option);
     auto filter = std::make_unique<ServiceFilter>(service_option);
     ProgramFilterOption program_option;
     LoadOption(args, &program_option);
