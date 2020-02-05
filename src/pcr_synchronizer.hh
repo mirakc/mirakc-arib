@@ -15,12 +15,18 @@
 
 namespace {
 
+struct PcrSynchronizerOption final {
+  SidSet sids;
+  SidSet xsids;
+};
+
 class PcrSynchronizer final : public PacketSink,
                               public JsonlSource,
                               public ts::TableHandlerInterface {
  public:
-  PcrSynchronizer()
-      : demux_(context_) {
+  PcrSynchronizer(const PcrSynchronizerOption& option)
+      : option_(option),
+        demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
   }
@@ -131,6 +137,16 @@ class PcrSynchronizer final : public PacketSink,
     }
 
     for (const auto& [sid, pmt_pid] : pat.pmts) {
+      if (!option_.sids.IsEmpty() && !option_.sids.Contain(sid)) {
+        MIRAKC_ARIB_DEBUG(
+            "Ignore SID{:04X} according to the inclusion list", sid);
+        continue;
+      }
+      if (!option_.xsids.IsEmpty() && option_.xsids.Contain(sid)) {
+        MIRAKC_ARIB_DEBUG(
+            "Ignore SID{:04X} according to the exclusion list", sid);
+        continue;
+      }
       pmt_pids_[sid] = pmt_pid;
     }
 
@@ -242,6 +258,7 @@ class PcrSynchronizer final : public PacketSink,
     done_ = false;
   }
 
+  const PcrSynchronizerOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
   std::map<uint16_t, ts::PID> pmt_pids_;  // SID -> PID of PMT

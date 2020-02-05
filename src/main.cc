@@ -23,41 +23,70 @@ namespace {
 
 static const std::string kVersion = "0.1.0";
 
-static const char kUsageTemplate[] = R"(
+static const std::string kUsage = R"(
 Tools to process ARIB TS streams.
 
 Usage:
-  {0} -h | --help
-  {0} --version
-  {0} scan-services [FILE]
-  {0} collect-eits [FILE]
-  {0} filter-service --sid=<SID> [FILE]
-  {0} filter-program --sid=<SID> --eid=<EID>
-        --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
-        [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
-  {0} sync-clocks [FILE]
+  mirakc-arib (-h | --help) [(scan-services | sync-clocks | collect-eits |
+                              filter-service | filter-program)]
+  mirakc-arib --version
+  mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
+  mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
+  mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...] [FILE]
+  mirakc-arib filter-service --sid=<SID> [FILE]
+  mirakc-arib filter-program --sid=<SID> --eid=<EID>
+              --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
+              [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
+
+Description:
+  `mirakc-arib <sub-command> -h` shows help for each sub-command.
+
+Logging:
+  mirakc-arib doesn't output any log message by default.  The MIRAKC_ARIB_LOG
+  environment variable is used for changing the logging level.
+
+  The following command outputs info-level log messages to STDERR:
+
+    $ recdvb 26 - - 2>/dev/null | \
+        MIRAKC_ARIB_LOG=info mirakc-arib scan-services >/dev/null
+    [2019-08-11 22:58:31.989] [scan-services] [info] Read packets from STDIN...
+    [2019-08-11 22:58:31.990] [scan-services] [info] Feed packets...
+    [2019-08-11 22:58:34.840] [scan-services] [info] PAT ready
+    [2019-08-11 22:58:35.574] [scan-services] [info] SDT ready
+    [2019-08-11 22:58:35.709] [scan-services] [info] NIT ready
+    [2019-08-11 22:58:35.709] [scan-services] [info] Ready to collect services
+
+  mirakc-arib uses spdlog for logging.  See the document of spdlog for details
+  about log levels.
+)";
+
+static const std::string kScanServices = "scan-services";
+
+static const std::string kScanServicesHelp = R"(
+Scan services
+
+Usage:
+  mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
 
 Options:
-  -h --help                    Print help.
-  --version                    Print version.
-  --sid=<SID>                  Service ID.
-  --eid=<EID>                  Event ID of a TV program.
-  --clock-pcr=<PCR>            27MHz, 42bits PCR value.
-  --clock-time=<UNIX-TIME-MS>  UNIX time (ms) correspoinding to the PCR value.
-  --start-margin=<MS>          Offset (ms) from the start time of the event
-                               toward the past.
-  --end-margin=<MS>            Offset (ms) from the end time of the event
-                               toward the future.
-  --pre-streaming              Output PSI/SI packets before start.
+  -h --help
+    Print help.
+
+  --sids=<SID>
+    Service ID which must be included.
+
+  --xsids=<SID>
+    Service ID which must be excluded.
 
 Arguments:
-  FILE                         Path to a TS file.
+  FILE
+    Path to a TS file.
 
-scan-services:
+Description:
   `scan-services` scans services in a TS stream.  Results will be output to
   STDOUT in the following JSON format:
 
-    $ recdvb 27 - - 2>/dev/null | {0} scan-services | jq .[0]
+    $ recdvb 27 - - 2>/dev/null | mirakc-arib scan-services | jq .[0]
     {{
       "nid": 32736,
       "tsid": 32736,
@@ -81,11 +110,93 @@ scan-services:
   Scanning logo data has not been supported at this moment.  So, values of the
   `logoId` and `hasLogoData` are always `-1` and `false` respectively.
 
-collect-eits:
+)";
+
+static const std::string kSyncClocks = "sync-clocks";
+
+static const std::string kSyncClocksHelp = R"(
+Synchrohize PCR and TOT/TDT
+
+Usage:
+  mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
+
+Options:
+  -h --help
+    Print help.
+
+  --sids=<SID>
+    Service ID which must be included.
+
+  --xsids=<SID>
+    Service ID which must be excluded.
+
+Arguments:
+  FILE
+    Path to a TS file.
+
+Description:
+  `sync-clocks` synchronizes PCR for each service and TDT/TOT with accuracy
+  within 1 second.
+
+  `sync-clocks` outputs the result in the following JSON format:
+
+    $ recdvb 27 - - 2>/dev/null | mirakc-arib sync-clocks | jq .[0]
+    {{
+      "nid": 32736,
+      "tsid": 32736,
+      "sid": 1024,
+      "clock": {{
+        "pcr": 744077003262,
+        "time": 1576398518000
+      }}
+    }}
+
+  where:
+
+    clock.pcr
+      27MHz, 42 bits PCR value correspoinding to `clock.time`
+
+    clock.time
+      TDT/TOT time in the 64 bits UNIX time format in milliseconds
+
+  `sync-clocks` collects PCR for each service whose type is included in the
+  following list:
+
+    * 0x01 (Digital television service)
+    * 0x02 (Digital audio service)
+    * 0xA1 (Special video service)
+    * 0xA2 (Special audio service)
+    * 0xA5 (Promotion video service)
+    * 0xA6 (Promotion audio service)
+)";
+
+static const std::string kCollectEits = "collect-eits";
+
+static const std::string kCollectEitsHelp = R"(
+Collect EIT sections
+
+Usage:
+  mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...] [FILE]
+
+Options:
+  -h --help
+    Print help.
+
+  --sids=<SID>
+    Service ID which must be included.
+
+  --xsids=<SID>
+    Service ID which must be excluded.
+
+Arguments:
+  FILE
+    Path to a TS file.
+
+Description:
   `collect-eits` collects EIT sections from a TS stream.  Results will be output
   to STDOUT in the following JSONL format:
 
-    $ recdvb 27 10 - 2>/dev/null | {0} collect-eits | head -1 | jq .
+    $ recdvb 27 10 - 2>/dev/null | mirakc-arib collect-eits | head -1 | jq .
     {{
       "originalNetworkId": 32736,
       "transportStreamId": 32736,
@@ -163,8 +274,28 @@ collect-eits:
         ...
       ]
     }}
+)";
 
-filter-service:
+static const std::string kFilterService = "filter-service";
+
+static const std::string kFilterServiceHelp = R"(
+Service filter
+
+Usage:
+  mirakc-arib filter-service --sid=<SID> [FILE]
+
+Options:
+  -h --help
+    Print help.
+
+  --sid=<SID>
+    Service ID.
+
+Arguments:
+  FILE
+    Path to a TS file.
+
+Description:
   `filter-service` drops packets in a TS stream, which are not related to the
   specified service ID (SID).
 
@@ -196,8 +327,48 @@ filter-service:
     * SDTT (PID=0x0023,0x0028)
     * DCM-CC for BML (PID specified in PMT)
     * PES private data (PID specified in PMT)
+)";
 
-filter-program:
+static const std::string kFilterProgram = "filter-program";
+
+static const std::string kFilterProgramHelp = R"(
+Program filter
+
+Usage:
+  mirakc-arib filter-program --sid=<SID> --eid=<EID>
+              --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
+              [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
+
+Options:
+  -h --help
+    Print help.
+
+  --sid=<SID>
+    Service ID.
+
+  --eid=<EID>
+    Event ID of a TV program.
+
+  --clock-pcr=<PCR>
+    27MHz, 42bits PCR value.
+
+  --clock-time=<UNIX-TIME-MS>
+    UNIX time (ms) correspoinding to the PCR value.
+
+  --start-margin=<MS>
+    Offset (ms) from the start time of the event toward the past.
+
+  --end-margin=<MS>
+    Offset (ms) from the end time of the event toward the future.
+
+  --pre-streaming
+    Output PSI/SI packets before start.
+
+Arguments:
+  FILE
+    Path to a TS file.
+
+Description:
   `filter-program` performs the same processing as `filter-service`, but also
   outputs packets only while a specified TV program is being broadcast.
 
@@ -210,59 +381,6 @@ filter-program:
         |             |                       |           |
       start-time    start-time         end-time           end-time
       of streaming  of the TV program  of the TV program  of streaming
-
-sync-clocks:
-  `sync-clocks` synchronizes PCR for each service and TDT/TOT with accuracy
-  within 1 second.
-
-  `sync-clocks` outputs the result in the following JSON format:
-
-    $ recdvb 27 - - 2>/dev/null | {0} sync-clocks | jq .[0]
-    {{
-      "nid": 32736,
-      "tsid": 32736,
-      "sid": 1024,
-      "clock": {{
-        "pcr": 744077003262,
-        "time": 1576398518000
-      }}
-    }}
-
-  where:
-
-    clock.pcr
-      27MHz, 42 bits PCR value correspoinding to `clock.time`
-
-    clock.time
-      TDT/TOT time in the 64 bits UNIX time format in milliseconds
-
-  `sync-clocks` collects PCR for each service whose type is included in the
-  following list:
-
-    * 0x01 (Digital television service)
-    * 0x02 (Digital audio service)
-    * 0xA1 (Special video service)
-    * 0xA2 (Special audio service)
-    * 0xA5 (Promotion video service)
-    * 0xA6 (Promotion audio service)
-
-Logging:
-  {0} doesn't output any log message by default.  The MIRAKC_ARIB_LOG
-  environment variable is used for changing the logging level.
-
-  The following command outputs info-level log messages to STDERR:
-
-    $ recdvb 26 - - 2>/dev/null | \
-        MIRAKC_ARIB_LOG=info {0} scan-services >/dev/null
-    [2019-08-11 22:58:31.989] [scan-services] [info] Read packets from STDIN...
-    [2019-08-11 22:58:31.990] [scan-services] [info] Feed packets...
-    [2019-08-11 22:58:34.840] [scan-services] [info] PAT ready
-    [2019-08-11 22:58:35.574] [scan-services] [info] SDT ready
-    [2019-08-11 22:58:35.709] [scan-services] [info] NIT ready
-    [2019-08-11 22:58:35.709] [scan-services] [info] Ready to collect services
-
-  {0} uses spdlog for logging.  See the document of spdlog for details about
-  log levels.
 )";
 
 class PosixFile final : public File {
@@ -301,23 +419,23 @@ class PosixFile final : public File {
   bool need_close_ = false;
 };
 
-void init(const Args& args) {
-  if (args.at("scan-services").asBool()) {
-    InitLogger("scan-services");
-  } else if (args.at("collect-eits").asBool()) {
-    InitLogger("collect-eits");
-  } else if (args.at("filter-service").asBool()) {
-    InitLogger("filter-service");
-  } else if (args.at("filter-program").asBool()) {
-    InitLogger("filter-program");
-  } else if (args.at("sync-clocks").asBool()) {
-    InitLogger("sync-clocks");
+void Init(const Args& args) {
+  if (args.at(kScanServices).asBool()) {
+    InitLogger(kScanServices);
+  } else if (args.at(kSyncClocks).asBool()) {
+    InitLogger(kSyncClocks);
+  } else if (args.at(kCollectEits).asBool()) {
+    InitLogger(kCollectEits);
+  } else if (args.at(kFilterService).asBool()) {
+    InitLogger(kFilterService);
+  } else if (args.at(kFilterProgram).asBool()) {
+    InitLogger(kFilterProgram);
   }
 
   ts::DVBCharset::EnableARIBMode();
 }
 
-std::unique_ptr<PacketSource> make_source(const Args& args) {
+std::unique_ptr<PacketSource> MakePacketSource(const Args& args) {
   static const std::string kFILE = "FILE";
 
   std::string path = args.at(kFILE).isString() ? args.at(kFILE).asString() : "";
@@ -329,7 +447,15 @@ ts::Time ConvertUnixTimeToJstTime(ts::MilliSecond unix_time_ms) {
   return ts::Time::UnixEpoch + unix_time_ms + kJstTzOffset;
 }
 
-void set_options(const Args& args, ServiceFilterOption* opt) {
+void LoadSidSet(const Args& args, const std::string& name, SidSet* sids) {
+  if (args.at(name)) {
+    auto list = args.at(name).asStringList();
+    sids->Add(list);
+    MIRAKC_ARIB_INFO("{} SIDs: {}", name, fmt::join(list, ", "));
+  }
+}
+
+void LoadOptions(const Args& args, ServiceFilterOption* opt) {
   static const std::string kSid = "--sid";
 
   if (args.at(kSid)) {
@@ -340,7 +466,7 @@ void set_options(const Args& args, ServiceFilterOption* opt) {
   }
 }
 
-void load_option(const Args& args, ProgramFilterOption* opt) {
+void LoadOption(const Args& args, ProgramFilterOption* opt) {
   static const std::string kSid = "--sid";
   static const std::string kEid = "--eid";
   static const std::string kClockPcr = "--clock-pcr";
@@ -370,55 +496,87 @@ void load_option(const Args& args, ProgramFilterOption* opt) {
       opt->end_margin, opt->pre_streaming);
 }
 
-std::unique_ptr<PacketSink> make_sink(const Args& args) {
-  if (args.at("scan-services").asBool()) {
-    auto scanner = std::make_unique<ServiceScanner>();
+std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
+  if (args.at(kScanServices).asBool()) {
+    ServiceScannerOption option;
+    LoadSidSet(args, "--sids", &option.sids);
+    LoadSidSet(args, "--xsids", &option.xsids);
+    auto scanner = std::make_unique<ServiceScanner>(option);
     scanner->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return scanner;
   }
-  if (args.at("collect-eits").asBool()) {
-    auto collector = std::make_unique<EitCollector>();
+  if (args.at(kSyncClocks).asBool()) {
+    PcrSynchronizerOption option;
+    LoadSidSet(args, "--sids", &option.sids);
+    LoadSidSet(args, "--xsids", &option.xsids);
+    auto sync = std::make_unique<PcrSynchronizer>(option);
+    sync->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
+    return sync;
+  }
+  if (args.at(kCollectEits).asBool()) {
+    EitCollectorOption option;
+    LoadSidSet(args, "--sids", &option.sids);
+    LoadSidSet(args, "--xsids", &option.xsids);
+    auto collector = std::make_unique<EitCollector>(option);
     collector->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return collector;
   }
-  if (args.at("filter-service").asBool()) {
+  if (args.at(kFilterService).asBool()) {
     ServiceFilterOption service_option;
-    set_options(args, &service_option);
+    LoadOptions(args, &service_option);
     auto filter = std::make_unique<ServiceFilter>(service_option);
     filter->Connect(std::make_unique<StdoutSink>());
     return filter;
   }
-  if (args.at("filter-program").asBool()) {
+  if (args.at(kFilterProgram).asBool()) {
     ServiceFilterOption service_option;
-    set_options(args, &service_option);
+    LoadOptions(args, &service_option);
     auto filter = std::make_unique<ServiceFilter>(service_option);
     ProgramFilterOption program_option;
-    load_option(args, &program_option);
+    LoadOption(args, &program_option);
     auto program_filter = std::make_unique<ProgramFilter>(program_option);
     program_filter->Connect(std::make_unique<StdoutSink>());
     filter->Connect(std::move(program_filter));
     return filter;
   }
-  if (args.at("sync-clocks").asBool()) {
-    auto sync = std::make_unique<PcrSynchronizer>();
-    sync->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
-    return sync;
-  }
   return std::unique_ptr<PacketSink>();
+}
+
+void ShowHelp(const Args& args, const std::string& prog_name) {
+  if (args.at(kScanServices).asBool()) {
+    fmt::print(kScanServicesHelp, prog_name);
+  } else if (args.at(kSyncClocks).asBool()) {
+    fmt::print(kSyncClocksHelp, prog_name);
+  } else if (args.at(kCollectEits).asBool()) {
+    fmt::print(kCollectEitsHelp, prog_name);
+  } else if (args.at(kFilterService).asBool()) {
+    fmt::print(kFilterServiceHelp, prog_name);
+  } else if (args.at(kFilterProgram).asBool()) {
+    fmt::print(kFilterProgramHelp, prog_name);
+  } else {
+    fmt::print(kUsage, prog_name);
+  }
 }
 
 }  // namespace
 
 int main(int argc, char* argv[]) {
-  auto usage = fmt::format(kUsageTemplate, argv[0]);
+  std::string prog_name = argv[0];
+
+  auto usage = fmt::format(kUsage, prog_name);
 
   auto args =
-      docopt::docopt(trim(usage), { argv + 1, argv + argc }, true, kVersion);
+      docopt::docopt(usage, { argv + 1, argv + argc }, false, kVersion);
 
-  init(args);
+  if (args.at("-h").asBool() || args.at("--help").asBool()) {
+    ShowHelp(args, prog_name);
+    return EXIT_SUCCESS;
+  }
 
-  auto src = make_source(args);
-  src->Connect(make_sink(args));
+  Init(args);
+
+  auto src = MakePacketSource(args);
+  src->Connect(MakePacketSink(args));
   auto success = src->FeedPackets();
 
   return success ? EXIT_SUCCESS : EXIT_FAILURE;

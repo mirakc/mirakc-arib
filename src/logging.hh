@@ -16,7 +16,7 @@ inline spdlog::level::level_enum GetLogLevel() {
   return spdlog::level::from_str(std::string(v));
 }
 
-inline void InitLogger(const char* name) {
+inline void InitLogger(const std::string& name) {
   auto logger = spdlog::stderr_color_st(name);
   spdlog::set_default_logger(logger);
   spdlog::set_level(GetLogLevel());
