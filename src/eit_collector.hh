@@ -544,12 +544,12 @@ class EitCollector final : public PacketSink,
     EitSection eit(section, has_timestamp_, timestamp_);
     if (!option_.sids.IsEmpty() && !option_.sids.Contain(eit.sid)) {
       MIRAKC_ARIB_DEBUG(
-          "Ignore SID{:04X} according to the inclusion list", eit.sid);
+          "Ignore SID#{:04X} according to the inclusion list", eit.sid);
       return;
     }
     if (!option_.xsids.IsEmpty() && option_.xsids.Contain(eit.sid)) {
       MIRAKC_ARIB_DEBUG(
-          "Ignore SID{:04X} according to the exclusion list", eit.sid);
+          "Ignore SID#{:04X} according to the exclusion list", eit.sid);
       return;
     }
     if (CheckCollected(eit)) {

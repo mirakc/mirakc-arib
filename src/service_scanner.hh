@@ -141,13 +141,13 @@ class ServiceScanner final : public PacketSink,
 
       if (!option_.sids.IsEmpty() && !option_.sids.Contain(sid)) {
         MIRAKC_ARIB_DEBUG(
-            "Ignore SID{:04X} according to the inclusion list", sid);
+            "Ignore SID#{:04X} according to the inclusion list", sid);
         continue;
       }
 
       if (!option_.xsids.IsEmpty() && option_.xsids.Contain(sid)) {
         MIRAKC_ARIB_DEBUG(
-            "Ignore SID{:04X} according to the exclusion list", sid);
+            "Ignore SID#{:04X} according to the exclusion list", sid);
         continue;
       }
 
