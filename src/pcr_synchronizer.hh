@@ -75,13 +75,18 @@ class PcrSynchronizer final : public PacketSink,
 
     if (started_) {
       if (pcr_pids_.count(pid) == 1 && pcr_map_.find(pid) == pcr_map_.end()) {
-        MIRAKC_ARIB_ASSERT(packet.hasPCR());
-        auto pcr = static_cast<int64_t>(packet.getPCR());
-        MIRAKC_ARIB_INFO("PCR#{:04X}: {}", pid, FormatPcr(pcr));
-        pcr_map_[pid] = pcr;
-        if (pcr_map_.size() == pcr_pids_.size()) {
-          done_ = true;
-          return false;
+        if (packet.hasPCR()) {
+          auto pcr = static_cast<int64_t>(packet.getPCR());
+          MIRAKC_ARIB_INFO("PCR#{:04X}: {}", pid, FormatPcr(pcr));
+          pcr_map_[pid] = pcr;
+          if (pcr_map_.size() == pcr_pids_.size()) {
+            done_ = true;
+            return false;
+          }
+        } else {
+          // Many PCR packets in a specific CS channel have no PCR...
+          // See https://github.com/masnagam/mirakc-arib/issues/3
+          MIRAKC_ARIB_DEBUG("PCR#{:04X} has no PCR...", pid);
         }
       }
     }

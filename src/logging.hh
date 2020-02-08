@@ -36,8 +36,14 @@ inline void InitLogger(const std::string& name) {
 #define MIRAKC_ARIB_ERROR(...) MIRAKC_ARIB_LOG(spdlog::level::err, __VA_ARGS__)
 
 #define MIRAKC_ARIB_ASSERT(cond) \
-  ((cond) ? (void)0 : (MIRAKC_ARIB_LOG( \
-      spdlog::level::critical, "Assertion failed: " #cond), std::abort()))
+  ((cond) ? (void)0 : \
+   (MIRAKC_ARIB_LOG(spdlog::level::critical, \
+                    "Assertion failed: " #cond), std::abort()))
+
+#define MIRAKC_ARIB_ASSERT_MSG(cond, ...) \
+  ((cond) ? (void)0 : \
+   (MIRAKC_ARIB_LOG(spdlog::level::critical, \
+                    "Assertion failed: " #cond ": " __VA_ARGS__), std::abort()))
 
 #define MIRAKC_ARIB_NEVER_REACH(...) \
   (MIRAKC_ARIB_LOG(spdlog::level::critical, __VA_ARGS__), std::abort())
