@@ -271,7 +271,7 @@ ExternalProject_Add(vendor-aribb24
     ./configure
       --prefix=${MIRAKC_ARIB_VENDOR_DIR}
       --disable-shared --with-pic --without-libpng
-      $<$<BOOL:CMAKE_CROSSCOMPILING>:--host=${MIRAKC_ARIB_HOST_TRIPLE}>
+      $<$<BOOL:CMAKE_CROSSCOMPILING>:--host=${CMAKE_C_COMPILER_TARGET}>
   BUILD_COMMAND
     make -j ${NPROC}
   EXCLUDE_FROM_ALL
@@ -318,7 +318,7 @@ if(CMAKE_CROSSCOMPILING)
     CC=${CMAKE_C_COMPILER}
     GCC=${CMAKE_C_COMPILER}
     CXX=${CMAKE_CXX_COMPILER}
-    LD=${MIRAKC_ARIB_HOST_TRIPLE}-ld
+    LD=${CMAKE_C_COMPILER_TARGET}-ld
   )
 endif()
 
