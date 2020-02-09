@@ -112,6 +112,10 @@ class TableSource final : public PacketSource {
     return packets_.empty();
   }
 
+  size_t GetNumberOfRemainingPackets() const {
+    return packets_.size();
+  }
+
  private:
   ts::DuckContext context_;
   ts::SectionFile section_file_;

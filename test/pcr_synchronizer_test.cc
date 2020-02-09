@@ -97,6 +97,7 @@ TEST(PcrSynchronizerTest, Successful) {
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
 }
 
 TEST(PcrSynchronizerTest, Reset) {
@@ -198,6 +199,7 @@ TEST(PcrSynchronizerTest, Reset) {
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(PcrSynchronizerTest, NoPcr) {
@@ -246,6 +248,7 @@ TEST(PcrSynchronizerTest, NoPcr) {
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
   EXPECT_FALSE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(PcrSynchronizerTest, InclusionList) {
@@ -315,6 +318,7 @@ TEST(PcrSynchronizerTest, InclusionList) {
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(3, src.GetNumberOfRemainingPackets());
 }
 
 TEST(PcrSynchronizerTest, ExclusionList) {
@@ -384,4 +388,5 @@ TEST(PcrSynchronizerTest, ExclusionList) {
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
 }

@@ -118,6 +118,7 @@ TEST(ProgramFilterTest, WaitReady) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ProgramFilterTest, AlreadyStarted) {
@@ -209,6 +210,7 @@ TEST(ProgramFilterTest, AlreadyStarted) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ProgramFilterTest, EndStreaming) {
@@ -325,6 +327,7 @@ TEST(ProgramFilterTest, EndStreaming) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
 }
 
 TEST(ProgramFilterTest, UpdatePcrRange) {
@@ -500,6 +503,7 @@ TEST(ProgramFilterTest, UpdatePcrRange) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
 }
 
 TEST(ProgramFilterTest, NoEventInEit) {
@@ -540,6 +544,7 @@ TEST(ProgramFilterTest, NoEventInEit) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ProgramFilterTest, NoFollowingEventInEit) {
@@ -582,6 +587,7 @@ TEST(ProgramFilterTest, NoFollowingEventInEit) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ProgramFilterTest, StartPcrUnderflow) {
@@ -656,6 +662,7 @@ TEST(ProgramFilterTest, StartPcrUnderflow) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ProgramFilterTest, EndPcrOverflow) {
@@ -730,6 +737,7 @@ TEST(ProgramFilterTest, EndPcrOverflow) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ProgramFilterTest, PreStreaming) {
@@ -797,4 +805,5 @@ TEST(ProgramFilterTest, PreStreaming) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }

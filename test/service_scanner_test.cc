@@ -88,6 +88,7 @@ TEST(ServiceScannerTest, Complete) {
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceScannerTest, NoPat) {
@@ -128,6 +129,7 @@ TEST(ServiceScannerTest, NoPat) {
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
   EXPECT_FALSE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceScannerTest, NoNit) {
@@ -168,6 +170,7 @@ TEST(ServiceScannerTest, NoNit) {
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
   EXPECT_FALSE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceScannerTest, NoSdt) {
@@ -196,6 +199,7 @@ TEST(ServiceScannerTest, NoSdt) {
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
   EXPECT_FALSE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceScannerTest, NonStandardNit) {
@@ -261,6 +265,7 @@ TEST(ServiceScannerTest, NonStandardNit) {
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceScannerTest, ServiceTypes) {
@@ -334,6 +339,7 @@ TEST(ServiceScannerTest, ServiceTypes) {
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceScannerTest, InclusionList) {
@@ -395,6 +401,7 @@ TEST(ServiceScannerTest, InclusionList) {
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceScannerTest, ExclusionList) {
@@ -456,4 +463,5 @@ TEST(ServiceScannerTest, ExclusionList) {
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }

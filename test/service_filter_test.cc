@@ -82,6 +82,7 @@ TEST(ServiceFilterTest, NoSidInPat) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceFilterTest, ServiceStream) {
@@ -201,6 +202,7 @@ TEST(ServiceFilterTest, ServiceStream) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
@@ -293,6 +295,7 @@ TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
@@ -373,6 +376,7 @@ TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 TEST(ServiceFilterTest, TimeLimitTot) {
@@ -423,6 +427,7 @@ TEST(ServiceFilterTest, TimeLimitTot) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
 }
 
 TEST(ServiceFilterTest, TimeLimitTdt) {
@@ -473,4 +478,5 @@ TEST(ServiceFilterTest, TimeLimitTdt) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
 }
