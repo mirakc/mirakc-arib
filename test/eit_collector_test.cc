@@ -46,6 +46,7 @@ TEST(EitCollectorTest, TimedOut) {
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
   EXPECT_FALSE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
 }
 
 // TODO: Add more tests here.

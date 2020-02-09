@@ -605,10 +605,8 @@ class EitCollector final : public PacketSink,
       return;
     }
 
-    timestamp_ = tdt.utc_time;
-    MIRAKC_ARIB_INFO("TDT: {}", timestamp_);
-
-    progress_.UpdateUnused(timestamp_);
+    MIRAKC_ARIB_INFO("TDT: {}", tdt.utc_time);
+    HandleTime(tdt.utc_time);
   }
 
   inline void HandleTot(const ts::BinaryTable& table) {
@@ -619,10 +617,19 @@ class EitCollector final : public PacketSink,
       return;
     }
 
-    timestamp_ = tot.utc_time;
-    MIRAKC_ARIB_INFO("TOT: {}", timestamp_);
+    MIRAKC_ARIB_INFO("TOT: {}", tot.utc_time);
+    HandleTime(tot.utc_time);
+  }
+
+  inline void HandleTime(const ts::Time& time) {
+    timestamp_ = time;
 
     progress_.UpdateUnused(timestamp_);
+
+    if (!has_timestamp_) {
+      last_updated_ = timestamp_;
+      has_timestamp_ = true;
+    }
   }
 
   inline bool CheckCollected(const EitSection& eit) const {
@@ -885,7 +892,7 @@ class EitCollector final : public PacketSink,
   }
 
   inline bool CheckTimeout() const {
-    auto elapsed = last_updated_ - timestamp_;
+    auto elapsed = timestamp_ - last_updated_;
     return elapsed >= option_.time_limit;
   }
 
@@ -896,6 +903,7 @@ class EitCollector final : public PacketSink,
   const EitCollectorOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
+  bool has_timestamp_ = false;
   ts::Time timestamp_;  // JST
   ts::Time last_updated_;  // JST
   CollectProgress progress_;

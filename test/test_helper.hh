@@ -108,6 +108,10 @@ class TableSource final : public PacketSource {
     }
   }
 
+  bool IsEmpty() const {
+    return packets_.empty();
+  }
+
  private:
   ts::DuckContext context_;
   ts::SectionFile section_file_;
