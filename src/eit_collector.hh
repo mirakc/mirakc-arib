@@ -151,6 +151,8 @@ class TableProgress {
     for (size_t i = 0; i < segment; ++i) {
       unused_[i] = 0xFF;
     }
+
+    completed_ = CheckCompleted();
   }
 
   bool CheckCollected(const EitSection& eit) const {
@@ -297,6 +299,7 @@ class TableGroupProgress {
 
   inline void UpdateUnused(const ts::Time& timestamp) {
     tables_[0].UpdateUnused(timestamp);
+    completed_ = CheckCompleted();
   }
 
   bool CheckCollected(const EitSection& eit) const {
