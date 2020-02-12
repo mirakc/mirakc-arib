@@ -21,6 +21,7 @@ struct EitCollectorOption final {
   SidSet sids;
   SidSet xsids;
   ts::MilliSecond time_limit = 30 * ts::MilliSecPerSec;  // 30s
+  bool streaming = false;
 };
 
 struct EitSection {
@@ -891,10 +892,16 @@ class EitCollector final : public PacketSink,
   }
 
   inline bool IsCompleted() const {
+    if (option_.streaming) {
+      return false;
+    }
     return progress_.IsCompleted();
   }
 
   inline bool CheckTimeout() const {
+    if (option_.streaming) {
+      return false;
+    }
     auto elapsed = timestamp_ - last_updated_;
     return elapsed >= option_.time_limit;
   }

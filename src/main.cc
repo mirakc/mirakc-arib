@@ -33,7 +33,7 @@ Usage:
   mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...]
-                           [--time-limit=<MS>] [FILE]
+                           [--time-limit=<MS>] [--streaming] [FILE]
   mirakc-arib filter-service --sid=<SID> [FILE]
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
               --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
@@ -178,7 +178,7 @@ Collect EIT sections
 
 Usage:
   mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...]
-                           [--time-limit=<MS>] [FILE]
+                           [--time-limit=<MS>] [--streaming] [FILE]
 
 Options:
   -h --help
@@ -196,6 +196,13 @@ Options:
 
     It makes no sence to specify a time limit less than 5 seconds.  Because TOT
     comes every 5 seconds in Japan.
+
+  --streaming
+    Streaming mode.
+
+    In the streaming mode, the program never stops until killed.  The progress
+    status will be updated in order to drop EIT sections which have already been
+    collected.
 
 Arguments:
   FILE
@@ -477,6 +484,7 @@ void LoadOption(const Args& args, ServiceFilterOption* opt) {
 
 void LoadOption(const Args& args, EitCollectorOption* opt) {
   static const std::string kTimeLimit = "--time-limit";
+  static const std::string kStreaming = "--streaming";
 
   LoadSidSet(args, "--sids", &opt->sids);
   LoadSidSet(args, "--xsids", &opt->xsids);
@@ -484,7 +492,9 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
     opt->time_limit =
         static_cast<ts::MilliSecond>(args.at(kTimeLimit).asLong());
   }
-  MIRAKC_ARIB_INFO("Time-Limit: {}", opt->time_limit);
+  opt->streaming = args.at(kStreaming).asBool();
+  MIRAKC_ARIB_INFO("Time-Limit({}), Streaming({})",
+                   opt->time_limit, opt->streaming);
 }
 
 void LoadOption(const Args& args, ProgramFilterOption* opt) {
