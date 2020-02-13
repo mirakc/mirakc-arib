@@ -7,9 +7,9 @@
 #include <fmt/format.h>
 #include <tsduck/tsduck.h>
 
+#include "airtime_tracker.hh"
 #include "base.hh"
 #include "eit_collector.hh"
-#include "event_time_tracker.hh"
 #include "file.hh"
 #include "jsonl_sink.hh"
 #include "logging.hh"
@@ -30,7 +30,7 @@ Tools to process ARIB TS streams.
 Usage:
   mirakc-arib (-h | --help) [(scan-services | sync-clocks | collect-eits |
                               filter-service | filter-program |
-                              track-event-time)]
+                              track-airtime)]
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
@@ -40,7 +40,7 @@ Usage:
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
               --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
               [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
-  mirakc-arib track-event-time --sid=<SID> --eid=<EID> [FILE]
+  mirakc-arib track-airtime --sid=<SID> --eid=<EID> [FILE]
 
 Description:
   `mirakc-arib <sub-command> -h` shows help for each sub-command.
@@ -402,13 +402,13 @@ Description:
       of streaming  of the TV program  of the TV program  of streaming
 )";
 
-static const std::string kTrackEventTime = "track-event-time";
+static const std::string kTrackAirtime = "track-airtime";
 
-static const std::string kTrackEventTimeHelp = R"(
+static const std::string kTrackAirtimeHelp = R"(
 Track changes of an event
 
 Usage:
-  mirakc-arib track-event-time --sid=<SID> --eid=<EID> [FILE]
+  mirakc-arib track-airtime --sid=<SID> --eid=<EID> [FILE]
 
 Options:
   -h --help
@@ -425,13 +425,13 @@ Arguments:
     Path to a TS file.
 
 Description:
-  `track-event-time` tracks changes of a specified event.
+  `track-airtime` tracks changes of a specified event.
 
-  `track-event-time` outputs event information when changes are detected.
-  Results will be output to STDOUT in the following JSONL format:
+  `track-airtime` outputs event information when changes are detected.  Results
+  will be output to STDOUT in the following JSONL format:
 
     $ recdvb 27 10 - 2>/dev/null | \
-        mirakc-arib track-event-time --sid=102 | head -1 | jq .
+        mirakc-arib track-airtime --sid=102 | head -1 | jq .
     {{
       "nid": 32736,
       "tsid": 32736,
@@ -489,8 +489,8 @@ void Init(const Args& args) {
     InitLogger(kFilterService);
   } else if (args.at(kFilterProgram).asBool()) {
     InitLogger(kFilterProgram);
-  } else if (args.at(kTrackEventTime).asBool()) {
-    InitLogger(kTrackEventTime);
+  } else if (args.at(kTrackAirtime).asBool()) {
+    InitLogger(kTrackAirtime);
   }
 
   ts::DVBCharset::EnableARIBMode();
@@ -542,7 +542,7 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
                    opt->time_limit, opt->streaming);
 }
 
-void LoadOption(const Args& args, EventTimeTrackerOption* opt) {
+void LoadOption(const Args& args, AirtimeTrackerOption* opt) {
   static const std::string kSid = "--sid";
   static const std::string kEid = "--eid";
 
@@ -623,10 +623,10 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     filter->Connect(std::move(program_filter));
     return filter;
   }
-  if (args.at(kTrackEventTime).asBool()) {
-    EventTimeTrackerOption option;
+  if (args.at(kTrackAirtime).asBool()) {
+    AirtimeTrackerOption option;
     LoadOption(args, &option);
-    auto tracker = std::make_unique<EventTimeTracker>(option);
+    auto tracker = std::make_unique<AirtimeTracker>(option);
     tracker->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return tracker;
   }
@@ -644,8 +644,8 @@ void ShowHelp(const Args& args) {
     fmt::print(kFilterServiceHelp);
   } else if (args.at(kFilterProgram).asBool()) {
     fmt::print(kFilterProgramHelp);
-  } else if (args.at(kTrackEventTime).asBool()) {
-    fmt::print(kTrackEventTimeHelp);
+  } else if (args.at(kTrackAirtime).asBool()) {
+    fmt::print(kTrackAirtimeHelp);
   } else {
     fmt::print(kUsage);
   }

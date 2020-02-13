@@ -476,9 +476,9 @@ endif()
 # mirakc-arib
 
 add_executable(mirakc-arib
+  src/airtime_tracker.hh
   src/base.hh
   src/eit_collector.hh
-  src/event_time_tracker.hh
   src/file.hh
   src/jsonl_sink.hh
   src/jsonl_source.hh
@@ -511,8 +511,8 @@ if(MIRAKC_ARIB_TEST)
   # test
 
   add_executable(mirakc-arib-test
+    test/airtime_tracker_test.cc
     test/eit_collector_test.cc
-    test/event_time_tracker_test.cc
     test/packet_source_test.cc
     test/pcr_synchronizer_test.cc
     test/program_filter_test.cc

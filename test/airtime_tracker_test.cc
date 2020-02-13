@@ -4,19 +4,19 @@
 #include <gtest/gtest.h>
 #include <tsduck/tsduck.h>
 
-#include "event_time_tracker.hh"
+#include "airtime_tracker.hh"
 
 #include "test_helper.hh"
 
 namespace {
-const EventTimeTrackerOption kOption {
+const AirtimeTrackerOption kOption {
   0x0003, 0x0004
 };
 }
 
-TEST(EventTimeTrackerTest, NoPacket) {
+TEST(AirtimeTrackerTest, NoPacket) {
   MockSource src;
-  auto tracker = std::make_unique<EventTimeTracker>(kOption);
+  auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
   EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false));  // EOF
@@ -27,9 +27,9 @@ TEST(EventTimeTrackerTest, NoPacket) {
   EXPECT_TRUE(src.FeedPackets());
 }
 
-TEST(EventTimeTrackerTest, Present) {
+TEST(AirtimeTrackerTest, Present) {
   TableSource src;
-  auto tracker = std::make_unique<EventTimeTracker>(kOption);
+  auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
   // TDT tables are used for emulating PES and PCR packets.
@@ -62,9 +62,9 @@ TEST(EventTimeTrackerTest, Present) {
   EXPECT_TRUE(src.IsEmpty());
 }
 
-TEST(EventTimeTrackerTest, Following) {
+TEST(AirtimeTrackerTest, Following) {
   TableSource src;
-  auto tracker = std::make_unique<EventTimeTracker>(kOption);
+  auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
   // TDT tables are used for emulating PES and PCR packets.
@@ -97,9 +97,9 @@ TEST(EventTimeTrackerTest, Following) {
   EXPECT_TRUE(src.IsEmpty());
 }
 
-TEST(EventTimeTrackerTest, Changes) {
+TEST(AirtimeTrackerTest, Changes) {
   TableSource src;
-  auto tracker = std::make_unique<EventTimeTracker>(kOption);
+  auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
   // TDT tables are used for emulating PES and PCR packets.
@@ -167,9 +167,9 @@ TEST(EventTimeTrackerTest, Changes) {
   EXPECT_TRUE(src.IsEmpty());
 }
 
-TEST(EventTimeTrackerTest, ServiceNotFound) {
+TEST(AirtimeTrackerTest, ServiceNotFound) {
   TableSource src;
-  auto tracker = std::make_unique<EventTimeTracker>(kOption);
+  auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
   // TDT tables are used for emulating PES and PCR packets.
@@ -196,9 +196,9 @@ TEST(EventTimeTrackerTest, ServiceNotFound) {
   EXPECT_TRUE(src.IsEmpty());
 }
 
-TEST(EventTimeTrackerTest, EventNotFound) {
+TEST(AirtimeTrackerTest, EventNotFound) {
   TableSource src;
-  auto tracker = std::make_unique<EventTimeTracker>(kOption);
+  auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
   // TDT tables are used for emulating PES and PCR packets.

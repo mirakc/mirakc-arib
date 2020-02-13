@@ -12,16 +12,16 @@
 
 namespace {
 
-struct EventTimeTrackerOption final {
+struct AirtimeTrackerOption final {
   uint16_t sid = 0;
   uint16_t eid = 0;
 };
 
-class EventTimeTracker final : public PacketSink,
-                               public JsonlSource,
-                               public ts::TableHandlerInterface {
+class AirtimeTracker final : public PacketSink,
+                             public JsonlSource,
+                             public ts::TableHandlerInterface {
  public:
-  explicit EventTimeTracker(const EventTimeTrackerOption& option)
+  explicit AirtimeTracker(const AirtimeTrackerOption& option)
       : option_(option),
         demux_(context_) {
     demux_.setTableHandler(this);
@@ -29,7 +29,7 @@ class EventTimeTracker final : public PacketSink,
     MIRAKC_ARIB_DEBUG("Demux EIT");
   }
 
-  virtual ~EventTimeTracker() override {}
+  virtual ~AirtimeTracker() override {}
 
   bool HandlePacket(const ts::TSPacket& packet) override {
     demux_.feedPacket(packet);
@@ -109,7 +109,7 @@ class EventTimeTracker final : public PacketSink,
     FeedDocument(json);
   }
 
-  const EventTimeTrackerOption option_;
+  const AirtimeTrackerOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
   bool done_ = false;
