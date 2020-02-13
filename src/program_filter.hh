@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <unordered_set>
 
@@ -280,7 +279,7 @@ class ProgramFilter final : public PacketSink,
 
     const auto& present = eit.events[0];
     if (present.event_id == option_.eid) {
-      MIRAKC_ARIB_DEBUG("Event#{:04X} have started", option_.eid);
+      MIRAKC_ARIB_DEBUG("Event#{:04X} has started", option_.eid);
       UpdatePcrRange(present);
       return;
     }

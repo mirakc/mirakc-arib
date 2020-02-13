@@ -9,6 +9,7 @@
 
 #include "base.hh"
 #include "eit_collector.hh"
+#include "event_time_tracker.hh"
 #include "file.hh"
 #include "jsonl_sink.hh"
 #include "logging.hh"
@@ -28,7 +29,8 @@ Tools to process ARIB TS streams.
 
 Usage:
   mirakc-arib (-h | --help) [(scan-services | sync-clocks | collect-eits |
-                              filter-service | filter-program)]
+                              filter-service | filter-program |
+                              track-event-time)]
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
@@ -38,6 +40,7 @@ Usage:
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
               --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
               [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
+  mirakc-arib track-event-time --sid=<SID> --eid=<EID> [FILE]
 
 Description:
   `mirakc-arib <sub-command> -h` shows help for each sub-command.
@@ -399,6 +402,46 @@ Description:
       of streaming  of the TV program  of the TV program  of streaming
 )";
 
+static const std::string kTrackEventTime = "track-event-time";
+
+static const std::string kTrackEventTimeHelp = R"(
+Track changes of an event
+
+Usage:
+  mirakc-arib track-event-time --sid=<SID> --eid=<EID> [FILE]
+
+Options:
+  -h --help
+    Print help.
+
+  --sid=<SID>
+    Service ID.
+
+  --eid=<EID>
+    Event ID of a TV program.
+
+Arguments:
+  FILE
+    Path to a TS file.
+
+Description:
+  `track-event-time` tracks changes of a specified event.
+
+  `track-event-time` outputs event information when changes are detected.
+  Results will be output to STDOUT in the following JSONL format:
+
+    $ recdvb 27 10 - 2>/dev/null | \
+        mirakc-arib track-event-time --sid=102 | head -1 | jq .
+    {{
+      "nid": 32736,
+      "tsid": 32736,
+      "sid": 1024,
+      "eid": 31887,
+      "startTime": 1581596400000,
+      "duration": 1500000
+    }}
+)";
+
 class PosixFile final : public File {
  public:
   PosixFile(const std::string& path) {
@@ -446,6 +489,8 @@ void Init(const Args& args) {
     InitLogger(kFilterService);
   } else if (args.at(kFilterProgram).asBool()) {
     InitLogger(kFilterProgram);
+  } else if (args.at(kTrackEventTime).asBool()) {
+    InitLogger(kTrackEventTime);
   }
 
   ts::DVBCharset::EnableARIBMode();
@@ -495,6 +540,15 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
   opt->streaming = args.at(kStreaming).asBool();
   MIRAKC_ARIB_INFO("Time-Limit({}), Streaming({})",
                    opt->time_limit, opt->streaming);
+}
+
+void LoadOption(const Args& args, EventTimeTrackerOption* opt) {
+  static const std::string kSid = "--sid";
+  static const std::string kEid = "--eid";
+
+  opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
+  opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
+  MIRAKC_ARIB_INFO("Event Tracker: SID#{:04X} EID#{:04X}", opt->sid, opt->eid);
 }
 
 void LoadOption(const Args& args, ProgramFilterOption* opt) {
@@ -569,37 +623,44 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     filter->Connect(std::move(program_filter));
     return filter;
   }
+  if (args.at(kTrackEventTime).asBool()) {
+    EventTimeTrackerOption option;
+    LoadOption(args, &option);
+    auto tracker = std::make_unique<EventTimeTracker>(option);
+    tracker->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
+    return tracker;
+  }
   return std::unique_ptr<PacketSink>();
 }
 
-void ShowHelp(const Args& args, const std::string& prog_name) {
+void ShowHelp(const Args& args) {
   if (args.at(kScanServices).asBool()) {
-    fmt::print(kScanServicesHelp, prog_name);
+    fmt::print(kScanServicesHelp);
   } else if (args.at(kSyncClocks).asBool()) {
-    fmt::print(kSyncClocksHelp, prog_name);
+    fmt::print(kSyncClocksHelp);
   } else if (args.at(kCollectEits).asBool()) {
-    fmt::print(kCollectEitsHelp, prog_name);
+    fmt::print(kCollectEitsHelp);
   } else if (args.at(kFilterService).asBool()) {
-    fmt::print(kFilterServiceHelp, prog_name);
+    fmt::print(kFilterServiceHelp);
   } else if (args.at(kFilterProgram).asBool()) {
-    fmt::print(kFilterProgramHelp, prog_name);
+    fmt::print(kFilterProgramHelp);
+  } else if (args.at(kTrackEventTime).asBool()) {
+    fmt::print(kTrackEventTimeHelp);
   } else {
-    fmt::print(kUsage, prog_name);
+    fmt::print(kUsage);
   }
 }
 
 }  // namespace
 
 int main(int argc, char* argv[]) {
-  std::string prog_name = argv[0];
-
-  auto usage = fmt::format(kUsage, prog_name);
+  auto usage = fmt::format(kUsage);
 
   auto args =
       docopt::docopt(usage, { argv + 1, argv + argc }, false, kVersion);
 
   if (args.at("-h").asBool() || args.at("--help").asBool()) {
-    ShowHelp(args, prog_name);
+    ShowHelp(args);
     return EXIT_SUCCESS;
   }
 
