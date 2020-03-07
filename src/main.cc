@@ -345,7 +345,8 @@ Description:
 
     * SDTT (PID=0x0023,0x0028)
     * DCM-CC for BML (PID specified in PMT)
-    * PES private data (PID specified in PMT)
+    * PES private data that doesn't contain subtitles and superimposed texts
+      (PID specified in PMT)
 )";
 
 static const std::string kFilterProgram = "filter-program";

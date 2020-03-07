@@ -480,3 +480,293 @@ TEST(ServiceFilterTest, TimeLimitTdt) {
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
 }
+
+TEST(ServiceFilterTest, Subtitle) {
+  TableSource src;
+  auto filter = std::make_unique<ServiceFilter>(kOption);
+  auto sink = std::make_unique<MockSink>();
+
+  // TDT tables are used for emulating PES packets.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x901"
+           test-pid="0x0101">
+        <component elementary_PID="0x0300" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x30" />
+        </component>
+        <component elementary_PID="0x0301" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x31" />
+        </component>
+        <component elementary_PID="0x0302" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x32" />
+        </component>
+        <component elementary_PID="0x0303" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x33" />
+        </component>
+        <component elementary_PID="0x0304" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x34" />
+        </component>
+        <component elementary_PID="0x0305" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x35" />
+        </component>
+        <component elementary_PID="0x0306" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x36" />
+        </component>
+        <component elementary_PID="0x0307" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x37" />
+        </component>
+
+      </PMT>
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0300" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0303" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0304" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0305" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0306" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0307" />
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_PAT, packet.getPID());
+          TableValidator<ts::PAT> validator(ts::PID_PAT);
+          EXPECT_CALL(validator, Validate).WillOnce(
+              [](const ts::PAT& pat) {
+                EXPECT_TRUE(pat.isValid());
+                EXPECT_EQ(1, pat.pmts.size());
+                EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
+              });
+          validator.FeedPacket(packet);
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0101, packet.getPID());
+          TableValidator<ts::PMT> validator(0x0101);
+          EXPECT_CALL(validator, Validate).WillOnce(
+              [](const ts::PMT& pmt) {
+                EXPECT_TRUE(pmt.isValid());
+                EXPECT_EQ(8, pmt.streams.size());
+                EXPECT_TRUE(pmt.streams.find(0x0300) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x0301) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x0302) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x0303) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x0304) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x0305) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x0306) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x0307) != pmt.streams.end());
+              });
+          validator.FeedPacket(packet);
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0300, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0301, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0302, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0303, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0304, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0305, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0306, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0307, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
+}
+
+TEST(ServiceFilterTest, SuperimposedText) {
+  TableSource src;
+  auto filter = std::make_unique<ServiceFilter>(kOption);
+  auto sink = std::make_unique<MockSink>();
+
+  // TDT tables are used for emulating PES packets.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x901"
+           test-pid="0x0101">
+        <component elementary_PID="0x0308" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x38" />
+        </component>
+        <component elementary_PID="0x0309" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x39" />
+        </component>
+        <component elementary_PID="0x030A" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x3A" />
+        </component>
+        <component elementary_PID="0x030B" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x3B" />
+        </component>
+        <component elementary_PID="0x030C" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x3C" />
+        </component>
+        <component elementary_PID="0x030D" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x3D" />
+        </component>
+        <component elementary_PID="0x030E" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x3E" />
+        </component>
+        <component elementary_PID="0x030F" stream_type="0x06">
+          <stream_identifier_descriptor component_tag="0x3F" />
+        </component>
+
+      </PMT>
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0308" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0309" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030A" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030B" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030C" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030D" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030E" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030F" />
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_PAT, packet.getPID());
+          TableValidator<ts::PAT> validator(ts::PID_PAT);
+          EXPECT_CALL(validator, Validate).WillOnce(
+              [](const ts::PAT& pat) {
+                EXPECT_TRUE(pat.isValid());
+                EXPECT_EQ(1, pat.pmts.size());
+                EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
+              });
+          validator.FeedPacket(packet);
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0101, packet.getPID());
+          TableValidator<ts::PMT> validator(0x0101);
+          EXPECT_CALL(validator, Validate).WillOnce(
+              [](const ts::PMT& pmt) {
+                EXPECT_TRUE(pmt.isValid());
+                EXPECT_EQ(8, pmt.streams.size());
+                EXPECT_TRUE(pmt.streams.find(0x0308) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x0309) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x030A) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x030B) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x030C) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x030D) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x030E) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x030F) != pmt.streams.end());
+              });
+          validator.FeedPacket(packet);
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0308, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0309, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x030A, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x030B, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x030C, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x030D, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x030E, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x030F, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
+}

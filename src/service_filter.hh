@@ -102,7 +102,26 @@ class ServiceFilter final : public PacketSink,
   }
 
  private:
-  inline bool CheckFilterForDrop(ts::PID pid) const {
+  static bool IsAribSubtitle(const ts::PMT::Stream& stream) {
+    return CheckComponentTagByRange(stream, 0x30, 0x37);
+  }
+
+  static bool IsAribSuperimposedText(const ts::PMT::Stream& stream) {
+    return CheckComponentTagByRange(stream, 0x38, 0x3F);
+  }
+
+  static bool CheckComponentTagByRange(
+      const ts::PMT::Stream& stream, uint8_t min, uint8_t max) {
+    uint8_t tag;
+    if (stream.getComponentTag(tag)) {
+      if (tag >= min && tag <= max) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool CheckFilterForDrop(ts::PID pid) const {
     if (content_filter_.find(pid) != content_filter_.end()) {
       return false;
     }
@@ -255,6 +274,14 @@ class ServiceFilter final : public PacketSink,
       } else if (stream.isSubtitles()) {
         content_filter_.insert(pid);
         MIRAKC_ARIB_DEBUG("Content filter += PES/Subtitle#{:04X}", pid);
+        ++it;
+      } else if (IsAribSubtitle(stream)) {
+        content_filter_.insert(pid);
+        MIRAKC_ARIB_DEBUG("Content filter += PES/Arib-Subtitle#{:04X}", pid);
+        ++it;
+      } else if (IsAribSuperimposedText(stream)) {
+        content_filter_.insert(pid);
+        MIRAKC_ARIB_DEBUG("Content filter += PES/Arib-SuperimposedText#{:04X}", pid);
         ++it;
       } else {
         // Remove other streams from PMT.

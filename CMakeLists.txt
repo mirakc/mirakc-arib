@@ -359,7 +359,7 @@ find_library(tsduck-arib_LIB tsduck
   NO_DEFAULT_PATH)
 
 if(tsduck-arib_LIB)
-  # Add an interface target for aribb24 like other third party libraries.
+  # Add an interface target for tsduck-arib like other third party libraries.
   add_library(tsduck-arib::static-lib STATIC IMPORTED)
 
   set_target_properties(tsduck-arib::static-lib PROPERTIES
