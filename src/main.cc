@@ -22,7 +22,15 @@
 
 namespace {
 
-static const std::string kVersion = "0.1.0";
+static const std::string kVersion = R"(0.1.0
+
+* docopt/docopt.cpp {}
+* fmtlib/fmt {}
+* gabime/spdlog {}
+* Tencent/rapidjson {}
+* masnagam/aribb24 {}
+* masnagam/tsduck-arib {}
+)";
 
 static const std::string kUsage = R"(
 Tools to process ARIB TS streams.
@@ -655,10 +663,16 @@ void ShowHelp(const Args& args) {
 }  // namespace
 
 int main(int argc, char* argv[]) {
-  auto usage = fmt::format(kUsage);
+  auto version = fmt::format(kVersion,
+                             MIRAKC_ARIB_DOCOPT_VERSION,
+                             MIRAKC_ARIB_FMT_VERSION,
+                             MIRAKC_ARIB_SPDLOG_VERSION,
+                             MIRAKC_ARIB_RAPIDJSON_VERSION,
+                             MIRAKC_ARIB_ARIBB24_VERSION,
+                             MIRAKC_ARIB_TSDUCK_ARIB_VERSION);
 
   auto args =
-      docopt::docopt(usage, { argv + 1, argv + argc }, false, kVersion);
+      docopt::docopt(kUsage, { argv + 1, argv + argc }, false, version);
 
   if (args.at("-h").asBool() || args.at("--help").asBool()) {
     ShowHelp(args);

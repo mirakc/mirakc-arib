@@ -9,6 +9,31 @@ endif()
 option(MIRAKC_ARIB_TEST "Build tests." OFF)
 option(MIRAKC_ARIB_VENDOR_TEST "Build tests in vendor libs." OFF)
 
+set(MIRAKC_ARIB_DOCOPT_VERSION
+  "1ae5cd6ee6328399863dc657d0b2f7b32e8472dd"
+  CACHE STRING "docopt.cpp version to use.")
+set(MIRAKC_ARIB_FMT_VERSION
+  "6.1.2"
+  CACHE STRING "fmt version to use.")
+set(MIRAKC_ARIB_SPDLOG_VERSION
+  "v1.5.0"
+  CACHE STRING "spdlog version to use.")
+set(MIRAKC_ARIB_RAPIDJSON_VERSION
+  "v1.1.0"
+  CACHE STRING "RapidJSON version to use.")
+set(MIRAKC_ARIB_ARIBB24_VERSION
+  "654026e064ec127beff43bf3ecdcebd54119be15"
+  CACHE STRING "aribb24 version to use.")
+set(MIRAKC_ARIB_TSDUCK_ARIB_VERSION
+  "c400025b7d31e26c0c15471e81adf2ad50632281"
+  CACHE STRING "tsduck-arib version to use.")
+set(MIRAKC_ARIB_GOOGLETEST_VERSION
+  "release-1.10.0"
+  CACHE STRING "googletest version to use.")
+set(MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION
+  "v1.5.0"
+  CACHE STRING "Google Benchmark version to use.")
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -51,19 +76,25 @@ endif()
 
 # Display general information
 message(STATUS "Create build system with the following variables:")
-message(STATUS "  CMAKE_BUILD_TYPE              : ${CMAKE_BUILD_TYPE}")
-message(STATUS "  CMAKE_HOST_SYSTEM_NAME        : ${CMAKE_HOST_SYSTEM_NAME}")
-message(STATUS "  CMAKE_HOST_SYSTEM_PROCESSOR   : ${CMAKE_HOST_SYSTEM_PROCESSOR}")
-message(STATUS "  CMAKE_SYSTEM_NAME             : ${CMAKE_SYSTEM_NAME}")
-message(STATUS "  CMAKE_SYSTEM_PROCESSOR        : ${CMAKE_SYSTEM_PROCESSOR}")
-message(STATUS "  CMAKE_RUNTIME_OUTPUT_DIRECTORY: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-message(STATUS "  CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
-message(STATUS "  CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-message(STATUS "  CMAKE_CXX_STANDARD            : ${CMAKE_CXX_STANDARD}")
-message(STATUS "  CMAKE_CXX_STANDARD_REQUIRED   : ${CMAKE_CXX_STANDARD_REQUIRED}")
-message(STATUS "  CMAKE_CXX_EXTENSIONS          : ${CMAKE_CXX_EXTENSIONS}")
-message(STATUS "  MIRAKC_ARIB_TEST              : ${MIRAKC_ARIB_TEST}")
-message(STATUS "  NPROC                         : ${NPROC}")
+message(STATUS "  CMAKE_BUILD_TYPE                : ${CMAKE_BUILD_TYPE}")
+message(STATUS "  CMAKE_HOST_SYSTEM_NAME          : ${CMAKE_HOST_SYSTEM_NAME}")
+message(STATUS "  CMAKE_HOST_SYSTEM_PROCESSOR     : ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+message(STATUS "  CMAKE_SYSTEM_NAME               : ${CMAKE_SYSTEM_NAME}")
+message(STATUS "  CMAKE_SYSTEM_PROCESSOR          : ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "  CMAKE_RUNTIME_OUTPUT_DIRECTORY  : ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+message(STATUS "  CMAKE_ARCHIVE_OUTPUT_DIRECTORY  : ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
+message(STATUS "  CMAKE_LIBRARY_OUTPUT_DIRECTORY  : ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+message(STATUS "  CMAKE_CXX_STANDARD              : ${CMAKE_CXX_STANDARD}")
+message(STATUS "  CMAKE_CXX_STANDARD_REQUIRED     : ${CMAKE_CXX_STANDARD_REQUIRED}")
+message(STATUS "  CMAKE_CXX_EXTENSIONS            : ${CMAKE_CXX_EXTENSIONS}")
+message(STATUS "  MIRAKC_ARIB_TEST                : ${MIRAKC_ARIB_TEST}")
+message(STATUS "  NPROC                           : ${NPROC}")
+message(STATUS "  MIRAKC_ARIB_DOCOPT_VERSION      : ${MIRAKC_ARIB_DOCOPT_VERSION}")
+message(STATUS "  MIRAKC_ARIB_FMT_VERSION         : ${MIRAKC_ARIB_FMT_VERSION}")
+message(STATUS "  MIRAKC_ARIB_SPDLOG_VERSION      : ${MIRAKC_ARIB_SPDLOG_VERSION}")
+message(STATUS "  MIRAKC_ARIB_RAPIDJSON_VERSION   : ${MIRAKC_ARIB_RAPIDJSON_VERSION}")
+message(STATUS "  MIRAKC_ARIB_ARIBB24_VERSION     : ${MIRAKC_ARIB_ARIBB24_VERSION}")
+message(STATUS "  MIRAKC_ARIB_TSDUCK_ARIB_VERSION : ${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}")
 
 # a thread library is required
 
@@ -93,7 +124,7 @@ ExternalProject_Add(vendor-docopt
   GIT_REPOSITORY
     https://github.com/docopt/docopt.cpp.git
   GIT_TAG
-    master
+    ${MIRAKC_ARIB_DOCOPT_VERSION}
   GIT_SHALLOW
     YES
   CMAKE_ARGS
@@ -133,7 +164,7 @@ ExternalProject_Add(vendor-fmt
   GIT_REPOSITORY
     https://github.com/fmtlib/fmt.git
   GIT_TAG
-    6.1.2
+    ${MIRAKC_ARIB_FMT_VERSION}
   GIT_SHALLOW
     YES
   CMAKE_ARGS
@@ -176,7 +207,7 @@ ExternalProject_Add(vendor-spdlog
   GIT_REPOSITORY
     https://github.com/gabime/spdlog.git
   GIT_TAG
-    v1.5.0
+    ${MIRAKC_ARIB_SPDLOG_VERSION}
   GIT_SHALLOW
     YES
   CMAKE_ARGS
@@ -219,7 +250,7 @@ ExternalProject_Add(vendor-rapidjson
   GIT_REPOSITORY
     https://github.com/Tencent/rapidjson.git
   GIT_TAG
-    v1.1.0
+    ${MIRAKC_ARIB_RAPIDJSON_VERSION}
   GIT_SHALLOW
     YES
   CMAKE_ARGS
@@ -260,7 +291,7 @@ ExternalProject_Add(vendor-aribb24
   GIT_REPOSITORY
     https://github.com/masnagam/aribb24.git
   GIT_TAG
-    master
+    ${MIRAKC_ARIB_ARIBB24_VERSION}
   GIT_SHALLOW
     YES
   BUILD_IN_SOURCE
@@ -302,7 +333,7 @@ endif()
 
 # tsduck-arib
 
-set(MIRAKC_ARIB_TSDUCK_DEFS ARIB=1 NOCURL=1 NODTAPI=1 NOPCSC=1)
+set(MIRAKC_ARIB_TSDUCK_DEFS ARIB=1 NOCURL=1 NODTAPI=1 NOPCSC=1 NOSRT=1)
 
 if(NOT MIRAKC_ARIB_VENDOR_TEST)
   list(APPEND MIRAKC_ARIB_TSDUCK_DEFS NOTEST=1)
@@ -334,7 +365,7 @@ ExternalProject_Add(vendor-tsduck-arib
   GIT_REPOSITORY
     https://github.com/masnagam/tsduck-arib.git
   GIT_TAG
-    master
+    ${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}
   GIT_SHALLOW
     YES
   BUILD_IN_SOURCE
@@ -388,7 +419,7 @@ if(MIRAKC_ARIB_TEST)
     GIT_REPOSITORY
       https://github.com/google/googletest.git
     GIT_TAG
-      release-1.10.0
+      ${MIRAKC_ARIB_GOOGLETEST_VERSION}
     GIT_SHALLOW
       YES
     CMAKE_ARGS
@@ -429,7 +460,7 @@ if(MIRAKC_ARIB_TEST)
     GIT_REPOSITORY
       https://github.com/google/benchmark.git
     GIT_TAG
-      v1.5.0
+      ${MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION}
     GIT_SHALLOW
       YES
     CMAKE_ARGS
@@ -505,6 +536,12 @@ target_link_libraries(mirakc-arib
 target_compile_definitions(mirakc-arib
   PRIVATE
     SPDLOG_DISABLE_DEFAULT_LOGGER
+    MIRAKC_ARIB_DOCOPT_VERSION="${MIRAKC_ARIB_DOCOPT_VERSION}"
+    MIRAKC_ARIB_FMT_VERSION="${MIRAKC_ARIB_FMT_VERSION}"
+    MIRAKC_ARIB_SPDLOG_VERSION="${MIRAKC_ARIB_SPDLOG_VERSION}"
+    MIRAKC_ARIB_RAPIDJSON_VERSION="${MIRAKC_ARIB_RAPIDJSON_VERSION}"
+    MIRAKC_ARIB_ARIBB24_VERSION="${MIRAKC_ARIB_ARIBB24_VERSION}"
+    MIRAKC_ARIB_TSDUCK_ARIB_VERSION="${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}"
 )
 
 if(MIRAKC_ARIB_TEST)
