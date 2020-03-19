@@ -17,6 +17,7 @@ Make sure that tools listed below has already been installed:
 * gcc/g++
 * libtool
 * make
+* ninja (optional)
 * pkg-config
 
 Then:
