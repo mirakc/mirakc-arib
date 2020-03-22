@@ -13,6 +13,7 @@
 #include "file.hh"
 #include "jsonl_sink.hh"
 #include "logging.hh"
+#include "logo_collector.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
 #include "pcr_synchronizer.hh"
@@ -28,6 +29,7 @@ static const std::string kVersion = R"(0.1.0
 * fmtlib/fmt {}
 * gabime/spdlog {}
 * Tencent/rapidjson {}
+* tplgy/cppcodec {}
 * masnagam/aribb24 {}
 * masnagam/tsduck-arib {}
 )";
@@ -37,13 +39,14 @@ Tools to process ARIB TS streams.
 
 Usage:
   mirakc-arib (-h | --help) [(scan-services | sync-clocks | collect-eits |
-                              filter-service | filter-program |
+                              collect-logos | filter-service | filter-program |
                               track-airtime)]
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...]
                            [--time-limit=<MS>] [--streaming] [FILE]
+  mirakc-arib collect-logos [FILE]
   mirakc-arib filter-service --sid=<SID> [FILE]
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
               --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
@@ -303,6 +306,59 @@ Description:
     }}
 )";
 
+static const std::string kCollectLogos = "collect-logos";
+
+static const std::string kCollectLogosHelp = R"(
+Collect logos
+
+Usage:
+  mirakc-arib collect-logos [FILE]
+
+Options:
+  -h --help
+    Print help.
+
+Arguments:
+  FILE
+    Path to a TS file.
+
+Description:
+  `collect-logos` collects logos from a TS stream.  Results will be output
+  to STDOUT in the following JSONL format:
+
+    $ recdvb 27 - - 2>/dev/null | mirakc-arib collect-logos | head -1 | jq .
+    {{
+      "nid": 32736,
+      "ddid": 1024,
+      "logo": {{
+        "type": 0,
+        "id": 0,
+        "version": 0,
+        "data": "base64-encoded-png"
+      }}
+    }}
+
+  Currently, `collect-logos` never stops even after all logos have been
+  collected.
+
+  Transmission frequency of CDT section and the number of logos are different
+  for each broadcaster:
+
+    CHANNEL  ENOUGH TIME TO COLLECT ALL LOGOS  #LOGOS
+    -------  --------------------------------  ------
+    MX       10 minutes                        12
+    CX       10 minutes                         6
+    TBS       5 minutes                         6
+    TX       10 minutes                         6
+    EX       10 minutes                        18
+    NTV      10 minutes                         6
+    ETV      10 minutes                         6
+    NHK      10 minutes                         6
+
+  You can collect logos from a TS files recorded using `filter-service` or
+  `filter-program` if it contains CDT sections.
+)";
+
 static const std::string kFilterService = "filter-service";
 
 static const std::string kFilterServiceHelp = R"(
@@ -494,6 +550,8 @@ void Init(const Args& args) {
     InitLogger(kSyncClocks);
   } else if (args.at(kCollectEits).asBool()) {
     InitLogger(kCollectEits);
+  } else if (args.at(kCollectLogos).asBool()) {
+    InitLogger(kCollectLogos);
   } else if (args.at(kFilterService).asBool()) {
     InitLogger(kFilterService);
   } else if (args.at(kFilterProgram).asBool()) {
@@ -614,6 +672,11 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     collector->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return collector;
   }
+  if (args.at(kCollectLogos).asBool()) {
+    auto collector = std::make_unique<LogoCollector>();
+    collector->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
+    return collector;
+  }
   if (args.at(kFilterService).asBool()) {
     ServiceFilterOption service_option;
     LoadOption(args, &service_option);
@@ -649,6 +712,8 @@ void ShowHelp(const Args& args) {
     fmt::print(kSyncClocksHelp);
   } else if (args.at(kCollectEits).asBool()) {
     fmt::print(kCollectEitsHelp);
+  } else if (args.at(kCollectLogos).asBool()) {
+    fmt::print(kCollectLogosHelp);
   } else if (args.at(kFilterService).asBool()) {
     fmt::print(kFilterServiceHelp);
   } else if (args.at(kFilterProgram).asBool()) {
@@ -668,6 +733,7 @@ int main(int argc, char* argv[]) {
                              MIRAKC_ARIB_FMT_VERSION,
                              MIRAKC_ARIB_SPDLOG_VERSION,
                              MIRAKC_ARIB_RAPIDJSON_VERSION,
+                             MIRAKC_ARIB_CPPCODEC_VERSION,
                              MIRAKC_ARIB_ARIBB24_VERSION,
                              MIRAKC_ARIB_TSDUCK_ARIB_VERSION);
 

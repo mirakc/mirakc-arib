@@ -109,6 +109,7 @@ mirakc-arib is static-linked against the following libraries:
 * [fmtlib/fmt] (MIT)
 * [gabime/spdlog] (MIT)
 * [Tencent/rapidjson] (MIT)
+* [tplgy/cppcodec] (MIT)
 * [masnagam/tsduck-arib] forked from [tsduck/tsduck] (BSD 2-Clause)
 * [masnagam/aribb24] forked from [nkoriyama/aribb24] (LGPL-3.0)
 
@@ -158,6 +159,7 @@ shall be dual licensed as above, without any additional terms or conditions.
 [fmtlib/fmt]: https://github.com/fmtlib/fmt
 [gabime/spdlog]: https://github.com/gabime/spdlog
 [Tencent/rapidjson]: https://github.com/Tencent/rapidjson
+[tplgy/cppcodec]: https://github.com/tplgy/cppcodec
 [masnagam/tsduck-arib]: https://github.com/masnagam/tsduck-arib
 [tsduck/tsduck]: https://github.com/tsduck/tsduck
 [masnagam/aribb24]: https://github.com/masnagam/aribb24

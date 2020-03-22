@@ -21,6 +21,9 @@ set(MIRAKC_ARIB_SPDLOG_VERSION
 set(MIRAKC_ARIB_RAPIDJSON_VERSION
   "v1.1.0"
   CACHE STRING "RapidJSON version to use.")
+set(MIRAKC_ARIB_CPPCODEC_VERSION
+  "bd6ddf95129e769b50ef63e0f558fa21364f3f65"
+  CACHE STRING "cppcodec version to use.")
 set(MIRAKC_ARIB_ARIBB24_VERSION
   "654026e064ec127beff43bf3ecdcebd54119be15"
   CACHE STRING "aribb24 version to use.")
@@ -93,6 +96,7 @@ message(STATUS "  MIRAKC_ARIB_DOCOPT_VERSION      : ${MIRAKC_ARIB_DOCOPT_VERSION
 message(STATUS "  MIRAKC_ARIB_FMT_VERSION         : ${MIRAKC_ARIB_FMT_VERSION}")
 message(STATUS "  MIRAKC_ARIB_SPDLOG_VERSION      : ${MIRAKC_ARIB_SPDLOG_VERSION}")
 message(STATUS "  MIRAKC_ARIB_RAPIDJSON_VERSION   : ${MIRAKC_ARIB_RAPIDJSON_VERSION}")
+message(STATUS "  MIRAKC_ARIB_CPPCODEC_VERSION    : ${MIRAKC_ARIB_CPPCODEC_VERSION}")
 message(STATUS "  MIRAKC_ARIB_ARIBB24_VERSION     : ${MIRAKC_ARIB_ARIBB24_VERSION}")
 message(STATUS "  MIRAKC_ARIB_TSDUCK_ARIB_VERSION : ${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}")
 
@@ -275,11 +279,50 @@ if(RapidJSON_FOUND)
 
   # "RAPIDJSON_HAS_STDSTRING=1" is defined for convenience.
   set_target_properties(rapidjson::header-only PROPERTIES
-    INTERFACE_COMPILE_DEFINITIONS "RAPIDJSON_HAS_STDSTRING=1"
-    INTERFACE_INCLUDE_DIRECTORIES "${RAPIDJSON_INCLUDE_DIRS}"
+    INTERFACE_COMPILE_DEFINITIONS
+      "RAPIDJSON_HAS_STDSTRING=1"
+    INTERFACE_INCLUDE_DIRECTORIES
+      "${RAPIDJSON_INCLUDE_DIRS}"
   )
 else()
   message(WARNING "rapidjson: not found")
+  set(MIRAKC_ARIB_VENDOR_READY FALSE)
+endif()
+
+# cppcodec
+
+ExternalProject_Add(vendor-cppcodec
+  PREFIX
+    ${MIRAKC_ARIB_VENDOR_DIR}
+  GIT_REPOSITORY
+    https://github.com/tplgy/cppcodec.git
+  GIT_TAG
+    ${MIRAKC_ARIB_CPPCODEC_VERSION}
+  GIT_SHALLOW
+    YES
+  CMAKE_ARGS
+    -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
+    -D CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+  EXCLUDE_FROM_ALL
+    YES
+)
+
+add_dependencies(vendor vendor-cppcodec)
+
+find_file(cppcodec cppcodec/base64_rfc4648.hpp
+  PATHS ${MIRAKC_ARIB_VENDOR_DIR}/include NO_DEFAULT_PATH)
+
+if(cppcodec)
+  # Add an interface target for cppcodec like other third party libraries.
+  add_library(cppcodec::header-only INTERFACE IMPORTED)
+
+  set_target_properties(cppcodec::header-only PROPERTIES
+    INTERFACE_INCUDE_DIRECTORIES
+      ${MIRAKC_ARIB_VENDOR_DIR}/include
+  )
+else()
+  message(WARNING "cppcodec: not found")
   set(MIRAKC_ARIB_VENDOR_READY FALSE)
 endif()
 
@@ -514,6 +557,7 @@ add_executable(mirakc-arib
   src/jsonl_sink.hh
   src/jsonl_source.hh
   src/logging.hh
+  src/logo_collector.hh
   src/main.cc
   src/packet_sink.hh
   src/packet_source.hh
@@ -529,6 +573,7 @@ target_link_libraries(mirakc-arib
     fmt::fmt
     spdlog::spdlog
     rapidjson::header-only
+    cppcodec::header-only
     tsduck-arib::static-lib
     aribb24::static-lib
 )
@@ -540,6 +585,7 @@ target_compile_definitions(mirakc-arib
     MIRAKC_ARIB_FMT_VERSION="${MIRAKC_ARIB_FMT_VERSION}"
     MIRAKC_ARIB_SPDLOG_VERSION="${MIRAKC_ARIB_SPDLOG_VERSION}"
     MIRAKC_ARIB_RAPIDJSON_VERSION="${MIRAKC_ARIB_RAPIDJSON_VERSION}"
+    MIRAKC_ARIB_CPPCODEC_VERSION="${MIRAKC_ARIB_CPPCODEC_VERSION}"
     MIRAKC_ARIB_ARIBB24_VERSION="${MIRAKC_ARIB_ARIBB24_VERSION}"
     MIRAKC_ARIB_TSDUCK_ARIB_VERSION="${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}"
 )
@@ -550,6 +596,7 @@ if(MIRAKC_ARIB_TEST)
   add_executable(mirakc-arib-test
     test/airtime_tracker_test.cc
     test/eit_collector_test.cc
+    test/logo_collector_test.cc
     test/packet_source_test.cc
     test/pcr_synchronizer_test.cc
     test/program_filter_test.cc
@@ -576,6 +623,7 @@ if(MIRAKC_ARIB_TEST)
       fmt::fmt
       spdlog::spdlog
       rapidjson::header-only
+      cppcodec::header-only
       tsduck-arib::static-lib
       aribb24::static-lib
   )
@@ -601,6 +649,7 @@ if(MIRAKC_ARIB_TEST)
       fmt::fmt
       spdlog::spdlog
       rapidjson::header-only
+      cppcodec::header-only
       tsduck-arib::static-lib
       aribb24::static-lib
   )
