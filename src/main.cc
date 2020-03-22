@@ -23,7 +23,7 @@
 
 namespace {
 
-static const std::string kVersion = R"(0.1.0
+static const std::string kVersion = R"({}
 
 * docopt/docopt.cpp {}
 * fmtlib/fmt {}
@@ -729,6 +729,7 @@ void ShowHelp(const Args& args) {
 
 int main(int argc, char* argv[]) {
   auto version = fmt::format(kVersion,
+                             MIRAKC_ARIB_VERSION,
                              MIRAKC_ARIB_DOCOPT_VERSION,
                              MIRAKC_ARIB_FMT_VERSION,
                              MIRAKC_ARIB_SPDLOG_VERSION,
