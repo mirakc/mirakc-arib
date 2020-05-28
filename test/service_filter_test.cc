@@ -155,9 +155,10 @@ TEST(ServiceFilterTest, ServiceStream) {
           EXPECT_CALL(validator, Validate).WillOnce(
               [](const ts::PMT& pmt) {
                 EXPECT_TRUE(pmt.isValid());
-                EXPECT_EQ(2, pmt.streams.size());
+                EXPECT_EQ(3, pmt.streams.size());
                 EXPECT_TRUE(pmt.streams.find(0x0301) != pmt.streams.end());
                 EXPECT_TRUE(pmt.streams.find(0x0302) != pmt.streams.end());
+                EXPECT_TRUE(pmt.streams.find(0x0303) != pmt.streams.end());
               });
           validator.FeedPacket(packet);
           return true;
@@ -176,6 +177,12 @@ TEST(ServiceFilterTest, ServiceStream) {
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(0x0302, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0303, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;
         });

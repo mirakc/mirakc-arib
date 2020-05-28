@@ -25,8 +25,7 @@ class ServiceFilter final : public PacketSink,
   explicit ServiceFilter(const ServiceFilterOption& option)
       : option_(option),
         demux_(context_),
-        pat_packetizer_(ts::PID_PAT, ts::CyclingPacketizer::ALWAYS),
-        pmt_packetizer_(ts::PID_PAT, ts::CyclingPacketizer::ALWAYS) {
+        pat_packetizer_(ts::PID_PAT, ts::CyclingPacketizer::ALWAYS) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
     MIRAKC_ARIB_DEBUG("Demux PAT");
@@ -87,14 +86,6 @@ class ServiceFilter final : public PacketSink,
       pat_packetizer_.getNextPacket(pat_packet);
       MIRAKC_ARIB_ASSERT(pat_packet.getPID() == ts::PID_PAT);
       return sink_->HandlePacket(pat_packet);
-    }
-
-    if (pid == pmt_pid_) {
-      // Feed a modified PMT packet
-      ts::TSPacket pmt_packet;
-      pmt_packetizer_.getNextPacket(pmt_packet);
-      MIRAKC_ARIB_ASSERT(pmt_packet.getPID() == pmt_pid_);
-      return sink_->HandlePacket(pmt_packet);
     }
 
     MIRAKC_ARIB_ASSERT(pid != ts::PID_NULL);
@@ -260,52 +251,26 @@ class ServiceFilter final : public PacketSink,
       i = pmt.descs.search(ts::DID_CA, i + 1);
     }
 
-    for (auto it = pmt.streams.begin(); it != pmt.streams.end(); ) {
+    for (auto it = pmt.streams.begin(); it != pmt.streams.end(); ++it) {
       ts::PID pid = it->first;
+      content_filter_.insert(pid);
+
       const auto& stream = it->second;
       if (stream.isVideo()) {
-        content_filter_.insert(pid);
         MIRAKC_ARIB_DEBUG("Content filter += PES/Video#{:04X}", pid);
-        ++it;
       } else if (stream.isAudio()) {
-        content_filter_.insert(pid);
         MIRAKC_ARIB_DEBUG("Content filter += PES/Audio#{:04X}", pid);
-        ++it;
       } else if (stream.isSubtitles()) {
-        content_filter_.insert(pid);
         MIRAKC_ARIB_DEBUG("Content filter += PES/Subtitle#{:04X}", pid);
-        ++it;
       } else if (IsAribSubtitle(stream)) {
-        content_filter_.insert(pid);
         MIRAKC_ARIB_DEBUG("Content filter += PES/Arib-Subtitle#{:04X}", pid);
-        ++it;
       } else if (IsAribSuperimposedText(stream)) {
-        content_filter_.insert(pid);
-        MIRAKC_ARIB_DEBUG("Content filter += PES/Arib-SuperimposedText#{:04X}", pid);
-        ++it;
+        MIRAKC_ARIB_DEBUG(
+            "Content filter += PES/Arib-SuperimposedText#{:04X}", pid);
       } else {
-        // Remove other streams from PMT.
-        //
-        // Mirakurun never drops any PES packet listed in PMT table.  But this
-        // program drops PES packets which are not required for playback, in
-        // order to reduce the data size of the TS stream.
-        //
-        // Usually, TS stream includes the following types of additional PES
-        // packets:
-        //
-        //   * DSM-CC for BML
-        //   * PES private data
-        //
-        // It will be possible to play TS stream without any error even though
-        // PES packets listed above are dropped.
-        it = pmt.streams.erase(it);
+        MIRAKC_ARIB_DEBUG("Content filter += Other#{:04X}", pid);
       }
     }
-
-    // Prepare packetizer for modified PMT.
-    pmt_packetizer_.removeAll();
-    pmt_packetizer_.setPID(pmt_pid_);
-    pmt_packetizer_.addTable(context_, pmt);
 
     psi_filter_.insert(pmt_pid_);
     MIRAKC_ARIB_DEBUG("PSI/SI filter += PMT#{:04X}", pmt_pid_);
@@ -346,7 +311,6 @@ class ServiceFilter final : public PacketSink,
   ts::DuckContext context_;
   ts::SectionDemux demux_;
   ts::CyclingPacketizer pat_packetizer_;
-  ts::CyclingPacketizer pmt_packetizer_;
   std::unique_ptr<PacketSink> sink_;
   std::unordered_set<ts::PID> psi_filter_;
   std::unordered_set<ts::PID> content_filter_;

@@ -397,20 +397,14 @@ Description:
     * EMM (PID specified in CAT)
     * PCR (PID specified in PMT)
     * ECM (PID specified in PMT)
-    * PES for video/audio/subtitles (PID specified in PMT)
+    * PES (PID specified in PMT)
 
   `filter-service` modifies PAT so that its service map contains only the
   specified SID.
 
-  `filter-service` modifies PMT so that its stream map contains only PES's PIDs
-  which are needed for playback.
-
   Unlike Mirakurun, packets listed below are always dropped:
 
     * SDTT (PID=0x0023,0x0028)
-    * DCM-CC for BML (PID specified in PMT)
-    * PES private data that doesn't contain subtitles and superimposed texts
-      (PID specified in PMT)
 )";
 
 static const std::string kFilterProgram = "filter-program";
