@@ -174,7 +174,7 @@ class TableProgress {
   }
 
   void Show(size_t index) const {
-    MIRAKC_ARIB_DEBUG("      {}: {:3d}/256", index, CalcProgressCount());
+    MIRAKC_ARIB_TRACE("      {}: {:3d}/256", index, CalcProgressCount());
     std::stringstream ss;
     for (size_t i = 0; i < kNumSegments; ++i) {
       ss << '[';
@@ -190,7 +190,7 @@ class TableProgress {
       }
       ss << ']';
       if (i % 8 == 7) {
-        MIRAKC_ARIB_DEBUG("         {}", ss.str());
+        MIRAKC_ARIB_TRACE("         {}", ss.str());
         ss.str("");
       }
     }
@@ -321,7 +321,7 @@ class TableGroupProgress {
   }
 
   void Show(const char* label) const {
-    MIRAKC_ARIB_DEBUG("    {}: last-table-index({}), ltid-changed({})",
+    MIRAKC_ARIB_TRACE("    {}: last-table-index({}), ltid-changed({})",
                       label, last_table_index_, last_table_index_change_count_);
     for (size_t i = 0; i < kNumTables; ++i) {
       if (tables_[i].IsCompleted()) {
@@ -402,7 +402,7 @@ class ServiceProgress {
   }
 
   void Show(uint32_t id) const {
-    MIRAKC_ARIB_DEBUG("  {:08X}:", id);
+    MIRAKC_ARIB_TRACE("  {:08X}:", id);
     if (!basic_.IsCompleted()) {
       basic_.Show("basic");
     }
@@ -453,7 +453,7 @@ class CollectProgress {
     if (IsCompleted()) {
       return;
     }
-    MIRAKC_ARIB_DEBUG("Progress:");
+    MIRAKC_ARIB_TRACE("Progress:");
     for (const auto& pair : services_) {
       if (pair.second.IsCompleted()) {
         continue;
@@ -498,7 +498,7 @@ class EitCollector final : public PacketSink,
   explicit EitCollector(const EitCollectorOption& option)
       : option_(option),
         demux_(context_) {
-    if (GetLogLevel() == spdlog::level::debug) {
+    if (GetLogLevel() == spdlog::level::trace) {
       EnableShowProgress();
     }
 

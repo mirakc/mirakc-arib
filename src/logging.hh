@@ -30,6 +30,7 @@ inline void InitLogger(const std::string& name) {
 #endif
 
 #define MIRAKC_ARIB_LOG(...) spdlog::log(MIRAKC_ARIB_SOURCE_LOC, __VA_ARGS__)
+#define MIRAKC_ARIB_TRACE(...) MIRAKC_ARIB_LOG(spdlog::level::trace, __VA_ARGS__)
 #define MIRAKC_ARIB_DEBUG(...) MIRAKC_ARIB_LOG(spdlog::level::debug, __VA_ARGS__)
 #define MIRAKC_ARIB_INFO(...) MIRAKC_ARIB_LOG(spdlog::level::info, __VA_ARGS__)
 #define MIRAKC_ARIB_WARN(...) MIRAKC_ARIB_LOG(spdlog::level::warn, __VA_ARGS__)
