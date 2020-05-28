@@ -16,10 +16,10 @@ set(MIRAKC_ARIB_DOCOPT_VERSION
   "1ae5cd6ee6328399863dc657d0b2f7b32e8472dd"
   CACHE STRING "docopt.cpp version to use.")
 set(MIRAKC_ARIB_FMT_VERSION
-  "6.1.2"
+  "6.2.1"
   CACHE STRING "fmt version to use.")
 set(MIRAKC_ARIB_SPDLOG_VERSION
-  "v1.5.0"
+  "v1.6.1"
   CACHE STRING "spdlog version to use.")
 set(MIRAKC_ARIB_RAPIDJSON_VERSION
   "v1.1.0"
