@@ -10,7 +10,7 @@ option(MIRAKC_ARIB_TEST "Build tests." OFF)
 option(MIRAKC_ARIB_VENDOR_TEST "Build tests in vendor libs." OFF)
 
 set(MIRAKC_ARIB_VERSION
-  "0.2.1"
+  "0.3.0"
   CACHE STRING "mirakc-arib version." FORCE)
 set(MIRAKC_ARIB_DOCOPT_VERSION
   "1ae5cd6ee6328399863dc657d0b2f7b32e8472dd"
