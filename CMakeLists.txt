@@ -11,34 +11,34 @@ option(MIRAKC_ARIB_VENDOR_TEST "Build tests in vendor libs." OFF)
 
 set(MIRAKC_ARIB_VERSION
   "0.2.1"
-  CACHE STRING "mirakc-arib version.")
+  CACHE STRING "mirakc-arib version." FORCE)
 set(MIRAKC_ARIB_DOCOPT_VERSION
   "1ae5cd6ee6328399863dc657d0b2f7b32e8472dd"
-  CACHE STRING "docopt.cpp version to use.")
+  CACHE STRING "docopt.cpp version to use." FORCE)
 set(MIRAKC_ARIB_FMT_VERSION
   "6.2.1"
-  CACHE STRING "fmt version to use.")
+  CACHE STRING "fmt version to use." FORCE)
 set(MIRAKC_ARIB_SPDLOG_VERSION
   "v1.6.1"
-  CACHE STRING "spdlog version to use.")
+  CACHE STRING "spdlog version to use." FORCE)
 set(MIRAKC_ARIB_RAPIDJSON_VERSION
   "v1.1.0"
-  CACHE STRING "RapidJSON version to use.")
+  CACHE STRING "RapidJSON version to use." FORCE)
 set(MIRAKC_ARIB_CPPCODEC_VERSION
   "bd6ddf95129e769b50ef63e0f558fa21364f3f65"
-  CACHE STRING "cppcodec version to use.")
+  CACHE STRING "cppcodec version to use." FORCE)
 set(MIRAKC_ARIB_ARIBB24_VERSION
   "654026e064ec127beff43bf3ecdcebd54119be15"
-  CACHE STRING "aribb24 version to use.")
+  CACHE STRING "aribb24 version to use." FORCE)
 set(MIRAKC_ARIB_TSDUCK_ARIB_VERSION
   "c400025b7d31e26c0c15471e81adf2ad50632281"
-  CACHE STRING "tsduck-arib version to use.")
+  CACHE STRING "tsduck-arib version to use." FORCE)
 set(MIRAKC_ARIB_GOOGLETEST_VERSION
   "release-1.10.0"
-  CACHE STRING "googletest version to use.")
+  CACHE STRING "googletest version to use." FORCE)
 set(MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION
   "v1.5.0"
-  CACHE STRING "Google Benchmark version to use.")
+  CACHE STRING "Google Benchmark version to use." FORCE)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
