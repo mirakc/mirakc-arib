@@ -96,6 +96,12 @@ TEST(ProgramFilter2Test, WaitReady) {
         });
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_EIT, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
           EXPECT_EQ(1, packet.getCC());
           return true;
@@ -153,6 +159,12 @@ TEST(ProgramFilter2Test, StartStreamingByNextPmt) {
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_EIT, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
@@ -231,6 +243,12 @@ TEST(ProgramFilter2Test, StartStreamingByEit) {
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_EIT, packet.getPID());
           EXPECT_EQ(0, packet.getCC());
           return true;
         });

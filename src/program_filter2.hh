@@ -80,12 +80,14 @@ class ProgramFilter2 final : public PacketSink,
   bool WaitReady(const ts::TSPacket& packet) {
     auto pid = packet.getPID();
 
-    if (pid != ts::PID_PAT) {
-      // Drop packets except for PAT.
-      return true;
+    if (pid == ts::PID_PAT || pid == ts::PID_CAT || pid == ts::PID_NIT ||
+        pid == ts::PID_SDT || pid == ts::PID_EIT || pid == ts::PID_RST ||
+        pid == ts::PID_TOT || pid == ts::PID_BIT || pid == ts::PID_CDT) {
+      return sink_->HandlePacket(packet);
     }
 
-    return sink_->HandlePacket(packet);
+    // Drop other packets.
+    return true;
   }
 
   bool DoStreaming(const ts::TSPacket& packet) {
@@ -134,6 +136,10 @@ class ProgramFilter2 final : public PacketSink,
   void HandlePmt(const ts::BinaryTable& table) {
     ts::PMT pmt(context_, table);
 
+    if (state_ != kWaitReady) {
+      return;
+    }
+
     if (!pmt.isValid()) {
       MIRAKC_ARIB_WARN("Broken PMT, skip");
       return;
@@ -170,9 +176,11 @@ class ProgramFilter2 final : public PacketSink,
 
     const auto& present = eit.events[0];
     if (present.event_id == option_.eid) {
-      MIRAKC_ARIB_INFO("Event#{:04X} has started, start streaming",
-                       option_.eid);
-      state_ = kStreaming;
+      if (state_ == kWaitReady) {
+        MIRAKC_ARIB_INFO("Event#{:04X} has started, start streaming",
+                         option_.eid);
+        state_ = kStreaming;
+      }
       return;
     }
 
@@ -201,18 +209,6 @@ class ProgramFilter2 final : public PacketSink,
     MIRAKC_ARIB_ERROR("Event#{:04X} might have been canceled", option_.eid);
     state_ = kDone;
     return;
-  }
-
-  bool PreStreamingPackets(const ts::TSPacket& packet) {
-    auto pid = packet.getPID();
-    bool do_send = false;
-    if (pid == ts::PID_PAT) {
-      do_send = true;
-    }
-    if (do_send) {
-      return sink_->HandlePacket(packet);
-    }
-    return true;
   }
 
   enum State {

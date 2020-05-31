@@ -491,13 +491,8 @@ Description:
   change of the PMT version as the start position of the TV program.
 
   Before the TV program starts, PMTs for the previous TV program will come.
-  `filter-program2` simply stops streaming packets except for PAT until the
-  second "version" of PMT comes.  This is not a perfect solution, but works well
-  in most cases.
-
-  `filter-program2` never drops PAT packets even before the TV program starts.
-  Leading PAT packets may be useless and those increase a file size by tens of
-  KB.
+  `filter-program2` simply drops PMT and PES packets until a different version
+  of PMT comes.  This is not a perfect solution, but works well in most cases.
 )";
 
 static const std::string kTrackAirtime = "track-airtime";
