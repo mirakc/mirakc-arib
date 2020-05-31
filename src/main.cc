@@ -18,6 +18,7 @@
 #include "packet_source.hh"
 #include "pcr_synchronizer.hh"
 #include "program_filter.hh"
+#include "program_filter2.hh"
 #include "service_filter.hh"
 #include "service_scanner.hh"
 
@@ -40,7 +41,7 @@ Tools to process ARIB TS streams.
 Usage:
   mirakc-arib (-h | --help) [(scan-services | sync-clocks | collect-eits |
                               collect-logos | filter-service | filter-program |
-                              track-airtime)]
+                              filter-program2 | track-airtime)]
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
@@ -51,6 +52,7 @@ Usage:
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
               --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
               [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
+  mirakc-arib filter-program2 --sid=<SID> --eid=<EID> [FILE]
   mirakc-arib track-airtime --sid=<SID> --eid=<EID> [FILE]
 
 Description:
@@ -461,6 +463,43 @@ Description:
       of streaming  of the TV program  of the TV program  of streaming
 )";
 
+static const std::string kFilterProgram2 = "filter-program2";
+
+static const std::string kFilterProgram2Help = R"(
+Program filter
+
+Usage:
+  mirakc-arib filter-program2 --sid=<SID> --eid=<EID> [FILE]
+
+Options:
+  -h --help
+    Print help.
+
+  --sid=<SID>
+    Service ID.
+
+  --eid=<EID>
+    Event ID of a TV program.
+
+Arguments:
+  FILE
+    Path to a TS file.
+
+Description:
+  Unkile `filter-program`, `filter-program2` doesn't use PCR for detecting the
+  start position of the TV program.  Instead, `filter-program2` detects the
+  change of the PMT version as the start position of the TV program.
+
+  Before the TV program starts, PMTs for the previous TV program will come.
+  `filter-program2` simply stops streaming packets except for PAT until the
+  second "version" of PMT comes.  This is not a perfect solution, but works well
+  in most cases.
+
+  `filter-program2` never drops PAT packets even before the TV program starts.
+  Leading PAT packets may be useless and those increase a file size by tens of
+  KB.
+)";
+
 static const std::string kTrackAirtime = "track-airtime";
 
 static const std::string kTrackAirtimeHelp = R"(
@@ -550,6 +589,8 @@ void Init(const Args& args) {
     InitLogger(kFilterService);
   } else if (args.at(kFilterProgram).asBool()) {
     InitLogger(kFilterProgram);
+  } else if (args.at(kFilterProgram2).asBool()) {
+    InitLogger(kFilterProgram2);
   } else if (args.at(kTrackAirtime).asBool()) {
     InitLogger(kTrackAirtime);
   }
@@ -642,6 +683,16 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
       opt->end_margin, opt->pre_streaming);
 }
 
+void LoadOption(const Args& args, ProgramFilter2Option* opt) {
+  static const std::string kSid = "--sid";
+  static const std::string kEid = "--eid";
+
+  opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
+  opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
+  MIRAKC_ARIB_INFO(
+      "Program Filter 2: SID#{:04X} EID#{:04X}", opt->sid, opt->eid);
+}
+
 std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
   if (args.at(kScanServices).asBool()) {
     ServiceScannerOption option;
@@ -689,6 +740,17 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     filter->Connect(std::move(program_filter));
     return filter;
   }
+  if (args.at(kFilterProgram2).asBool()) {
+    ServiceFilterOption service_option;
+    LoadOption(args, &service_option);
+    auto filter = std::make_unique<ServiceFilter>(service_option);
+    ProgramFilter2Option program_option;
+    LoadOption(args, &program_option);
+    auto program_filter = std::make_unique<ProgramFilter2>(program_option);
+    program_filter->Connect(std::make_unique<StdoutSink>());
+    filter->Connect(std::move(program_filter));
+    return filter;
+  }
   if (args.at(kTrackAirtime).asBool()) {
     AirtimeTrackerOption option;
     LoadOption(args, &option);
@@ -712,6 +774,8 @@ void ShowHelp(const Args& args) {
     fmt::print(kFilterServiceHelp);
   } else if (args.at(kFilterProgram).asBool()) {
     fmt::print(kFilterProgramHelp);
+  } else if (args.at(kFilterProgram2).asBool()) {
+    fmt::print(kFilterProgram2Help);
   } else if (args.at(kTrackAirtime).asBool()) {
     fmt::print(kTrackAirtimeHelp);
   } else {

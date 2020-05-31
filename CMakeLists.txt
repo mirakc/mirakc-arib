@@ -549,6 +549,7 @@ add_executable(mirakc-arib
   src/packet_source.hh
   src/pcr_synchronizer.hh
   src/program_filter.hh
+  src/program_filter2.hh
   src/service_filter.hh
   src/service_scanner.hh
 )
@@ -587,6 +588,7 @@ if(MIRAKC_ARIB_TEST)
     test/packet_source_test.cc
     test/pcr_synchronizer_test.cc
     test/program_filter_test.cc
+    test/program_filter2_test.cc
     test/service_filter_test.cc
     test/service_scanner_test.cc
     test/test.cc
