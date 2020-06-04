@@ -105,7 +105,7 @@ Usages of mirakc-arib are different from `tsp`:
 
 mirakc-arib is static-linked against the following libraries:
 
-* [docopt/docopt.cpp] (Boost/MIT)
+* [masnagam/docopt.cpp] forked from [docopt/docopt.cpp] (Boost/MIT)
 * [fmtlib/fmt] (MIT)
 * [gabime/spdlog] (MIT)
 * [Tencent/rapidjson] (MIT)
@@ -155,6 +155,7 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in this project by you, as defined in the Apache-2.0 license,
 shall be dual licensed as above, without any additional terms or conditions.
 
+[masnagam/docopt.cpp]: https://github.com/masnagam/docopt.cpp
 [docopt/docopt.cpp]: https://github.com/docopt/docopt.cpp
 [fmtlib/fmt]: https://github.com/fmtlib/fmt
 [gabime/spdlog]: https://github.com/gabime/spdlog

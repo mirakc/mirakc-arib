@@ -13,7 +13,7 @@ set(MIRAKC_ARIB_VERSION
   "0.4.1"
   CACHE STRING "mirakc-arib version." FORCE)
 set(MIRAKC_ARIB_DOCOPT_VERSION
-  "1ae5cd6ee6328399863dc657d0b2f7b32e8472dd"
+  "715aca4846fddc61649f8e363c029f7fd3e21c2c"
   CACHE STRING "docopt.cpp version to use." FORCE)
 set(MIRAKC_ARIB_FMT_VERSION
   "6.2.1"
@@ -130,7 +130,7 @@ ExternalProject_Add(vendor-docopt
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
   GIT_REPOSITORY
-    https://github.com/docopt/docopt.cpp.git
+    https://github.com/masnagam/docopt.cpp.git
   GIT_TAG
     ${MIRAKC_ARIB_DOCOPT_VERSION}
   CMAKE_ARGS
