@@ -212,6 +212,8 @@ ExternalProject_Add(vendor-spdlog
     https://github.com/gabime/spdlog.git
   GIT_TAG
     ${MIRAKC_ARIB_SPDLOG_VERSION}
+  PATCH_COMMAND
+    git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/spdlog.patch
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}

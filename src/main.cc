@@ -5,6 +5,7 @@
 
 #include <docopt/docopt.h>
 #include <fmt/format.h>
+#include <spdlog/cfg/env.h>
 #include <tsduck/tsduck.h>
 
 #include "airtime_tracker.hh"
@@ -781,6 +782,8 @@ void ShowHelp(const Args& args) {
 }  // namespace
 
 int main(int argc, char* argv[]) {
+  spdlog::cfg::load_env_levels("MIRAKC_ARIB_LOG");
+
   auto version = fmt::format(kVersion,
                              MIRAKC_ARIB_VERSION,
                              MIRAKC_ARIB_DOCOPT_VERSION,

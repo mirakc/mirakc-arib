@@ -107,7 +107,7 @@ mirakc-arib is static-linked against the following libraries:
 
 * [masnagam/docopt.cpp] forked from [docopt/docopt.cpp] (Boost/MIT)
 * [fmtlib/fmt] (MIT)
-* [gabime/spdlog] (MIT)
+* [gabime/spdlog] w/ [patches/spdlog.patch](./patches/spdlog.patch) (MIT)
 * [Tencent/rapidjson] (MIT)
 * [tplgy/cppcodec] (MIT)
 * [masnagam/tsduck-arib] forked from [tsduck/tsduck] (BSD 2-Clause)

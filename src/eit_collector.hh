@@ -498,7 +498,7 @@ class EitCollector final : public PacketSink,
   explicit EitCollector(const EitCollectorOption& option)
       : option_(option),
         demux_(context_) {
-    if (GetLogLevel() == spdlog::level::trace) {
+    if (spdlog::default_logger()->should_log(spdlog::level::trace)) {
       EnableShowProgress();
     }
 

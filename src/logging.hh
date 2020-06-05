@@ -8,18 +8,9 @@
 
 namespace {
 
-inline spdlog::level::level_enum GetLogLevel() {
-  const auto* v = std::getenv("MIRAKC_ARIB_LOG");
-  if (v == nullptr) {
-    return spdlog::level::off;
-  }
-  return spdlog::level::from_str(std::string(v));
-}
-
 inline void InitLogger(const std::string& name) {
   auto logger = spdlog::stderr_color_st(name);
   spdlog::set_default_logger(logger);
-  spdlog::set_level(GetLogLevel());
 }
 
 #if MIRAKC_ARIB_LOG_SHOW_SOURCE_LOC

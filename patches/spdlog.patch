@@ -1,0 +1,40 @@
+diff --git include/spdlog/cfg/env.h include/spdlog/cfg/env.h
+index 115b676f..dbd60489 100644
+--- include/spdlog/cfg/env.h
++++ include/spdlog/cfg/env.h
+@@ -25,9 +25,9 @@
+ 
+ namespace spdlog {
+ namespace cfg {
+-void load_env_levels()
++void load_env_levels(const char *env_var = "SPDLOG_LEVEL")
+ {
+-    auto env_val = details::os::getenv("SPDLOG_LEVEL");
++    auto env_val = details::os::getenv(env_var);
+     auto levels = helpers::extract_levels(env_val);
+     details::registry::instance().update_levels(std::move(levels));
+ }
+diff --git include/spdlog/cfg/helpers-inl.h include/spdlog/cfg/helpers-inl.h
+index b0915073..898eeee6 100644
+--- include/spdlog/cfg/helpers-inl.h
++++ include/spdlog/cfg/helpers-inl.h
+@@ -82,17 +82,14 @@ SPDLOG_INLINE log_levels extract_levels(const std::string &input)
+ {
+     auto key_vals = extract_key_vals_(input);
+     log_levels rv;
++    rv.set_default(level::off);  // compatible with env_logger
+ 
+     for (auto &name_level : key_vals)
+     {
+         auto &logger_name = name_level.first;
+         auto level_name = to_lower_(name_level.second);
+         auto level = level::from_str(level_name);
+-        // fallback to "info" if unrecognized level name
+-        if (level == level::off && level_name != "off")
+-        {
+-            level = level::info;
+-        }
++        // fallback to "off" if unrecognized level name
+         rv.set(logger_name, level);
+     }
+     return rv;
