@@ -32,7 +32,7 @@ class ProgramFilter final : public PacketSink,
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
     demux_.addPID(ts::PID_EIT);
-    MIRAKC_ARIB_DEBUG("Demux PAT EIT");
+    MIRAKC_ARIB_DEBUG("Demux += PAT EIT");
   }
 
   virtual ~ProgramFilter() override {}
@@ -71,18 +71,18 @@ class ProgramFilter final : public PacketSink,
     switch (state_) {
       case kWaitReady:
         return WaitReady(packet);
-      case kSeekPat:
-        return SeekPat(packet);
       case kStreaming:
         return DoStreaming(packet);
-      case kDone:
-        MIRAKC_ARIB_INFO("Done");
-        return false;
     }
     // never reach here
   }
 
  private:
+  enum State {
+    kWaitReady,
+    kStreaming,
+  };
+
   // Compares two PCR values taking into account the PCR wrap around.
   //
   // Assumed that the real interval time between the PCR values is less than
@@ -97,18 +97,35 @@ class ProgramFilter final : public PacketSink,
   }
 
   bool WaitReady(const ts::TSPacket& packet) {
-    if (option_.pre_streaming) {
-      if (!PreStreamingPackets(packet)) {
-          state_ = kDone;
-          return false;
-        }
+    if (stop_) {
+      MIRAKC_ARIB_WARN("Canceled");
+      return false;
+    }
+
+    auto pid = packet.getPID();
+
+    if (pid == ts::PID_PAT) {
+      if (option_.pre_streaming) {
+        return sink_->HandlePacket(packet);
+      }
+      // Save packets of the last PAT.
+      if (packet.getPUSI()) {
+        last_pat_packets_.clear();
+      }
+      last_pat_packets_.push_back(packet);
+    } else if (pmt_pid_ != ts::PID_NULL && pid == pmt_pid_) {
+      // Save packets of the last PMT.
+      if (packet.getPUSI()) {
+        last_pmt_packets_.clear();
+      }
+      last_pmt_packets_.push_back(packet);
+    } else {
+      // Drop other packets.
     }
 
     if (!pcr_pid_ready_ || !pcr_range_ready_) {
       return true;
     }
-
-    auto pid = packet.getPID();
 
     if (pid != pcr_pid_) {
       return true;
@@ -116,7 +133,6 @@ class ProgramFilter final : public PacketSink,
 
     if (!packet.hasPCR()) {
       MIRAKC_ARIB_ERROR("No PCR value in PCR#{:04X}", pid);
-      state_ = kDone;
       return false;
     }
 
@@ -126,63 +142,47 @@ class ProgramFilter final : public PacketSink,
     // Pcr class.  This coding style looks elegant, but requires more typing.
     if (ComparePcr(pcr, end_pcr_) >= 0) {  // pcr >= end_pcr_
       MIRAKC_ARIB_INFO("Reached the end PCR");
-      state_ = kDone;
       return false;
     }
 
-    if (ComparePcr(pcr, start_pcr_) >= 0) {  // pcr >= start_pcr_
-      MIRAKC_ARIB_INFO("Reached the start PCR");
-      if (option_.pre_streaming) {
-        MIRAKC_ARIB_INFO("Start streaming");
-        state_ = kStreaming;
-      } else {
-        MIRAKC_ARIB_INFO("Seek PAT");
-        state_ = kSeekPat;
-      }
+    if (ComparePcr(pcr, start_pcr_) < 0) {  // pcr < start_pcr_
       return true;
     }
 
-    return true;
-  }
+    MIRAKC_ARIB_INFO("Reached the start PCR");
 
-  bool SeekPat(const ts::TSPacket& packet) {
-    auto pid = packet.getPID();
-
-    if (pid == pcr_pid_) {
-      if (!packet.hasPCR()) {
-        MIRAKC_ARIB_ERROR("No PCR value in PCR#{:04X}", pid);
-        state_ = kDone;
+    // Send pending packets.
+    if (!option_.pre_streaming) {
+      MIRAKC_ARIB_ASSERT(!last_pat_packets_.empty());
+      for (const auto& pat : last_pat_packets_) {
+        if (!sink_->HandlePacket(pat)) {
+          return false;
+        }
+      }
+      last_pat_packets_.clear();
+    }
+    for (const auto& pmt : last_pmt_packets_) {
+      if (!sink_->HandlePacket(pmt)) {
         return false;
       }
-
-      auto pcr = packet.getPCR();
-
-      if (ComparePcr(pcr, end_pcr_) >= 0) {  // pcr >= end_pcr_
-        MIRAKC_ARIB_INFO("Reached the end PCR");
-        state_ = kDone;
-        return false;
-      }
-
-      return true;
+      last_pmt_packets_.clear();
     }
 
-    if (pid != ts::PID_PAT) {
-      return true;
-    }
-
-    MIRAKC_ARIB_INFO("Start streaming");
     state_ = kStreaming;
-
     return sink_->HandlePacket(packet);
   }
 
   bool DoStreaming(const ts::TSPacket& packet) {
+    if (stop_) {
+      MIRAKC_ARIB_INFO("Done");
+      return false;
+    }
+
     auto pid = packet.getPID();
 
     if (pid == pcr_pid_) {
       if (!packet.hasPCR()) {
         MIRAKC_ARIB_ERROR("No PCR value in PCR#{:04X}", pid);
-        state_ = kDone;
         return false;
       }
 
@@ -190,7 +190,6 @@ class ProgramFilter final : public PacketSink,
 
       if (ComparePcr(pcr, end_pcr_) >= 0) {  // pcr >= end_pcr_
         MIRAKC_ARIB_INFO("Reached the end PCR");
-        state_ = kDone;
         return false;
       }
     }
@@ -222,19 +221,20 @@ class ProgramFilter final : public PacketSink,
       return;
     }
 
-    // The following condition is ensured in ServiceFilter.
+    // The following condition is ensured by ServiceFilter.
     MIRAKC_ARIB_ASSERT(pat.pmts.find(option_.sid) != pat.pmts.end());
 
     auto new_pmt_pid = pat.pmts[option_.sid];
 
     if (pmt_pid_ != ts::PID_NULL) {
+      MIRAKC_ARIB_DEBUG("Demux -= PMT#{:04X}", pmt_pid_);
       demux_.removePID(pmt_pid_);
       pmt_pid_ = ts::PID_NULL;
     }
 
     pmt_pid_ = new_pmt_pid;
     demux_.addPID(pmt_pid_);
-    MIRAKC_ARIB_DEBUG("Demux PMT#{:04X}", pmt_pid_);
+    MIRAKC_ARIB_DEBUG("Demux += PMT#{:04X}", pmt_pid_);
   }
 
   void HandlePmt(const ts::BinaryTable& table) {
@@ -243,14 +243,6 @@ class ProgramFilter final : public PacketSink,
     if (!pmt.isValid()) {
       MIRAKC_ARIB_WARN("Broken PMT, skip");
       return;
-    }
-
-    ecm_pids_.clear();
-    auto i = pmt.descs.search(ts::DID_CA);
-    while (i < pmt.descs.size()) {
-      ts::CADescriptor desc(context_, *pmt.descs[i]);
-      ecm_pids_.insert(desc.ca_pid);
-      i = pmt.descs.search(ts::DID_CA, i + 1);
     }
 
     pcr_pid_ = pmt.pcr_pid;
@@ -272,8 +264,8 @@ class ProgramFilter final : public PacketSink,
     }
 
     if (eit.events.size() == 0) {
-      MIRAKC_ARIB_ERROR("No event in EIT");
-      state_ = kDone;
+      MIRAKC_ARIB_ERROR("No event in EIT, stop");
+      stop_ = true;
       return;
     }
 
@@ -291,7 +283,7 @@ class ProgramFilter final : public PacketSink,
         return;
       }
       MIRAKC_ARIB_ERROR("Event#{:04X} might have been canceled", option_.eid);
-      state_ = kDone;
+      stop_ = true;
       return;
     }
 
@@ -310,7 +302,7 @@ class ProgramFilter final : public PacketSink,
     }
 
     MIRAKC_ARIB_ERROR("Event#{:04X} might have been canceled", option_.eid);
-    state_ = kDone;
+    stop_ = true;
     return;
   }
 
@@ -334,41 +326,20 @@ class ProgramFilter final : public PacketSink,
     return pcr % kPcrUpperBound;
   }
 
-  bool PreStreamingPackets(const ts::TSPacket& packet) {
-    auto pid = packet.getPID();
-    bool do_send = false;
-    if (pid == ts::PID_PAT) {
-      do_send = true;
-    } else if (pmt_pid_ != ts::PID_NULL && pid == pmt_pid_) {
-      do_send = true;
-    } else if (ecm_pids_.find(pid) != ecm_pids_.end()) {
-      do_send = true;
-    }
-    if (do_send) {
-      return sink_->HandlePacket(packet);
-    }
-    return true;
-  }
-
-  enum State {
-    kWaitReady,
-    kSeekPat,
-    kStreaming,
-    kDone,
-  };
-
   const ProgramFilterOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
   std::unique_ptr<PacketSink> sink_;
   State state_ = kWaitReady;
-  std::unordered_set<ts::PID> ecm_pids_;
+  ts::TSPacketVector last_pat_packets_;
+  ts::TSPacketVector last_pmt_packets_;
   ts::PID pmt_pid_ = ts::PID_NULL;
   ts::PID pcr_pid_ = ts::PID_NULL;
   int64_t start_pcr_ = 0;
   int64_t end_pcr_ = 0;
   bool pcr_pid_ready_ = false;
   bool pcr_range_ready_ = false;
+  bool stop_ = false;
 
   MIRAKC_ARIB_NON_COPYABLE(ProgramFilter);
 };
