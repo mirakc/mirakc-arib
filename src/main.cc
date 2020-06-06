@@ -21,6 +21,7 @@
 #include "program_filter.hh"
 #include "service_filter.hh"
 #include "service_scanner.hh"
+#include "timetable_printer.hh"
 
 namespace {
 
@@ -28,7 +29,7 @@ static const std::string kVersion = R"({}
 
 * docopt/docopt.cpp {}
 * fmtlib/fmt {}
-* gabime/spdlog {}
+* gabime/spdlog {} w/ patches/spdlog.patch
 * Tencent/rapidjson {}
 * tplgy/cppcodec {}
 * masnagam/aribb24 {}
@@ -41,7 +42,7 @@ Tools to process ARIB TS streams.
 Usage:
   mirakc-arib (-h | --help) [(scan-services | sync-clocks | collect-eits |
                               collect-logos | filter-service | filter-program |
-                              track-airtime)]
+                              track-airtime | print-timetable)]
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
@@ -53,6 +54,7 @@ Usage:
               --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
               [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
   mirakc-arib track-airtime --sid=<SID> --eid=<EID> [FILE]
+  mirakc-arib print-timetable [FILE]
 
 Description:
   `mirakc-arib <sub-command> -h` shows help for each sub-command.
@@ -502,6 +504,65 @@ Description:
     }}
 )";
 
+static const std::string kPrintTimetable = "print-timetable";
+
+static const std::string kPrintTimetableHelp = R"(
+Print a timetable of a TS stream
+
+Usage:
+  mirakc-arib print-timetable [FILE]
+
+Options:
+  -h --help
+    Print help.
+
+Arguments:
+  FILE
+    Path to a TS file.
+
+Description:
+  `print-timetable` prints a timetable of a TS stream.  Each line is formatted
+  like below:
+
+    [DATETIME]|[CLOCK]|<MESSAGE>
+
+  where '[...]' means that the field is optional.
+
+  The DATETIME is NOT based on the system clock.  It's computed from PCR and
+  TDT/TOT included in the TS stream.
+
+  The CLOCK is one of PCR, DTS or PTS.  It's formatted like below:
+
+    <decimal integer of PCR base>+<decimal integer of PCR extention>
+
+  Currently, the following packets and tables are shown:
+
+    * Packets having PCR, DTS and/or PTS
+    * PAT
+    * CAT
+    * PMT
+    * EIT p/f Actual
+    * TDT/TOT
+
+Examples:
+  Show the timetable of a specific service stream:
+
+    $ cat nhk.ts | mirakc-arib filter-service --sid=1024 | \
+        mirakc-arib print-timetable
+                           |              |PAT: V#7
+                           |              |  SID#0400 => PMT#01F0
+                           |3172531391+124|PCR#01FF
+                           |3172536790+227|PCR#01FF
+                           |              |PMT: SID#0400 PCR#01FF V#9
+                           |              |  PES#0100 => Video#02
+                           |              |  PES#0110 => Audio#0F
+    ...
+    2020/06/02 22:29:03.000|              |TOT
+    2020/06/02 22:29:03.060|3172585068+178|PCR#01FF
+    2020/06/02 22:29:03.119|3172590391+038|PCR#01FF
+    ...
+)";
+
 class PosixFile final : public File {
  public:
   PosixFile(const std::string& path) {
@@ -553,6 +614,8 @@ void Init(const Args& args) {
     InitLogger(kFilterProgram);
   } else if (args.at(kTrackAirtime).asBool()) {
     InitLogger(kTrackAirtime);
+  } else if (args.at(kPrintTimetable).asBool()) {
+    InitLogger(kPrintTimetable);
   }
 
   ts::DVBCharset::EnableARIBMode();
@@ -693,6 +756,9 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     tracker->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return tracker;
   }
+  if (args.at(kPrintTimetable).asBool()) {
+    return std::make_unique<TimetablePrinter>();
+  }
   return std::unique_ptr<PacketSink>();
 }
 
@@ -711,6 +777,8 @@ void ShowHelp(const Args& args) {
     fmt::print(kFilterProgramHelp);
   } else if (args.at(kTrackAirtime).asBool()) {
     fmt::print(kTrackAirtimeHelp);
+  } else if (args.at(kPrintTimetable).asBool()) {
+    fmt::print(kPrintTimetableHelp);
   } else {
     fmt::print(kUsage);
   }

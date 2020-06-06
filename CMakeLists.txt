@@ -553,6 +553,8 @@ add_executable(mirakc-arib
   src/program_filter.hh
   src/service_filter.hh
   src/service_scanner.hh
+  src/timetable_printer.hh
+  src/tsduck_helper.hh
 )
 
 target_link_libraries(mirakc-arib

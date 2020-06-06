@@ -11,6 +11,7 @@
 #include "logging.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
+#include "tsduck_helper.hh"
 
 namespace {
 
@@ -20,7 +21,7 @@ struct ServiceFilterOption final {
 };
 
 class ServiceFilter final : public PacketSink,
-                           public ts::TableHandlerInterface {
+                            public ts::TableHandlerInterface {
  public:
   explicit ServiceFilter(const ServiceFilterOption& option)
       : option_(option),
@@ -93,25 +94,6 @@ class ServiceFilter final : public PacketSink,
   }
 
  private:
-  static bool IsAribSubtitle(const ts::PMT::Stream& stream) {
-    return CheckComponentTagByRange(stream, 0x30, 0x37);
-  }
-
-  static bool IsAribSuperimposedText(const ts::PMT::Stream& stream) {
-    return CheckComponentTagByRange(stream, 0x38, 0x3F);
-  }
-
-  static bool CheckComponentTagByRange(
-      const ts::PMT::Stream& stream, uint8_t min, uint8_t max) {
-    uint8_t tag;
-    if (stream.getComponentTag(tag)) {
-      if (tag >= min && tag <= max) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   bool CheckFilterForDrop(ts::PID pid) const {
     if (content_filter_.find(pid) != content_filter_.end()) {
       return false;
@@ -263,10 +245,10 @@ class ServiceFilter final : public PacketSink,
       } else if (stream.isSubtitles()) {
         MIRAKC_ARIB_DEBUG("Content filter += PES/Subtitle#{:04X}", pid);
       } else if (IsAribSubtitle(stream)) {
-        MIRAKC_ARIB_DEBUG("Content filter += PES/Arib-Subtitle#{:04X}", pid);
+        MIRAKC_ARIB_DEBUG("Content filter += PES/ARIB-Subtitle#{:04X}", pid);
       } else if (IsAribSuperimposedText(stream)) {
         MIRAKC_ARIB_DEBUG(
-            "Content filter += PES/Arib-SuperimposedText#{:04X}", pid);
+            "Content filter += PES/ARIB-SuperimposedText#{:04X}", pid);
       } else {
         MIRAKC_ARIB_DEBUG("Content filter += Other#{:04X}", pid);
       }
