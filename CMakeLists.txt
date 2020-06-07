@@ -553,6 +553,7 @@ add_executable(mirakc-arib
   src/program_filter.hh
   src/service_filter.hh
   src/service_scanner.hh
+  src/start_seeker.hh
   src/timetable_printer.hh
   src/tsduck_helper.hh
 )
@@ -593,6 +594,7 @@ if(MIRAKC_ARIB_TEST)
     test/program_filter_test.cc
     test/service_filter_test.cc
     test/service_scanner_test.cc
+    test/start_seeker_test.cc
     test/test.cc
     test/test_helper.hh
   )

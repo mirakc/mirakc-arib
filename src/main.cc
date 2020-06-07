@@ -21,6 +21,7 @@
 #include "program_filter.hh"
 #include "service_filter.hh"
 #include "service_scanner.hh"
+#include "start_seeker.hh"
 #include "timetable_printer.hh"
 
 namespace {
@@ -40,9 +41,10 @@ static const std::string kUsage = R"(
 Tools to process ARIB TS streams.
 
 Usage:
-  mirakc-arib (-h | --help) [(scan-services | sync-clocks | collect-eits |
-                              collect-logos | filter-service | filter-program |
-                              track-airtime | print-timetable)]
+  mirakc-arib (-h | --help)
+    [(scan-services | sync-clocks | collect-eits | collect-logos |
+      filter-service | filter-program | track-airtime | seek-start |
+      print-timetable)]
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
@@ -51,9 +53,11 @@ Usage:
   mirakc-arib collect-logos [FILE]
   mirakc-arib filter-service --sid=<SID> [FILE]
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
-              --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
-              [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
+    --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
+    [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
   mirakc-arib track-airtime --sid=<SID> --eid=<EID> [FILE]
+  mirakc-arib seek-start --sid=<SID>
+    [--max-duration=<MS>] [--max-packets=<NUM>] [FILE]
   mirakc-arib print-timetable [FILE]
 
 Description:
@@ -417,8 +421,8 @@ Program filter
 
 Usage:
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
-              --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
-              [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
+    --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
+    [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
 
 Options:
   -h --help
@@ -502,6 +506,49 @@ Description:
       "startTime": 1581596400000,
       "duration": 1500000
     }}
+)";
+
+static const std::string kSeekStart = "seek-start";
+
+static const std::string kSeekStartHelp = R"(
+Seek the start position of a TV program
+
+Usage:
+  mirakc-arib seek-start --sid=<SID>
+    [--max-duration=<MS>] [--max-packets=<NUM>] [FILE]
+
+Options:
+  -h --help
+    Print help.
+
+  --sid=<SID>
+    Service ID.
+
+  --max-duration=<MS>
+    The maximum duration used for detecting a stream transition point.
+
+  --max-packets=<NUM>
+    The maximum number of packets used for detecting a stream transion point.
+
+Arguments:
+  FILE
+    Path to a TS file.
+
+Description:
+  `seek-start` checks the leading packets in the TS stream and start streaming
+  from the start position of a TV program.
+
+  Currently, `seek-start` checks only the change of the number of audio streams
+  for detecting a stream transition point.  This is not a perfect solution, but
+  works well in most cases.
+
+  When a stream transition is detected, `seek-start` start streaming from a PSUI
+  packet of a PAT just before the transition point.  Otherwise, `seek-start`
+  outputs all packets in the TS stream.
+
+  One of --max-duration and --max-packets must be specified.  Usually, it's
+  enough to specify only --max-duration.  --max-packets can be used for
+  limitting the memory usage.
 )";
 
 static const std::string kPrintTimetable = "print-timetable";
@@ -614,6 +661,8 @@ void Init(const Args& args) {
     InitLogger(kFilterProgram);
   } else if (args.at(kTrackAirtime).asBool()) {
     InitLogger(kTrackAirtime);
+  } else if (args.at(kSeekStart).asBool()) {
+    InitLogger(kSeekStart);
   } else if (args.at(kPrintTimetable).asBool()) {
     InitLogger(kPrintTimetable);
   }
@@ -641,17 +690,6 @@ void LoadSidSet(const Args& args, const std::string& name, SidSet* sids) {
   }
 }
 
-void LoadOption(const Args& args, ServiceFilterOption* opt) {
-  static const std::string kSid = "--sid";
-
-  if (args.at(kSid)) {
-    opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
-    if (opt->sid != 0) {
-      MIRAKC_ARIB_INFO("Service Filter: SID#{:04X}", opt->sid);
-    }
-  }
-}
-
 void LoadOption(const Args& args, EitCollectorOption* opt) {
   static const std::string kTimeLimit = "--time-limit";
   static const std::string kStreaming = "--streaming";
@@ -663,17 +701,19 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
         static_cast<ts::MilliSecond>(args.at(kTimeLimit).asLong());
   }
   opt->streaming = args.at(kStreaming).asBool();
-  MIRAKC_ARIB_INFO("Time-Limit({}), Streaming({})",
+  MIRAKC_ARIB_INFO("Options: time-limit={}, streaming={}",
                    opt->time_limit, opt->streaming);
 }
 
-void LoadOption(const Args& args, AirtimeTrackerOption* opt) {
+void LoadOption(const Args& args, ServiceFilterOption* opt) {
   static const std::string kSid = "--sid";
-  static const std::string kEid = "--eid";
 
-  opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
-  opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
-  MIRAKC_ARIB_INFO("Event Tracker: SID#{:04X} EID#{:04X}", opt->sid, opt->eid);
+  if (args.at(kSid)) {
+    opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
+    if (opt->sid != 0) {
+      MIRAKC_ARIB_INFO("Options: sid=#{:04X}", opt->sid);
+    }
+  }
 }
 
 void LoadOption(const Args& args, ProgramFilterOption* opt) {
@@ -700,10 +740,40 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
   }
   opt->pre_streaming = args.at(kPreStreaming).asBool();
   MIRAKC_ARIB_INFO(
-      "Program Filter: SID#{:04X} EID#{:04X} Clock({:011X}, {}) Margin({}, {})"
-      " Pre-Streaming({})",
+      "Options: sid={:04X} eid={:04X} clock=({:011X}, {}) margin=({}, {})"
+      " pre-streaming={}",
       opt->sid, opt->eid, opt->clock_pcr, opt->clock_time, opt->start_margin,
       opt->end_margin, opt->pre_streaming);
+}
+
+void LoadOption(const Args& args, AirtimeTrackerOption* opt) {
+  static const std::string kSid = "--sid";
+  static const std::string kEid = "--eid";
+
+  opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
+  opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
+  MIRAKC_ARIB_INFO("Options: sid={:04X} eid={:04X}", opt->sid, opt->eid);
+}
+
+void LoadOption(const Args& args, StartSeekerOption* opt) {
+  static const std::string kSid = "--sid";
+  static const std::string kMaxDuration = "--max-duration";
+  static const std::string kMaxPackets = "--max-packets";
+
+  opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
+  if (args.at(kMaxDuration)) {
+    opt->max_duration =
+        static_cast<ts::MilliSecond>(args.at(kMaxDuration).asLong());
+  }
+  if (args.at(kMaxPackets)) {
+    opt->max_packets = static_cast<size_t>(args.at(kMaxPackets).asLong());
+  }
+  if (opt->max_duration == 0 && opt->max_packets == 0) {
+    fmt::print(kSeekStartHelp);
+    exit(EXIT_FAILURE);
+  }
+  MIRAKC_ARIB_INFO("Options: sid={:04X} max-duration={} max-packets={}",
+                   opt->sid, opt->max_duration, opt->max_packets);
 }
 
 std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
@@ -736,16 +806,16 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     return collector;
   }
   if (args.at(kFilterService).asBool()) {
-    ServiceFilterOption service_option;
-    LoadOption(args, &service_option);
-    auto filter = std::make_unique<ServiceFilter>(service_option);
+    ServiceFilterOption option;
+    LoadOption(args, &option);
+    auto filter = std::make_unique<ServiceFilter>(option);
     filter->Connect(std::make_unique<StdoutSink>());
     return filter;
   }
   if (args.at(kFilterProgram).asBool()) {
-    ProgramFilterOption program_option;
-    LoadOption(args, &program_option);
-    auto filter = std::make_unique<ProgramFilter>(program_option);
+    ProgramFilterOption option;
+    LoadOption(args, &option);
+    auto filter = std::make_unique<ProgramFilter>(option);
     filter->Connect(std::make_unique<StdoutSink>());
     return filter;
   }
@@ -755,6 +825,13 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     auto tracker = std::make_unique<AirtimeTracker>(option);
     tracker->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return tracker;
+  }
+  if (args.at(kSeekStart).asBool()) {
+    StartSeekerOption option;
+    LoadOption(args, &option);
+    auto seeker = std::make_unique<StartSeeker>(option);
+    seeker->Connect(std::make_unique<StdoutSink>());
+    return seeker;
   }
   if (args.at(kPrintTimetable).asBool()) {
     return std::make_unique<TimetablePrinter>();
@@ -777,6 +854,8 @@ void ShowHelp(const Args& args) {
     fmt::print(kFilterProgramHelp);
   } else if (args.at(kTrackAirtime).asBool()) {
     fmt::print(kTrackAirtimeHelp);
+  } else if (args.at(kSeekStart).asBool()) {
+    fmt::print(kSeekStartHelp);
   } else if (args.at(kPrintTimetable).asBool()) {
     fmt::print(kPrintTimetableHelp);
   } else {

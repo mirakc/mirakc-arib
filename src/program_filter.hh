@@ -10,6 +10,7 @@
 #include "logging.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
+#include "tsduck_helper.hh"
 
 namespace {
 
@@ -82,19 +83,6 @@ class ProgramFilter final : public PacketSink,
     kWaitReady,
     kStreaming,
   };
-
-  // Compares two PCR values taking into account the PCR wrap around.
-  //
-  // Assumed that the real interval time between the PCR values is less than
-  // half of kPcrUpperBound.
-  int64_t ComparePcr(int64_t lhs, int64_t rhs) {
-    auto a = lhs - rhs;
-    auto b = lhs - (kPcrUpperBound + rhs);
-    if (std::abs(a) < std::abs(b)) {
-      return a;
-    }
-    return b;
-  }
 
   bool WaitReady(const ts::TSPacket& packet) {
     if (stop_) {
