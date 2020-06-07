@@ -28,7 +28,7 @@ namespace {
 
 static const std::string kVersion = R"({}
 
-* docopt/docopt.cpp {}
+* masnagam/docopt.cpp {}
 * fmtlib/fmt {}
 * gabime/spdlog {} w/ patches/spdlog.patch
 * Tencent/rapidjson {}
