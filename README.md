@@ -18,6 +18,7 @@ Make sure that tools listed below has already been installed:
 * libtool
 * make
 * ninja (optional)
+* patch
 * pkg-config
 
 Then:
