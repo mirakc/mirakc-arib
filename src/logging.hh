@@ -10,6 +10,9 @@ namespace {
 
 inline void InitLogger(const std::string& name) {
   auto logger = spdlog::stderr_color_st(name);
+  if (std::getenv("MIRAKC_ARIB_LOG_NO_TIMESTAMP") != nullptr) {
+    logger->set_pattern("[%n] [%^%l%$] %v");
+  }
   spdlog::set_default_logger(logger);
 }
 
