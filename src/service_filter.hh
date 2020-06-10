@@ -130,10 +130,21 @@ class ServiceFilter final : public PacketSink,
   }
 
   void HandlePat(const ts::BinaryTable& table) {
+    if (table.sourcePID() != ts::PID_PAT) {
+      MIRAKC_ARIB_WARN(
+          "PAT delivered with PID#{:04X}, skip", table.sourcePID());
+      return;
+    }
+
     ts::PAT pat(context_, table);
 
     if (!pat.isValid()) {
       MIRAKC_ARIB_WARN("Broken PAT, skip");
+      return;
+    }
+
+    if (pat.ts_id == 0) {
+      MIRAKC_ARIB_WARN("PAT for TSID#0000, skip");
       return;
     }
 

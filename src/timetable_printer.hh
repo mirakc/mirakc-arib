@@ -115,18 +115,25 @@ class TimetablePrinter final : public PacketSink,
 
     ResetStates();
 
-    Print(fmt::format("PAT: V#{}", pat.version));
+    Print(fmt::format("PAT: V#{} PID#{:04X}", pat.version, table.sourcePID()));
 
-    for (const auto& [sid, pmt_pid] : pat.pmts) {
-      Print(fmt::format("  SID#{:04X} => PMT#{:04X}", sid, pmt_pid));
-      demux_.addPID(pmt_pid);
-      sids_.insert(sid);
-      pmt_pids_.push_back(pmt_pid);
-    }
+    if (table.sourcePID() == ts::PID_PAT) {
+      for (const auto& [sid, pmt_pid] : pat.pmts) {
+        Print(fmt::format("  SID#{:04X} => PMT#{:04X}", sid, pmt_pid));
+        demux_.addPID(pmt_pid);
+        sids_.insert(sid);
+        pmt_pids_.push_back(pmt_pid);
+      }
 
-    if (pmt_pids_.empty()) {
-      done_ = true;
-      MIRAKC_ARIB_WARN("No service defined in PAT, done");
+      if (pmt_pids_.empty()) {
+        done_ = true;
+        MIRAKC_ARIB_WARN("No service defined in PAT, done");
+      }
+    } else {
+      // Strange PAT
+      for (const auto& [sid, pmt_pid] : pat.pmts) {
+        Print(fmt::format("  SID#{:04X} => PMT#{:04X}", sid, pmt_pid));
+      }
     }
   }
 

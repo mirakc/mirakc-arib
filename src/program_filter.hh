@@ -202,10 +202,34 @@ class ProgramFilter final : public PacketSink,
   }
 
   void HandlePat(const ts::BinaryTable& table) {
+    // Ignore a strange PAT delivered with PID#0012 around midnight at least on
+    // BS-NTV and BS11 channels.
+    //
+    // This PAT has no PID of NIT and its ts_id is 0 like below:
+    //
+    //   * PAT, TID 0 (0x00), PID 18 (0x0012)
+    //     Short section, total size: 179 bytes
+    //     - Section 0:
+    //       TS id:       0 (0x0000)
+    //       Program: 19796 (0x4D54)  PID: 2672 (0x0A70)
+    //       Program: 28192 (0x6E20)  PID: 6205 (0x183D)
+    //       ...
+    //
+    if (table.sourcePID() != ts::PID_PAT) {
+      MIRAKC_ARIB_WARN("PAT delivered with PID#{:04X}, skip",
+                       table.sourcePID());
+      return;
+    }
+
     ts::PAT pat(context_, table);
 
     if (!pat.isValid()) {
       MIRAKC_ARIB_WARN("Broken PAT, skip");
+      return;
+    }
+
+    if (pat.ts_id == 0) {
+      MIRAKC_ARIB_WARN("PAT for TSID#0000, skip");
       return;
     }
 
