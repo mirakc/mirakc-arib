@@ -12,12 +12,10 @@ jobs:
           sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-8 libtool make ninja-build pkg-config
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 80
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Generate project files
         run: |
-          mkdir -p build
-          cd build
-          cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON ..
+          cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON
       - name: Build vendor libraries
         run: |
           ninja -C build vendor
@@ -30,5 +28,4 @@ jobs:
       - name: Run test
         run: |
           ninja -C build test
-        env:
-          MIRAKC_ARIB_CI: YES
+          ninja -C build cli-tests

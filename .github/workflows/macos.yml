@@ -9,7 +9,7 @@ jobs:
       - name: Install deps
         run: |
           brew install autoconf automake gnu-sed grep dos2unix libtool make ninja pkg-config
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Generate project files
         run: |
           cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON
@@ -25,5 +25,4 @@ jobs:
       - name: Run tests
         run: |
           ninja -C build test
-        env:
-          MIRAKC_ARIB_CI: YES
+          ninja -C build cli-tests
