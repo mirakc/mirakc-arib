@@ -3,7 +3,7 @@ name: macOS
 on: [push]
 
 jobs:
-  build:
+  macos-build:
     runs-on: macOS-latest
     steps:
       - name: Install deps
