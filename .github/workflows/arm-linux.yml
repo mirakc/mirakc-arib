@@ -13,10 +13,13 @@ jobs:
         include:
           - arch: armel
             host-triple: arm-linux-gnueabi
+            docker-arch: arm32v5
           - arch: armhf
             host-triple: arm-linux-gnueabihf
+            docker-arch: arm32v7
           - arch: arm64
             host-triple: aarch64-linux-gnu
+            docker-arch: arm64v8
     runs-on: ubuntu-latest
     steps:
       - name: Install deps
@@ -56,8 +59,8 @@ jobs:
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       - name: Show help
         run: |
-          docker run --rm -v $(pwd):/build debian:slim /build/bin/mirakc-arib -h
+          docker run --rm -v $(pwd):/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib -h
       - name: Run test
         run: |
-          docker run --rm -v $(pwd):/build debian:slim /build/bin/mirakc-arib-test --gtest_shuffle
-          docker run --rm -v $(pwd):/build -v $(pwd)/test/cli_tests.sh:/test/cli_tests.sh debian:slim sh /test/cli_tests.sh /build/bin/mirakc-arib
+          docker run --rm -v $(pwd):/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib-test --gtest_shuffle
+          docker run --rm -v $(pwd):/build ${{ matrix.docker-arch }}/debian:buster-slim /build/test/cli_tests.sh /build/bin/mirakc-arib
