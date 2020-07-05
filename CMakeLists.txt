@@ -13,7 +13,7 @@ set(MIRAKC_ARIB_VERSION
   "0.6.1"
   CACHE STRING "mirakc-arib version." FORCE)
 set(MIRAKC_ARIB_DOCOPT_VERSION
-  "715aca4846fddc61649f8e363c029f7fd3e21c2c"
+  "2df2b1cd28a870c810da2e0fcffbb97c9f89708e"
   CACHE STRING "docopt.cpp version to use." FORCE)
 set(MIRAKC_ARIB_FMT_VERSION
   "6.2.1"
@@ -648,4 +648,7 @@ if(MIRAKC_ARIB_TEST)
   )
 
   add_custom_target(benchmark $<TARGET_FILE:mirakc-arib-benchmark>)
+
+  add_custom_target(cli-tests
+    sh ${CMAKE_CURRENT_SOURCE_DIR}/test/cli_tests.sh $<TARGET_FILE:mirakc-arib>)
 endif()

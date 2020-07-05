@@ -698,7 +698,7 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
   LoadSidSet(args, "--xsids", &opt->xsids);
   if (args.at(kTimeLimit)) {
     opt->time_limit =
-        static_cast<ts::MilliSecond>(args.at(kTimeLimit).asLong());
+        static_cast<ts::MilliSecond>(args.at(kTimeLimit).asInt64());
   }
   opt->streaming = args.at(kStreaming).asBool();
   MIRAKC_ARIB_INFO("Options: time-limit={}, streaming={}",
@@ -727,16 +727,16 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
 
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
-  opt->clock_pcr = static_cast<uint64_t>(args.at(kClockPcr).asLong());
+  opt->clock_pcr = static_cast<uint64_t>(args.at(kClockPcr).asUint64());
   opt->clock_time = ConvertUnixTimeToJstTime(
-      static_cast<ts::MilliSecond>(args.at(kClockTime).asLong()));
+      static_cast<ts::MilliSecond>(args.at(kClockTime).asInt64()));
   if (args.at(kStartMargin)) {
     opt->start_margin =
-        static_cast<ts::MilliSecond>(args.at(kStartMargin).asLong());
+        static_cast<ts::MilliSecond>(args.at(kStartMargin).asInt64());
   }
   if (args.at(kEndMargin)) {
     opt->end_margin =
-        static_cast<ts::MilliSecond>(args.at(kEndMargin).asLong());
+        static_cast<ts::MilliSecond>(args.at(kEndMargin).asInt64());
   }
   opt->pre_streaming = args.at(kPreStreaming).asBool();
   MIRAKC_ARIB_INFO(
@@ -763,7 +763,7 @@ void LoadOption(const Args& args, StartSeekerOption* opt) {
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   if (args.at(kMaxDuration)) {
     opt->max_duration =
-        static_cast<ts::MilliSecond>(args.at(kMaxDuration).asLong());
+        static_cast<ts::MilliSecond>(args.at(kMaxDuration).asInt64());
   }
   if (args.at(kMaxPackets)) {
     opt->max_packets = static_cast<size_t>(args.at(kMaxPackets).asLong());
