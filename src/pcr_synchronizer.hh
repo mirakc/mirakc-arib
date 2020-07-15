@@ -84,9 +84,9 @@ class PcrSynchronizer final : public PacketSink,
             return false;
           }
         } else {
-          // Many PCR packets in a specific CS channel have no PCR...
+          // Many PCR packets in a specific channel have no PCR...
           // See https://github.com/masnagam/mirakc-arib/issues/3
-          MIRAKC_ARIB_DEBUG("PCR#{:04X} has no PCR...", pid);
+          MIRAKC_ARIB_TRACE("PCR#{:04X} has no PCR...", pid);
         }
       }
     }

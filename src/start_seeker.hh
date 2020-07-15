@@ -111,8 +111,10 @@ class StartSeeker final : public PacketSink,
     }
 
     if (!packet.hasPCR()) {
-      MIRAKC_ARIB_ERROR("No PCR value in PCR#{:04X}", pid);
-      return false;
+      // Many PCR packets in a specific channel have no PCR...
+      // See https://github.com/masnagam/mirakc-arib/issues/3
+      MIRAKC_ARIB_TRACE("PCR#{:04X} has no PCR...", pid);
+      return true;
     }
 
     auto pcr = packet.getPCR();
