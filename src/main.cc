@@ -603,6 +603,9 @@ Description:
     * EIT p/f Actual
     * TDT/TOT
 
+  At this moment, `print-timetable` doens't support a TS stream which includes
+  multiple service streams.
+
 Examples:
   Show the timetable of a specific service stream:
 
