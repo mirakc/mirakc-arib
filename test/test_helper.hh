@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <queue>
 
@@ -74,8 +75,16 @@ class TableSource final : public PacketSource {
       if (node->hasAttribute(u"test-pcr")) {
         uint64_t pcr;
         node->getIntAttribute<uint64_t>(pcr, u"test-pcr", false);
-        packet.setPayloadSize(0);
-        packet.setPCR(pcr);
+        if (pcr == ts::INVALID_PCR) {
+          packet.b[3] |= 0x20;
+          packet.b[4] = 1;
+          packet.b[5] |= 0x10;
+          assert(packet.hasPCR());
+          assert(packet.getPCR() == ts::INVALID_PCR);
+        } else {
+          packet.setPayloadSize(0);
+          packet.setPCR(pcr);
+        }
       }
 
       if (node->hasAttribute(u"test-sleep")) {

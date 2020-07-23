@@ -1007,6 +1007,8 @@ TEST(ProgramFilterTest, AbnormalPcrPackets) {
       <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
       <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="1" />
       <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="2"
+           test-pcr="0xFFFFFFFFFFFFFFFF"/>
+      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="3"
            test-pcr="27000000"/>
       <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
       <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
@@ -1020,7 +1022,7 @@ TEST(ProgramFilterTest, AbnormalPcrPackets) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="3" />
+      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="4" />
       <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="2" />
       <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="2" />
    </tsduck>
@@ -1045,7 +1047,7 @@ TEST(ProgramFilterTest, AbnormalPcrPackets) {
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(0x0901, packet.getPID());
           EXPECT_EQ(27000000, packet.getPCR());
-          EXPECT_EQ(2, packet.getCC());
+          EXPECT_EQ(3, packet.getCC());
           return true;
         });
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
@@ -1075,7 +1077,7 @@ TEST(ProgramFilterTest, AbnormalPcrPackets) {
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(0x0901, packet.getPID());
-          EXPECT_EQ(3, packet.getCC());
+          EXPECT_EQ(4, packet.getCC());
           return true;
         });
     EXPECT_CALL(*sink, HandlePacket).WillOnce(

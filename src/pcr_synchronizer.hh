@@ -75,7 +75,11 @@ class PcrSynchronizer final : public PacketSink,
 
     if (started_) {
       if (pcr_pids_.count(pid) == 1 && pcr_map_.find(pid) == pcr_map_.end()) {
-        if (packet.hasPCR()) {
+        if (!packet.hasPCR() || packet.getPCR() == ts::INVALID_PCR) {
+          // Many PCR packets in a specific channel have no valid PCR...
+          // See https://github.com/masnagam/mirakc-arib/issues/3
+          MIRAKC_ARIB_TRACE("PCR#{:04X} has no valid PCR...", pid);
+        } else {
           auto pcr = static_cast<int64_t>(packet.getPCR());
           MIRAKC_ARIB_INFO("PCR#{:04X}: {}", pid, FormatPcr(pcr));
           pcr_map_[pid] = pcr;
@@ -83,10 +87,6 @@ class PcrSynchronizer final : public PacketSink,
             done_ = true;
             return false;
           }
-        } else {
-          // Many PCR packets in a specific channel have no PCR...
-          // See https://github.com/masnagam/mirakc-arib/issues/3
-          MIRAKC_ARIB_TRACE("PCR#{:04X} has no PCR...", pid);
         }
       }
     }

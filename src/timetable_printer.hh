@@ -32,11 +32,11 @@ class TimetablePrinter final : public PacketSink,
 
   bool HandlePacket(const ts::TSPacket& packet) override {
     auto pid = packet.getPID();
-    if (packet.hasPCR()) {
+    if (packet.hasPCR() && packet.getPCR() != ts::INVALID_PCR) {
       Print(packet.getPCR(), fmt::format("PCR#{:04X}", pid));
       last_pcr_ = packet.getPCR();
     }
-    if (packet.hasPTS()) {
+    if (packet.hasPTS() && packet.getPTS() != ts::INVALID_PTS) {
       const auto it = stream_type_map_.find(pid);
       if (it != stream_type_map_.end()) {
         Print(packet.getPTS() * 300,
@@ -45,7 +45,7 @@ class TimetablePrinter final : public PacketSink,
         Print(packet.getPTS() * 300, fmt::format("PES#{:04X} PTS", pid));
       }
     }
-    if (packet.hasDTS()) {
+    if (packet.hasDTS() && packet.getDTS() != ts::INVALID_DTS) {
       const auto it = stream_type_map_.find(pid);
       if (it != stream_type_map_.end()) {
         Print(packet.getDTS() * 300,

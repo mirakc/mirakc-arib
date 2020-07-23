@@ -426,15 +426,27 @@ TEST(PcrSynchronizerTest, AbnormalPcrPackets) {
            test-pid="0x0101" />
       <PMT version="1" current="true" service_id="0x0002" PCR_PID="0x902"
            test-pid="0x0102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="101" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="201" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+           test-pcr="101" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+           test-pcr="201" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="202" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="103" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="203" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+           test-cc="1" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+           test-cc="1" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+           test-pcr="0xFFFFFFFFFFFFFFFF" test-cc="2" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+           test-pcr="0xFFFFFFFFFFFFFFFF" test-cc="2" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+           test-pcr="102" test-cc="3" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+           test-pcr="202" test-cc="3" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+           test-pcr="103" test-cc="4" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+           test-pcr="203" test-cc="4" />
     </tsduck>
   )");
 
