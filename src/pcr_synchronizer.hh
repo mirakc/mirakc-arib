@@ -49,6 +49,7 @@ class PcrSynchronizer final : public PacketSink,
         continue;
       }
       rapidjson::Value clock(rapidjson::kObjectType);
+      clock.AddMember("pid", pcr_pid, allocator);
       clock.AddMember("pcr", it->second, allocator);
       clock.AddMember("time", time, allocator);
       rapidjson::Value v(rapidjson::kObjectType);

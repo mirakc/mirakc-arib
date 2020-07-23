@@ -168,12 +168,16 @@ Description:
       "tsid": 32736,
       "sid": 1024,
       "clock": {{
+        "pid": 511,
         "pcr": 744077003262,
         "time": 1576398518000
       }}
     }}
 
   where:
+
+    clock.pid
+      PID of the PCR packet for the service
 
     clock.pcr
       27MHz, 42 bits PCR value correspoinding to `clock.time`
