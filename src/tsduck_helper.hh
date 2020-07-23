@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+
+#include <fmt/format.h>
 #include <tsduck/tsduck.h>
 
 namespace {
@@ -21,6 +24,12 @@ inline bool IsAribSubtitle(const ts::PMT::Stream& stream) {
 
 inline bool IsAribSuperimposedText(const ts::PMT::Stream& stream) {
   return CheckComponentTagByRange(stream, 0x38, 0x3F);
+}
+
+std::string FormatPcr(int64_t pcr) {
+  auto base = pcr / 300;
+  auto ext = pcr % 300;
+  return fmt::format("{:010d}+{:03d}", base, ext);
 }
 
 // Compares two PCR values taking into account the PCR wrap around.

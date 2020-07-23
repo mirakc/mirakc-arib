@@ -64,15 +64,12 @@ class TimetablePrinter final : public PacketSink,
   }
 
   void Print(int64_t clock, const std::string& msg) {
-    auto base = clock / 300;
-    auto ext = clock % 300;
     if (synced_) {
       auto delta_ms = (clock - last_sync_pcr_) / kPcrTicksPerMs;
       auto time = last_sync_time_ + delta_ms;
-      fmt::print("{}|{:010d}+{:03d}|{}\n", time, base, ext, msg);
+      fmt::print("{}|{}|{}\n", time, FormatPcr(clock), msg);
     } else {
-      fmt::print("                       |{:010d}+{:03d}|{}\n",
-                 base, ext, msg);
+      fmt::print("                       |{}|{}\n", FormatPcr(clock), msg);
     }
   }
 

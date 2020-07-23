@@ -12,6 +12,7 @@
 #include "jsonl_source.hh"
 #include "logging.hh"
 #include "packet_source.hh"
+#include "tsduck_helper.hh"
 
 namespace {
 
@@ -96,18 +97,6 @@ class PcrSynchronizer final : public PacketSink,
   }
 
  private:
-  static std::string FormatPcr(int64_t pcr) {
-    auto frac = pcr % kPcrTicksPerSec;
-    auto msec = frac * 1000 / kPcrTicksPerSec;
-    auto secs = pcr / kPcrTicksPerSec;
-    auto sec = secs % 60;
-    auto mins = secs / 60;
-    auto min = mins % 60;
-    auto hour = mins / 60;
-    return fmt::format("{:011X} ({:02d}:{:02d}:{:02d}.{:03d})",
-                       pcr, hour, min, sec, msec);
-  }
-
   void handleTable(ts::SectionDemux&, const ts::BinaryTable& table) override {
     switch (table.tableId()) {
       case ts::TID_PAT:
@@ -232,7 +221,7 @@ class PcrSynchronizer final : public PacketSink,
 
     if (pcr_pid_map_.size() == pmt_count_) {
       demux_.addPID(ts::PID_TOT);
-      MIRAKC_ARIB_DEBUG("Demux TOT");
+      MIRAKC_ARIB_DEBUG("Demux TDT/TOT");
     }
   }
 

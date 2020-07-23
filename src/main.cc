@@ -53,7 +53,7 @@ Usage:
   mirakc-arib collect-logos [FILE]
   mirakc-arib filter-service --sid=<SID> [FILE]
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
-    --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
+    --clock-pid=<PID> --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
     [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
   mirakc-arib track-airtime --sid=<SID> --eid=<EID> [FILE]
   mirakc-arib seek-start --sid=<SID>
@@ -425,7 +425,7 @@ Program filter
 
 Usage:
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
-    --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
+    --clock-pid=<PID> --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
     [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
 
 Options:
@@ -437,6 +437,9 @@ Options:
 
   --eid=<EID>
     Event ID of a TV program.
+
+  --clock-pid=<PID>
+    PID of PCR for the service.
 
   --clock-pcr=<PCR>
     27MHz, 42bits PCR value.
@@ -470,6 +473,11 @@ Description:
         |             |                       |           |
       start-time    start-time         end-time           end-time
       of streaming  of the TV program  of the TV program  of streaming
+
+  When the PCR for the service is changed while filtering packets,
+  `filter-program` resynchronize the clock automatically.  In this case, actual
+  start and end times may be delayed about 5 seconds due to the clock
+  synchronization.
 )";
 
 static const std::string kTrackAirtime = "track-airtime";
@@ -723,6 +731,7 @@ void LoadOption(const Args& args, ServiceFilterOption* opt) {
 void LoadOption(const Args& args, ProgramFilterOption* opt) {
   static const std::string kSid = "--sid";
   static const std::string kEid = "--eid";
+  static const std::string kClockPid = "--clock-pid";
   static const std::string kClockPcr = "--clock-pcr";
   static const std::string kClockTime = "--clock-time";
   static const std::string kStartMargin = "--start-margin";
@@ -731,6 +740,7 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
 
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
+  opt->clock_pid = static_cast<uint16_t>(args.at(kClockPid).asLong());
   opt->clock_pcr = static_cast<uint64_t>(args.at(kClockPcr).asUint64());
   opt->clock_time = ConvertUnixTimeToJstTime(
       static_cast<ts::MilliSecond>(args.at(kClockTime).asInt64()));
@@ -744,10 +754,10 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
   }
   opt->pre_streaming = args.at(kPreStreaming).asBool();
   MIRAKC_ARIB_INFO(
-      "Options: sid={:04X} eid={:04X} clock=({:011X}, {}) margin=({}, {})"
-      " pre-streaming={}",
-      opt->sid, opt->eid, opt->clock_pcr, opt->clock_time, opt->start_margin,
-      opt->end_margin, opt->pre_streaming);
+      "Options: sid={:04X} eid={:04X} clock=({:04X}, {:011X}, {})"
+      " margin=({}, {}) pre-streaming={}",
+      opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time,
+      opt->start_margin, opt->end_margin, opt->pre_streaming);
 }
 
 void LoadOption(const Args& args, AirtimeTrackerOption* opt) {

@@ -3,8 +3,8 @@
 #include <string>
 #include <unordered_set>
 
-#include <tsduck/tsduck.h>
 #include <docopt/docopt.h>
+#include <tsduck/tsduck.h>
 
 namespace {
 

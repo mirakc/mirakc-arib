@@ -17,6 +17,7 @@ namespace {
 struct ProgramFilterOption final {
   uint16_t sid = 0;
   uint16_t eid = 0;
+  ts::PID clock_pid = ts::PID_NULL;
   int64_t clock_pcr = 0;
   ts::Time clock_time;  // JST
   ts::MilliSecond start_margin = 0;  // ms
@@ -30,10 +31,19 @@ class ProgramFilter final : public PacketSink,
   explicit ProgramFilter(const ProgramFilterOption& option)
       : option_(option),
         demux_(context_) {
+    clock_pid_ = option_.clock_pid;
+    clock_pcr_ = option_.clock_pcr;
+    clock_time_ = option_.clock_time;
+    clock_pcr_ready_ = true;
+    clock_time_ready_ = true;
+    MIRAKC_ARIB_DEBUG("Initial clock: PCR#{:04X}, {:011X} ({})",
+                      clock_pid_, clock_pcr_, clock_time_);
+
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
     demux_.addPID(ts::PID_EIT);
-    MIRAKC_ARIB_DEBUG("Demux += PAT EIT");
+    demux_.addPID(ts::PID_TOT);
+    MIRAKC_ARIB_DEBUG("Demux += PAT EIT TDT/TOT");
   }
 
   virtual ~ProgramFilter() override {}
@@ -111,7 +121,7 @@ class ProgramFilter final : public PacketSink,
       // Drop other packets.
     }
 
-    if (!pcr_pid_ready_ || !pcr_range_ready_) {
+    if (!pcr_pid_ready_ || !event_time_ready_) {
       return true;
     }
 
@@ -127,6 +137,15 @@ class ProgramFilter final : public PacketSink,
     }
 
     auto pcr = packet.getPCR();
+
+    if (NeedClockSync()) {
+      UpdateClockPcr(pcr);
+    }
+
+    if (NeedClockSync()) {
+      // wait for clock_time_ready_
+      return true;
+    }
 
     // We can implement the comparison below using operator>=() defined in the
     // Pcr class.  This coding style looks elegant, but requires more typing.
@@ -180,6 +199,15 @@ class ProgramFilter final : public PacketSink,
 
       auto pcr = packet.getPCR();
 
+      if (NeedClockSync()) {
+        UpdateClockPcr(pcr);
+      }
+
+      if (NeedClockSync()) {
+        // Postpone the stop until the clock synchronization is done.
+        return sink_->HandlePacket(packet);
+      }
+
       if (ComparePcr(pcr, end_pcr_) >= 0) {  // pcr >= end_pcr_
         MIRAKC_ARIB_INFO("Reached the end PCR");
         return false;
@@ -199,6 +227,12 @@ class ProgramFilter final : public PacketSink,
         break;
       case ts::TID_EIT_PF_ACT:
         HandleEit(table);
+        break;
+      case ts::TID_TDT:
+        HandleTdt(table);
+        break;
+      case ts::TID_TOT:
+        HandleTot(table);
         break;
       default:
         break;
@@ -270,6 +304,15 @@ class ProgramFilter final : public PacketSink,
     MIRAKC_ARIB_DEBUG("PCR#{:04X}", pcr_pid_);
 
     pcr_pid_ready_ = true;
+
+    if (clock_pid_ != pcr_pid_) {
+      MIRAKC_ARIB_WARN(
+          "PID of PCR has been changed: {:04X} -> {:04X}, need resync",
+          clock_pid_, pcr_pid_);
+      clock_pid_ = pcr_pid_;
+      clock_pcr_ready_ = false;
+      clock_time_ready_ = false;
+    }
   }
 
   void HandleEit(const ts::BinaryTable& table) {
@@ -294,7 +337,7 @@ class ProgramFilter final : public PacketSink,
     const auto& present = eit.events[0];
     if (present.event_id == option_.eid) {
       MIRAKC_ARIB_DEBUG("Event#{:04X} has started", option_.eid);
-      UpdatePcrRange(present);
+      UpdateEventTime(present);
       return;
     }
 
@@ -312,7 +355,7 @@ class ProgramFilter final : public PacketSink,
     const auto& following = eit.events[1];
     if (following.event_id == option_.eid) {
       MIRAKC_ARIB_DEBUG("Event#{:04X} will start soon", option_.eid);
-      UpdatePcrRange(following);
+      UpdateEventTime(following);
       return;
     }
 
@@ -328,20 +371,98 @@ class ProgramFilter final : public PacketSink,
     return;
   }
 
-  void UpdatePcrRange(const ts::EIT::Event& event) {
-    auto start_time = event.start_time - option_.start_margin;
+  void HandleTdt(const ts::BinaryTable& table) {
+    ts::TDT tdt(context_, table);
+
+    if (!tdt.isValid()) {
+      MIRAKC_ARIB_WARN("Broken TDT, skip");
+      return;
+    }
+
+    if (clock_time_ready_) {
+      return;
+    }
+
+    UpdateClockTime(tdt.utc_time);  // JST in ARIB
+  }
+
+  void HandleTot(const ts::BinaryTable& table) {
+    ts::TOT tot(context_, table);
+
+    if (!tot.isValid()) {
+      MIRAKC_ARIB_WARN("Broken TOT, skip");
+      return;
+    }
+
+    if (clock_time_ready_) {
+      return;
+    }
+
+    UpdateClockTime(tot.utc_time);  // JST in ARIB
+  }
+
+  void UpdateEventTime(const ts::EIT::Event& event) {
     auto duration = event.duration * ts::MilliSecPerSec + option_.end_margin;
-    auto end_time = event.start_time + duration;
-    start_pcr_ = ConvertTimeToPcr(start_time);
-    end_pcr_ = ConvertTimeToPcr(end_time);
+
+    event_start_time_ = event.start_time - option_.start_margin;
+    event_end_time_ = event.start_time + duration;
+    MIRAKC_ARIB_INFO("Updated event time: ({}) .. ({})",
+                     event_start_time_, event_end_time_);
+
+    event_time_ready_ = true;
+
+    if (clock_time_ready_ && clock_pcr_ready_) {
+      UpdatePcrRange();
+    }
+  }
+
+  void UpdateClockPcr(int64_t pcr) {
+    MIRAKC_ARIB_ASSERT(NeedClockSync());
+
+    clock_pcr_ = pcr;
+    MIRAKC_ARIB_TRACE("Updated clock PCR: {:011X}", pcr);
+
+    clock_pcr_ready_ = true;
+
+    if (event_time_ready_ && clock_time_ready_) {
+      UpdatePcrRange();
+    }
+  }
+
+  void UpdateClockTime(const ts::Time& time) {
+    MIRAKC_ARIB_ASSERT(!clock_time_ready_);
+
+    clock_time_ = time;
+    MIRAKC_ARIB_TRACE("Updated clock time: {}", time);
+
+    clock_time_ready_ = true;
+
+    if (event_time_ready_ && clock_pcr_ready_) {
+      UpdatePcrRange();
+    }
+  }
+
+  bool NeedClockSync() const {
+    return !clock_time_ready_ || !clock_pcr_ready_;
+  }
+
+  void UpdatePcrRange() {
+    MIRAKC_ARIB_ASSERT(event_time_ready_);
+    MIRAKC_ARIB_ASSERT(clock_pcr_ready_);
+    MIRAKC_ARIB_ASSERT(clock_time_ready_);
+
+    start_pcr_ = ConvertTimeToPcr(event_start_time_);
+    end_pcr_ = ConvertTimeToPcr(event_end_time_);
     MIRAKC_ARIB_INFO("Updated PCR range: {:011X} ({}) .. {:011X} ({})",
-                     start_pcr_, start_time, end_pcr_, end_time);
-    pcr_range_ready_ = true;
+                     start_pcr_, event_start_time_, end_pcr_, event_end_time_);
   }
 
   int64_t ConvertTimeToPcr(const ts::Time& time) {
-    auto ms = time - option_.clock_time;  // may be a negative value
-    auto pcr = option_.clock_pcr + ms * kPcrTicksPerMs;
+    MIRAKC_ARIB_ASSERT(clock_pcr_ready_);
+    MIRAKC_ARIB_ASSERT(clock_time_ready_);
+
+    auto ms = time - clock_time_;  // may be a negative value
+    auto pcr = clock_pcr_ + ms * kPcrTicksPerMs;
     while (pcr < 0) {
       pcr += kPcrUpperBound;
     }
@@ -355,12 +476,19 @@ class ProgramFilter final : public PacketSink,
   State state_ = kWaitReady;
   ts::TSPacketVector last_pat_packets_;
   ts::TSPacketVector last_pmt_packets_;
+  ts::PID clock_pid_ = ts::PID_NULL;
+  int64_t clock_pcr_ = 0;
+  ts::Time clock_time_;
   ts::PID pmt_pid_ = ts::PID_NULL;
   ts::PID pcr_pid_ = ts::PID_NULL;
+  ts::Time event_start_time_;
+  ts::Time event_end_time_;
   int64_t start_pcr_ = 0;
   int64_t end_pcr_ = 0;
   bool pcr_pid_ready_ = false;
-  bool pcr_range_ready_ = false;
+  bool event_time_ready_ = false;
+  bool clock_pcr_ready_ = false;
+  bool clock_time_ready_ = false;
   bool stop_ = false;
 
   MIRAKC_ARIB_NON_COPYABLE(ProgramFilter);
