@@ -460,12 +460,14 @@ class ProgramFilter final : public PacketSink,
   int64_t ConvertTimeToPcr(const ts::Time& time) {
     MIRAKC_ARIB_ASSERT(clock_pcr_ready_);
     MIRAKC_ARIB_ASSERT(clock_time_ready_);
+    MIRAKC_ARIB_ASSERT(IsValidPcr(clock_pcr_));
 
     auto ms = time - clock_time_;  // may be a negative value
     auto pcr = clock_pcr_ + ms * kPcrTicksPerMs;
     while (pcr < 0) {
       pcr += kPcrUpperBound;
     }
+    MIRAKC_ARIB_ASSERT(pcr >= 0);
     return pcr % kPcrUpperBound;
   }
 

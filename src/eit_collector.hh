@@ -14,6 +14,7 @@
 #include "jsonl_source.hh"
 #include "logging.hh"
 #include "packet_source.hh"
+#include "tsduck_helper.hh"
 
 namespace {
 

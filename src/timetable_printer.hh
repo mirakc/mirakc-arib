@@ -33,25 +33,29 @@ class TimetablePrinter final : public PacketSink,
   bool HandlePacket(const ts::TSPacket& packet) override {
     auto pid = packet.getPID();
     if (packet.hasPCR() && packet.getPCR() != ts::INVALID_PCR) {
-      Print(packet.getPCR(), fmt::format("PCR#{:04X}", pid));
-      last_pcr_ = packet.getPCR();
+      auto pcr = static_cast<int64_t>(packet.getPCR());
+      MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
+      Print(pcr, fmt::format("PCR#{:04X}", pid));
+      last_pcr_ = pcr;
     }
     if (packet.hasPTS() && packet.getPTS() != ts::INVALID_PTS) {
+      auto pcr = static_cast<int64_t>(packet.getPTS()) * kMaxPcrExt;
+      MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
       const auto it = stream_type_map_.find(pid);
       if (it != stream_type_map_.end()) {
-        Print(packet.getPTS() * 300,
-              fmt::format("{}#{:04X} PTS", it->second, pid));
+        Print(pcr, fmt::format("{}#{:04X} PTS", it->second, pid));
       } else {
-        Print(packet.getPTS() * 300, fmt::format("PES#{:04X} PTS", pid));
+        Print(pcr, fmt::format("PES#{:04X} PTS", pid));
       }
     }
     if (packet.hasDTS() && packet.getDTS() != ts::INVALID_DTS) {
+      auto pcr = static_cast<int64_t>(packet.getDTS()) * kMaxPcrExt;
+      MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
       const auto it = stream_type_map_.find(pid);
       if (it != stream_type_map_.end()) {
-        Print(packet.getDTS() * 300,
-              fmt::format("{}#{:04X} DTS", it->second, pid));
+        Print(pcr, fmt::format("{}#{:04X} DTS", it->second, pid));
       } else {
-        Print(packet.getDTS() * 300, fmt::format("PES#{:04X} DTS", pid));
+        Print(pcr, fmt::format("PES#{:04X} DTS", pid));
       }
     }
     demux_.feedPacket(packet);
@@ -63,13 +67,13 @@ class TimetablePrinter final : public PacketSink,
     fmt::print("                       |              |{}\n", msg);
   }
 
-  void Print(int64_t clock, const std::string& msg) {
+  void Print(int64_t pcr, const std::string& msg) {
     if (synced_) {
-      auto delta_ms = (clock - last_sync_pcr_) / kPcrTicksPerMs;
+      auto delta_ms = (pcr - last_sync_pcr_) / kPcrTicksPerMs;
       auto time = last_sync_time_ + delta_ms;
-      fmt::print("{}|{}|{}\n", time, FormatPcr(clock), msg);
+      fmt::print("{}|{}|{}\n", time, FormatPcr(pcr), msg);
     } else {
-      fmt::print("                       |{}|{}\n", FormatPcr(clock), msg);
+      fmt::print("                       |{}|{}\n", FormatPcr(pcr), msg);
     }
   }
 

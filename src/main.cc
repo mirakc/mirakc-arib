@@ -741,7 +741,7 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
   opt->clock_pid = static_cast<uint16_t>(args.at(kClockPid).asLong());
-  opt->clock_pcr = static_cast<uint64_t>(args.at(kClockPcr).asUint64());
+  opt->clock_pcr = args.at(kClockPcr).asInt64();
   opt->clock_time = ConvertUnixTimeToJstTime(
       static_cast<ts::MilliSecond>(args.at(kClockTime).asInt64()));
   if (args.at(kStartMargin)) {
