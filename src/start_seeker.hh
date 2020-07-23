@@ -221,6 +221,11 @@ class StartSeeker final : public PacketSink,
       return;
     }
 
+    if (pmt.service_id != option_.sid) {
+      MIRAKC_ARIB_WARN("PMT.SID#{} unmatched, skip", pmt.service_id);
+      return;
+    }
+
     pcr_pid_ = pmt.pcr_pid;
     MIRAKC_ARIB_DEBUG("PCR#{:04X}", pcr_pid_);
 

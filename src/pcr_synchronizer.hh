@@ -213,6 +213,16 @@ class PcrSynchronizer final : public PacketSink,
       return;
     }
 
+    auto it = pmt_pids_.find(pmt.service_id);
+    if (it == pmt_pids_.end()) {
+      MIRAKC_ARIB_WARN("PMT.SID#{} unmatched, skip", pmt.service_id);
+      return;
+    }
+    if (it->second != table.sourcePID()) {
+      MIRAKC_ARIB_WARN("PMT.PID#{} unmatched, skip", table.sourcePID());
+      return;
+    }
+
     MIRAKC_ARIB_DEBUG("PCR#{:04X} for SID#{:04X}", pmt.pcr_pid, pmt.service_id);
     pcr_pid_map_[pmt.service_id] = pmt.pcr_pid;
     if (pmt.pcr_pid != ts::PID_NULL) {

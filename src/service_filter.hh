@@ -198,8 +198,10 @@ class ServiceFilter final : public PacketSink,
     psi_filter_.insert(ts::PID_TOT);
     psi_filter_.insert(ts::PID_BIT);
     psi_filter_.insert(ts::PID_CDT);
+    psi_filter_.insert(pmt_pid_);
     MIRAKC_ARIB_DEBUG(
-        "PSI/SI filter += PAT CAT NIT SDT EIT RST TDT/TOT BIT CDT");
+        "PSI/SI filter += PAT CAT NIT SDT EIT RST TDT/TOT BIT CDT PMT#{:04X}",
+        pmt_pid_);
   }
 
   void HandleCat(const ts::BinaryTable& table) {
@@ -227,6 +229,11 @@ class ServiceFilter final : public PacketSink,
 
     if (!pmt.isValid()) {
       MIRAKC_ARIB_WARN("Broken PMT, skip");
+      return;
+    }
+
+    if (pmt.service_id != option_.sid) {
+      MIRAKC_ARIB_WARN("PMT.SID#{} unmatched, skip", pmt.service_id);
       return;
     }
 
@@ -264,9 +271,6 @@ class ServiceFilter final : public PacketSink,
         MIRAKC_ARIB_DEBUG("Content filter += Other#{:04X}", pid);
       }
     }
-
-    psi_filter_.insert(pmt_pid_);
-    MIRAKC_ARIB_DEBUG("PSI/SI filter += PMT#{:04X}", pmt_pid_);
   }
 
   void HandleTdt(const ts::BinaryTable& table) {

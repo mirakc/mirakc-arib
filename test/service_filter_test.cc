@@ -777,3 +777,54 @@ TEST(ServiceFilterTest, SuperimposedText) {
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }
+
+TEST(ServiceFilterTest, PmtSidUnmatched) {
+  TableSource src;
+  auto filter = std::make_unique<ServiceFilter>(kOption);
+  auto sink = std::make_unique<MockSink>();
+
+  // TDT tables are used for emulating PCR packets.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+        <service service_id="0x0002" program_map_PID="0x0102" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0000" PCR_PID="0x0ABC"
+           test-pid="0x0101" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0ABC" test_pcr="0" />
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(ts::PID_PAT, packet.getPID());
+          TableValidator<ts::PAT> validator(ts::PID_PAT);
+          EXPECT_CALL(validator, Validate).WillOnce(
+              [](const ts::PAT& pat) {
+                EXPECT_TRUE(pat.isValid());
+                EXPECT_EQ(1, pat.pmts.size());
+                EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
+              });
+          validator.FeedPacket(packet);
+          return true;
+        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce(
+        [](const ts::TSPacket& packet) {
+          EXPECT_EQ(0x0101, packet.getPID());
+          EXPECT_EQ(0, packet.getCC());
+          return true;
+        });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
+}

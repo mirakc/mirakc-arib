@@ -131,6 +131,11 @@ class ServiceScanner final : public PacketSink,
       return;
     }
 
+    if (sdt->ts_id == 0) {
+      MIRAKC_ARIB_WARN("SDT for TSID#0000, skip");
+      return;
+    }
+
     sdt_ = sdt;
     MIRAKC_ARIB_INFO("SDT ready");
   }

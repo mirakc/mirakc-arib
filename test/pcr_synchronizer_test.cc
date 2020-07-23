@@ -467,3 +467,95 @@ TEST(PcrSynchronizerTest, AbnormalPcrPackets) {
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
 }
+
+TEST(PcrSynchronizerTest, PmtSidUnmatched) {
+  TableSource src;
+  auto sync = std::make_unique<PcrSynchronizer>(kEmptyOption);
+  auto sink = std::make_unique<MockJsonlSink>();
+
+  // TDT tables are used for emulating PCR packets.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+        <service service_id="0x0002" program_map_PID="0x0102" />
+      </PAT>
+      <SDT version="1" current="true" actual="true" transport_stream_id="0x0003"
+           original_network_id="0x0002" test-pid="0x0011">
+        <service service_id="0x0001" EIT_schedule="false"
+                 EIT_present_following="true" CA_mode="false"
+                 running_status="undefined">
+          <service_descriptor service_type="0x01"
+                              service_provider_name="test"
+                              service_name="service-1" />
+        </service>
+        <service service_id="0x0002" EIT_schedule="false"
+                 EIT_present_following="true" CA_mode="false"
+                 running_status="undefined">
+          <service_descriptor service_type="0x01"
+                              service_provider_name="test"
+                              service_name="service-2" />
+        </service>
+      </SDT>
+      <PMT version="1" current="true" service_id="0x1000" PCR_PID="0x0ABC"
+           test-pid="0x0101" />
+      <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0ABC" test-pcr="302" />
+    </tsduck>
+  )");
+
+  EXPECT_CALL(*sink, HandleDocument).Times(0);  // Never called
+
+  sync->Connect(std::move(sink));
+  src.Connect(std::move(sync));
+  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
+}
+
+TEST(PcrSynchronizerTest, PmtPidUnmatched) {
+  TableSource src;
+  auto sync = std::make_unique<PcrSynchronizer>(kEmptyOption);
+  auto sink = std::make_unique<MockJsonlSink>();
+
+  // TDT tables are used for emulating PCR packets.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+        <service service_id="0x0002" program_map_PID="0x0102" />
+      </PAT>
+      <SDT version="1" current="true" actual="true" transport_stream_id="0x0003"
+           original_network_id="0x0002" test-pid="0x0011">
+        <service service_id="0x0001" EIT_schedule="false"
+                 EIT_present_following="true" CA_mode="false"
+                 running_status="undefined">
+          <service_descriptor service_type="0x01"
+                              service_provider_name="test"
+                              service_name="service-1" />
+        </service>
+        <service service_id="0x0002" EIT_schedule="false"
+                 EIT_present_following="true" CA_mode="false"
+                 running_status="undefined">
+          <service_descriptor service_type="0x01"
+                              service_provider_name="test"
+                              service_name="service-2" />
+        </service>
+      </SDT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x0ABC"
+           test-pid="0x0103" />
+      <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
+      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0ABC" test-pcr="302" />
+    </tsduck>
+  )");
+
+  EXPECT_CALL(*sink, HandleDocument).Times(0);  // Never called
+
+  sync->Connect(std::move(sink));
+  src.Connect(std::move(sync));
+  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
+}

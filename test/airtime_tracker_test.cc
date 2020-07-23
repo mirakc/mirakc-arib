@@ -167,7 +167,7 @@ TEST(AirtimeTrackerTest, Changes) {
   EXPECT_TRUE(src.IsEmpty());
 }
 
-TEST(AirtimeTrackerTest, ServiceNotFound) {
+TEST(AirtimeTrackerTest, EitSidUnmatched) {
   TableSource src;
   auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();

@@ -261,6 +261,11 @@ class ProgramFilter final : public PacketSink,
       return;
     }
 
+    if (pmt.service_id != option_.sid) {
+      MIRAKC_ARIB_WARN("PMT.SID#{} unmatched, skip", pmt.service_id);
+      return;
+    }
+
     pcr_pid_ = pmt.pcr_pid;
     MIRAKC_ARIB_DEBUG("PCR#{:04X}", pcr_pid_);
 
@@ -276,6 +281,7 @@ class ProgramFilter final : public PacketSink,
     }
 
     if (eit.service_id != option_.sid) {
+      MIRAKC_ARIB_WARN("EIT.SID#{} unmatched, skip", eit.service_id);
       return;
     }
 
