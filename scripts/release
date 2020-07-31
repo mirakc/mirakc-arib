@@ -1,0 +1,23 @@
+#!/bin/sh -eu
+
+PROGNAME="$(basename $0)"
+BASEDIR="$(cd $(dirname $0); pwd)"
+PROJDIR="$(cd $BASEDIR/..; pwd)"
+
+MARKER='###version'
+
+VERSION="$1"
+
+echo "Bumping the version to $VERSION..."
+# Don't use the -i option of `sed`.
+# The incompatibility between macOS and GNU will cause troubles.
+sed -e "s/.*$MARKER/  \"$VERSION\"  $MARKER/" $PROJDIR/CMakeLists.txt | \
+  sponge $PROJDIR/CMakeLists.txt
+ninja -C $PROJDIR/build
+git add $PROJDIR/CMakeLists.txt
+git commit -m "misc: bump version to $VERSION"
+
+# TODO: Genereate CHANGELOG.md
+
+echo "Making an annotated tag for $VERSION..."
+git tag -a "$VERSION" -m "release: $VERSION"
