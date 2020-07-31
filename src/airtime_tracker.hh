@@ -59,7 +59,6 @@ class AirtimeTracker final : public PacketSink,
     }
 
     if (eit.service_id != option_.sid) {
-      MIRAKC_ARIB_WARN("EIT.SID#{} unmatched, skip", eit.service_id);
       return;
     }
 
