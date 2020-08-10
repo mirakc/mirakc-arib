@@ -2,5 +2,6 @@
 /compile_commands.json
 .ccls
 .ccls-cache/
+.clangd/
 .envrc
 .DS_Store
