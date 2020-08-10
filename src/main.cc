@@ -35,6 +35,7 @@ static const std::string kVersion = R"({}
 * tplgy/cppcodec {}
 * masnagam/aribb24 {}
 * masnagam/tsduck-arib {}
+* DBCTRADO/LibISDB {}
 )";
 
 static const std::string kUsage = R"(
@@ -49,7 +50,8 @@ Usage:
   mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
   mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...]
-                           [--time-limit=<MS>] [--streaming] [FILE]
+                           [--time-limit=<MS>] [--streaming]
+                           [--use-unicode-symbol] [FILE]
   mirakc-arib collect-logos [FILE]
   mirakc-arib filter-service --sid=<SID> [FILE]
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
@@ -203,7 +205,8 @@ Collect EIT sections
 
 Usage:
   mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...]
-                           [--time-limit=<MS>] [--streaming] [FILE]
+                           [--time-limit=<MS>] [--streaming]
+                           [--use-unicode-symbol] [FILE]
 
 Options:
   -h --help
@@ -228,6 +231,14 @@ Options:
     In the streaming mode, the program never stops until killed.  The progress
     status will be updated in order to drop EIT sections which have already been
     collected.
+
+  --use-unicode-symbol
+    Use Unicode symbols like enclosed ideographic supplement characters.
+
+    This option is added just for backword-compatibility.  It's not recommended
+    to use this option in normal use cases.  Because some functions of
+    EPGStation like the de-duplication of recorded programs won't work properly
+    if this option is specified.
 
 Arguments:
   FILE
@@ -708,6 +719,7 @@ void LoadSidSet(const Args& args, const std::string& name, SidSet* sids) {
 void LoadOption(const Args& args, EitCollectorOption* opt) {
   static const std::string kTimeLimit = "--time-limit";
   static const std::string kStreaming = "--streaming";
+  static const std::string kUseUnicodeSymbol = "--use-unicode-symbol";
 
   LoadSidSet(args, "--sids", &opt->sids);
   LoadSidSet(args, "--xsids", &opt->xsids);
@@ -716,8 +728,9 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
         static_cast<ts::MilliSecond>(args.at(kTimeLimit).asInt64());
   }
   opt->streaming = args.at(kStreaming).asBool();
-  MIRAKC_ARIB_INFO("Options: time-limit={}, streaming={}",
-                   opt->time_limit, opt->streaming);
+  opt->use_unicode_symbol = args.at(kUseUnicodeSymbol).asBool();
+  MIRAKC_ARIB_INFO("Options: time-limit={}, streaming={} use-unicode-symbol={}",
+                   opt->time_limit, opt->streaming, opt->use_unicode_symbol);
 }
 
 void LoadOption(const Args& args, ServiceFilterOption* opt) {
@@ -893,7 +906,8 @@ int main(int argc, char* argv[]) {
                              MIRAKC_ARIB_RAPIDJSON_VERSION,
                              MIRAKC_ARIB_CPPCODEC_VERSION,
                              MIRAKC_ARIB_ARIBB24_VERSION,
-                             MIRAKC_ARIB_TSDUCK_ARIB_VERSION);
+                             MIRAKC_ARIB_TSDUCK_ARIB_VERSION,
+                             MIRAKC_ARIB_LIBISDB_VERSION);
 
   auto args =
       docopt::docopt(kUsage, { argv + 1, argv + argc }, false, version);

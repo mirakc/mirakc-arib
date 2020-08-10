@@ -33,6 +33,9 @@ set(MIRAKC_ARIB_ARIBB24_VERSION
 set(MIRAKC_ARIB_TSDUCK_ARIB_VERSION
   "c400025b7d31e26c0c15471e81adf2ad50632281"
   CACHE STRING "tsduck-arib version to use." FORCE)
+set(MIRAKC_ARIB_LIBISDB_VERSION
+  "911e4c5262ec3c68a9758ffac112f11047613234"
+  CACHE STRING "LibISDB version to use." FORCE)
 set(MIRAKC_ARIB_GOOGLETEST_VERSION
   "release-1.10.0"
   CACHE STRING "googletest version to use." FORCE)
@@ -124,6 +127,8 @@ message(STATUS "  MIRAKC_ARIB_ARIBB24_VERSION:")
 message(STATUS "    ${MIRAKC_ARIB_ARIBB24_VERSION}")
 message(STATUS "  MIRAKC_ARIB_TSDUCK_ARIB_VERSION:")
 message(STATUS "    ${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}")
+message(STATUS "  MIRAKC_ARIB_LIBISDB_VERSION:")
+message(STATUS "    ${MIRAKC_ARIB_LIBISDB_VERSION}")
 message(STATUS "  MIRAKC_ARIB_GOOGLETEST_VERSION:")
 message(STATUS "    ${MIRAKC_ARIB_GOOGLETEST_VERSION}")
 message(STATUS "  MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION:")
@@ -339,7 +344,7 @@ if(cppcodec)
   add_library(cppcodec::header-only INTERFACE IMPORTED)
 
   set_target_properties(cppcodec::header-only PROPERTIES
-    INTERFACE_INCUDE_DIRECTORIES
+    INTERFACE_INCLUDE_DIRECTORIES
       ${MIRAKC_ARIB_VENDOR_DIR}/include
   )
 else()
@@ -385,7 +390,7 @@ if(aribb24_LIB)
       CXX
     IMPORTED_LOCATION
       ${aribb24_LIB}
-    INTERFACE_INCUDE_DIRECTORIES
+    INTERFACE_INCLUDE_DIRECTORIES
       ${MIRAKC_ARIB_VENDOR_DIR}/include
   )
 else()
@@ -467,6 +472,46 @@ if(tsduck-arib_LIB)
   )
 else()
   message(WARNING "tsduck-arib: not found")
+  set(MIRAKC_ARIB_VENDOR_READY FALSE)
+endif()
+
+# LibISDB
+
+ExternalProject_Add(vendor-libisdb
+  PREFIX
+    ${MIRAKC_ARIB_VENDOR_DIR}
+  GIT_REPOSITORY
+    https://github.com/DBCTRADO/LibISDB.git
+  GIT_TAG
+    ${MIRAKC_ARIB_LIBISDB_VERSION}
+  CMAKE_ARGS
+    -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
+    -D CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+  EXCLUDE_FROM_ALL
+    YES
+)
+
+add_dependencies(vendor vendor-libisdb)
+
+find_library(libisdb_LIB isdb
+  PATHS ${MIRAKC_ARIB_VENDOR_DIR}/lib ${MIRAKC_ARIB_VENDOR_DIR}/lib64
+  NO_DEFAULT_PATH)
+
+if(libisdb_LIB)
+  # Add an interface target for LibISDB like other third party libraries.
+  add_library(libisdb::static-lib STATIC IMPORTED)
+
+  set_target_properties(libisdb::static-lib PROPERTIES
+    IMPORTED_LINK_INTERFACE_LANGUAGES
+      CXX
+    IMPORTED_LOCATION
+      ${libisdb_LIB}
+    INTERFACE_INCLUDE_DIRECTORIES
+      ${MIRAKC_ARIB_VENDOR_DIR}/src/vendor-libisdb
+  )
+else()
+  message(WARNING "LibISDB: not found")
   set(MIRAKC_ARIB_VENDOR_READY FALSE)
 endif()
 
@@ -594,6 +639,7 @@ target_link_libraries(mirakc-arib
     cppcodec::header-only
     tsduck-arib::static-lib
     aribb24::static-lib
+    libisdb::static-lib
 )
 
 target_compile_definitions(mirakc-arib
@@ -607,6 +653,7 @@ target_compile_definitions(mirakc-arib
     MIRAKC_ARIB_CPPCODEC_VERSION="${MIRAKC_ARIB_CPPCODEC_VERSION}"
     MIRAKC_ARIB_ARIBB24_VERSION="${MIRAKC_ARIB_ARIBB24_VERSION}"
     MIRAKC_ARIB_TSDUCK_ARIB_VERSION="${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}"
+    MIRAKC_ARIB_LIBISDB_VERSION="${MIRAKC_ARIB_LIBISDB_VERSION}"
 )
 
 if(MIRAKC_ARIB_TEST)
@@ -646,6 +693,7 @@ if(MIRAKC_ARIB_TEST)
       cppcodec::header-only
       tsduck-arib::static-lib
       aribb24::static-lib
+      libisdb::static-lib
   )
 
   add_custom_target(test
@@ -672,6 +720,7 @@ if(MIRAKC_ARIB_TEST)
       cppcodec::header-only
       tsduck-arib::static-lib
       aribb24::static-lib
+      libisdb::static-lib
   )
 
   add_custom_target(benchmark $<TARGET_FILE:mirakc-arib-benchmark>)

@@ -4,6 +4,8 @@
 #include <memory>
 #include <sstream>
 
+#include <LibISDB/LibISDB.hpp>
+#include <LibISDB/EPG/EventInfo.hpp>
 #include <fmt/format.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -23,6 +25,7 @@ struct EitCollectorOption final {
   SidSet xsids;
   ts::MilliSecond time_limit = 30 * ts::MilliSecPerSec;  // 30s
   bool streaming = false;
+  bool use_unicode_symbol = false;
 };
 
 struct EitSection {
@@ -678,38 +681,41 @@ class EitCollector final : public PacketSink,
       data += EitSection::EIT_EVENT_FIXED_SIZE;
       remain -= EitSection::EIT_EVENT_FIXED_SIZE;
 
-      info_length = std::min(info_length, remain);
-      ts::DescriptorList descs(nullptr);
-      descs.add(data, info_length);
+      LibISDB::DescriptorBlock desc_block;
+      desc_block.ParseBlock(data, info_length);
 
       rapidjson::Value descriptors(rapidjson::kArrayType);
 
-      for (size_t i = 0; i < descs.size(); ++i) {
-        auto& dp = descs[i];
-        if (!dp->isValid()) {
+      for (int i = 0; i < desc_block.GetDescriptorCount(); ++i) {
+        const auto* dp = desc_block.GetDescriptorByIndex(i);
+        if (!dp->IsValid()) {
           continue;
         }
-        switch (dp->tag()) {
-          case ts::DID_SHORT_EVENT: {
-            ts::ShortEventDescriptor desc(context_, *dp);
+        switch (dp->GetTag()) {
+          case LibISDB::ShortEventDescriptor::TAG: {
+            const auto* desc =
+                static_cast<const LibISDB::ShortEventDescriptor*>(dp);
             auto json = MakeJsonValue(desc, allocator);
             descriptors.PushBack(json, allocator);
             break;
           }
-          case ts::DID_COMPONENT: {
-            ts::ComponentDescriptor desc(context_, *dp);
+          case LibISDB::ComponentDescriptor::TAG: {
+            const auto* desc =
+                static_cast<const LibISDB::ComponentDescriptor*>(dp);
             auto json = MakeJsonValue(desc, allocator);
             descriptors.PushBack(json, allocator);
             break;
           }
-          case ts::DID_CONTENT: {
-            ts::ContentDescriptor desc(context_, *dp);
+          case LibISDB::ContentDescriptor::TAG: {
+            const auto* desc =
+                static_cast<const LibISDB::ContentDescriptor*>(dp);
             auto json = MakeJsonValue(desc, allocator);
             descriptors.PushBack(json, allocator);
             break;
           }
-          case ts::DID_ARIB_AUDIO_COMPONENT: {
-            ts::ARIBAudioComponentDescriptor desc(context_, *dp);
+          case LibISDB::AudioComponentDescriptor::TAG: {
+            const auto* desc =
+                static_cast<const LibISDB::AudioComponentDescriptor*>(dp);
             auto json = MakeJsonValue(desc, allocator);
             descriptors.PushBack(json, allocator);
             break;
@@ -719,9 +725,11 @@ class EitCollector final : public PacketSink,
         }
       }
 
-      if (HasExtendedEventItems(descs)) {
-        auto json = MakeExtendedEventJsonValue(descs, allocator);
-        descriptors.PushBack(json, allocator);
+      {
+        auto json = MakeExtendedEventJsonValue(desc_block, allocator);
+        if (!json.IsNull()) {
+          descriptors.PushBack(json, allocator);
+        }
       }
 
       rapidjson::Value event(rapidjson::kObjectType);
@@ -752,35 +760,41 @@ class EitCollector final : public PacketSink,
   }
 
   rapidjson::Value MakeJsonValue(
-      const ts::ShortEventDescriptor& desc,
+      const LibISDB::ShortEventDescriptor* desc,
       rapidjson::Document::AllocatorType& allocator) const {
     rapidjson::Value json(rapidjson::kObjectType);
     json.AddMember("$type", "ShortEvent", allocator);
-    json.AddMember("eventName", desc.event_name.toUTF8(), allocator);
-    json.AddMember("text", desc.text.toUTF8(), allocator);
+    LibISDB::ARIBString event_name;
+    desc->GetEventName(&event_name);
+    json.AddMember("eventName", DecodeAribString(event_name), allocator);
+    LibISDB::ARIBString text;
+    desc->GetEventDescription(&text);
+    json.AddMember("text", DecodeAribString(text), allocator);
     return json;
   }
 
   rapidjson::Value MakeJsonValue(
-      const ts::ComponentDescriptor& desc,
+      const LibISDB::ComponentDescriptor* desc,
       rapidjson::Document::AllocatorType& allocator) const {
     rapidjson::Value json(rapidjson::kObjectType);
     json.AddMember("$type", "Component", allocator);
-    json.AddMember("streamContent", desc.stream_content, allocator);
-    json.AddMember("componentType", desc.component_type, allocator);
+    json.AddMember("streamContent", desc->GetStreamContent(), allocator);
+    json.AddMember("componentType", desc->GetComponentType(), allocator);
     return json;
   }
 
   rapidjson::Value MakeJsonValue(
-      const ts::ContentDescriptor& desc,
+      const LibISDB::ContentDescriptor* desc,
       rapidjson::Document::AllocatorType& allocator) const {
     rapidjson::Value nibbles(rapidjson::kArrayType);
-    for (const auto& entry : desc.entries) {
+    for (int i = 0; i < desc->GetNibbleCount(); ++i) {
+      LibISDB::ContentDescriptor::NibbleInfo info;
+      desc->GetNibble(i, &info);
       rapidjson::Value nibble(rapidjson::kArrayType);
-      nibble.PushBack(entry.content_nibble_level_1, allocator);
-      nibble.PushBack(entry.content_nibble_level_2, allocator);
-      nibble.PushBack(entry.user_nibble_1, allocator);
-      nibble.PushBack(entry.user_nibble_2, allocator);
+      nibble.PushBack(info.ContentNibbleLevel1, allocator);
+      nibble.PushBack(info.ContentNibbleLevel2, allocator);
+      nibble.PushBack(info.UserNibble1, allocator);
+      nibble.PushBack(info.UserNibble2, allocator);
       nibbles.PushBack(nibble, allocator);
     }
     rapidjson::Value json(rapidjson::kObjectType);
@@ -790,12 +804,12 @@ class EitCollector final : public PacketSink,
   }
 
   rapidjson::Value MakeJsonValue(
-      const ts::ARIBAudioComponentDescriptor& desc,
+      const LibISDB::AudioComponentDescriptor* desc,
       rapidjson::Document::AllocatorType& allocator) const {
     rapidjson::Value json(rapidjson::kObjectType);
     json.AddMember("$type", "AudioComponent", allocator);
-    json.AddMember("componentType", desc.component_type, allocator);
-    json.AddMember("samplingRate", desc.sampling_rate, allocator);
+    json.AddMember("componentType", desc->GetComponentType(), allocator);
+    json.AddMember("samplingRate", desc->GetSamplingRate(), allocator);
     return json;
   }
 
@@ -812,69 +826,29 @@ class EitCollector final : public PacketSink,
     return json;
   }
 
-  inline bool HasExtendedEventItems(const ts::DescriptorList& descs) const {
-    return descs.search(ts::DID_EXTENDED_EVENT) != descs.count();
+  rapidjson::Value MakeJsonValue(
+      const LibISDB::String& desc, const LibISDB::String& item,
+      rapidjson::Document::AllocatorType& allocator) const {
+    rapidjson::Value json(rapidjson::kArrayType);
+    json.PushBack(rapidjson::Value().SetString(desc, allocator), allocator);
+    json.PushBack(rapidjson::Value().SetString(item, allocator), allocator);
+    return json;
   }
 
   rapidjson::Value MakeExtendedEventJsonValue(
-      const ts::DescriptorList& descs,
+      const LibISDB::DescriptorBlock& desc_block,
       rapidjson::Document::AllocatorType& allocator) const {
-    rapidjson::Value items(rapidjson::kArrayType);
-
-    ts::ByteBlock eed_desc;
-    ts::ByteBlock eed_item;
-
-    for (size_t i = 0; i < descs.size(); ++i) {
-      auto& dp = descs[i];
-      if (!dp->isValid()) {
-        continue;
-      }
-      if (dp->tag() != ts::DID_EXTENDED_EVENT) {
-        continue;
-      }
-
-      // Extract metadata from `dp` directly without using
-      // ts::ExtendedEventdescriptor.  Because we need to decode a string
-      // after concatenating subsequent fragments of the string.
-
-      if (dp->payloadSize() < 5) {
-        continue;
-      }
-
-      const uint8_t* data = dp->payload();
-      size_t remaining = data[4];
-      data += 5;
-      while (remaining >= 2) {
-        size_t desc_len = std::min<size_t>(data[0], remaining - 1);
-        data += 1;
-        remaining -= 1;
-        if (desc_len > 0) {
-          if (!eed_desc.empty()) {
-            auto json = MakeJsonValue(eed_desc, eed_item, allocator);
-            items.PushBack(json, allocator);
-            eed_desc.clear();
-            eed_item.clear();
-          }
-          eed_desc.append(data, desc_len);
-          data += desc_len;
-          remaining -= desc_len;
-        }
-        if (remaining <= 0) {
-          break;
-        }
-        size_t item_len = std::min<size_t>(data[0], remaining - 1);
-        data += 1;
-        remaining -= 1;
-        if (item_len > 0) {
-          eed_item.append(data, item_len);
-          data += item_len;
-          remaining -= item_len;
-        }
-      }
+    LibISDB::ARIBStringDecoder decoder;
+    auto flags = GetAribStringDecodeFlag();
+    LibISDB::EventInfo::ExtendedTextInfoList ext_list;
+    if (!LibISDB::GetEventExtendedTextList(
+            &desc_block, decoder, flags, &ext_list)) {
+      return rapidjson::Value();
     }
 
-    if (!eed_desc.empty()) {
-      auto json = MakeJsonValue(eed_desc, eed_item, allocator);
+    rapidjson::Value items(rapidjson::kArrayType);
+    for (const auto& ext : ext_list) {
+      auto json = MakeJsonValue(ext.Description, ext.Text, allocator);
       items.PushBack(json, allocator);
     }
 
@@ -909,6 +883,23 @@ class EitCollector final : public PacketSink,
 
   inline void EnableShowProgress() {
     show_progress_ = true;
+  }
+
+  inline LibISDB::String DecodeAribString(
+      const LibISDB::ARIBString& str) const {
+    LibISDB::ARIBStringDecoder decoder;
+    LibISDB::String utf8;
+    decoder.Decode(str, &utf8, GetAribStringDecodeFlag());
+    return std::move(utf8);
+  }
+
+  inline LibISDB::ARIBStringDecoder::DecodeFlag GetAribStringDecodeFlag()
+      const {
+    auto flags = LibISDB::ARIBStringDecoder::DecodeFlag::UseCharSize;
+    if (option_.use_unicode_symbol) {
+      flags |= LibISDB::ARIBStringDecoder::DecodeFlag::UnicodeSymbol;
+    }
+    return flags;
   }
 
   const EitCollectorOption option_;

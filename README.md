@@ -113,6 +113,7 @@ mirakc-arib is static-linked against the following libraries:
 * [tplgy/cppcodec] (MIT)
 * [masnagam/tsduck-arib] forked from [tsduck/tsduck] (BSD 2-Clause)
 * [masnagam/aribb24] forked from [nkoriyama/aribb24] (LGPL-3.0)
+* [DBCTRADO/LibISDB] (GPLv2)
 
 The following libraries are used for testing purposes:
 
@@ -166,6 +167,7 @@ shall be dual licensed as above, without any additional terms or conditions.
 [tsduck/tsduck]: https://github.com/tsduck/tsduck
 [masnagam/aribb24]: https://github.com/masnagam/aribb24
 [nkoriyama/aribb24]: https://github.com/nkoriyama/aribb24
+[DBCTRADO/LibISDB]: https://github.com/DBCTRADO/LibISDB
 [google/googletest]: https://github.com/google/googletest
 [google/benchmark]: https://github.com/google/benchmark
 [node-aribts]: https://github.com/rndomhack/node-aribts
