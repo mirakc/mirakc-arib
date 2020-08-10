@@ -1,0 +1,10 @@
+diff --git CMakeLists.txt CMakeLists.txt
+index 9935ac7..d40f101 100644
+--- CMakeLists.txt
++++ CMakeLists.txt
+@@ -4,5 +4,3 @@ set(CMAKE_CXX_STANDARD 17)
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+ 
+ add_subdirectory(LibISDB)
+-add_subdirectory(Samples)
+-add_subdirectory(Tests)

@@ -484,6 +484,8 @@ ExternalProject_Add(vendor-libisdb
     https://github.com/DBCTRADO/LibISDB.git
   GIT_TAG
     ${MIRAKC_ARIB_LIBISDB_VERSION}
+  PATCH_COMMAND
+    git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/LibISDB.patch
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -509,6 +511,8 @@ if(libisdb_LIB)
       ${libisdb_LIB}
     INTERFACE_INCLUDE_DIRECTORIES
       ${MIRAKC_ARIB_VENDOR_DIR}/src/vendor-libisdb
+    INTERFACE_LINK_LIBRARIES
+      "${CMAKE_THREAD_LIBS_INIT}"
   )
 else()
   message(WARNING "LibISDB: not found")
