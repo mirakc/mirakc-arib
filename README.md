@@ -2,9 +2,9 @@
 
 > mirakc-tools for Japanese TV broadcast contents
 
-[![linux-status](https://github.com/masnagam/mirakc-arib/workflows/Linux/badge.svg)](https://github.com/masnagam/mirakc-arib/actions?workflow=Linux)
-[![macos-status](https://github.com/masnagam/mirakc-arib/workflows/macOS/badge.svg)](https://github.com/masnagam/mirakc-arib/actions?workflow=macOS)
-[![arm-linux-status](https://github.com/masnagam/mirakc-arib/workflows/ARM-Linux/badge.svg)](https://github.com/masnagam/mirakc-arib/actions?workflow=ARM-Linux)
+[![linux-status](https://github.com/mirakc/mirakc-arib/workflows/Linux/badge.svg)](https://github.com/mirakc/mirakc-arib/actions?workflow=Linux)
+[![macos-status](https://github.com/mirakc/mirakc-arib/workflows/macOS/badge.svg)](https://github.com/mirakc/mirakc-arib/actions?workflow=macOS)
+[![arm-linux-status](https://github.com/mirakc/mirakc-arib/workflows/ARM-Linux/badge.svg)](https://github.com/mirakc/mirakc-arib/actions?workflow=ARM-Linux)
 
 ## How to build
 
@@ -106,13 +106,13 @@ Usages of mirakc-arib are different from `tsp`:
 
 mirakc-arib is static-linked against the following libraries:
 
-* [masnagam/docopt.cpp] forked from [docopt/docopt.cpp] (Boost/MIT)
+* [mirakc/docopt.cpp] forked from [docopt/docopt.cpp] (Boost/MIT)
 * [fmtlib/fmt] (MIT)
 * [gabime/spdlog] w/ [patches/spdlog.patch](./patches/spdlog.patch) (MIT)
 * [Tencent/rapidjson] (MIT)
 * [tplgy/cppcodec] (MIT)
-* [masnagam/tsduck-arib] forked from [tsduck/tsduck] (BSD 2-Clause)
-* [masnagam/aribb24] forked from [nkoriyama/aribb24] (LGPL-3.0)
+* [mirakc/tsduck-arib] forked from [tsduck/tsduck] (BSD 2-Clause)
+* [mirakc/aribb24] forked from [nkoriyama/aribb24] (LGPL-3.0)
 * [DBCTRADO/LibISDB] (GPLv2)
 
 The following libraries are used for testing purposes:
@@ -157,15 +157,15 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in this project by you, as defined in the Apache-2.0 license,
 shall be dual licensed as above, without any additional terms or conditions.
 
-[masnagam/docopt.cpp]: https://github.com/masnagam/docopt.cpp
+[mirakc/docopt.cpp]: https://github.com/mirakc/docopt.cpp
 [docopt/docopt.cpp]: https://github.com/docopt/docopt.cpp
 [fmtlib/fmt]: https://github.com/fmtlib/fmt
 [gabime/spdlog]: https://github.com/gabime/spdlog
 [Tencent/rapidjson]: https://github.com/Tencent/rapidjson
 [tplgy/cppcodec]: https://github.com/tplgy/cppcodec
-[masnagam/tsduck-arib]: https://github.com/masnagam/tsduck-arib
+[mirakc/tsduck-arib]: https://github.com/mirakc/tsduck-arib
 [tsduck/tsduck]: https://github.com/tsduck/tsduck
-[masnagam/aribb24]: https://github.com/masnagam/aribb24
+[mirakc/aribb24]: https://github.com/mirakc/aribb24
 [nkoriyama/aribb24]: https://github.com/nkoriyama/aribb24
 [DBCTRADO/LibISDB]: https://github.com/DBCTRADO/LibISDB
 [google/googletest]: https://github.com/google/googletest

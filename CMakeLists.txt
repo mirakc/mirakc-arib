@@ -160,7 +160,7 @@ ExternalProject_Add(vendor-docopt
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
   GIT_REPOSITORY
-    https://github.com/masnagam/docopt.cpp.git
+    https://github.com/mirakc/docopt.cpp.git
   GIT_TAG
     ${MIRAKC_ARIB_DOCOPT_VERSION}
   CMAKE_ARGS
@@ -358,7 +358,7 @@ ExternalProject_Add(vendor-aribb24
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
   GIT_REPOSITORY
-    https://github.com/masnagam/aribb24.git
+    https://github.com/mirakc/aribb24.git
   GIT_TAG
     ${MIRAKC_ARIB_ARIBB24_VERSION}
   BUILD_IN_SOURCE
@@ -430,7 +430,7 @@ ExternalProject_Add(vendor-tsduck-arib
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
   GIT_REPOSITORY
-    https://github.com/masnagam/tsduck-arib.git
+    https://github.com/mirakc/tsduck-arib.git
   GIT_TAG
     ${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}
   BUILD_IN_SOURCE

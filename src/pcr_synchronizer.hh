@@ -79,7 +79,7 @@ class PcrSynchronizer final : public PacketSink,
       if (pcr_pids_.count(pid) == 1 && pcr_map_.find(pid) == pcr_map_.end()) {
         if (!packet.hasPCR() || packet.getPCR() == ts::INVALID_PCR) {
           // Many PCR packets in a specific channel have no valid PCR...
-          // See https://github.com/masnagam/mirakc-arib/issues/3
+          // See https://github.com/mirakc/mirakc-arib/issues/3
           MIRAKC_ARIB_TRACE("PCR#{:04X} has no valid PCR...", pid);
         } else {
           auto pcr = static_cast<int64_t>(packet.getPCR());

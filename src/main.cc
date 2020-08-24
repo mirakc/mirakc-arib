@@ -28,13 +28,13 @@ namespace {
 
 static const std::string kVersion = R"({}
 
-* masnagam/docopt.cpp {}
+* mirakc/docopt.cpp {}
 * fmtlib/fmt {}
 * gabime/spdlog {} w/ patches/spdlog.patch
 * Tencent/rapidjson {}
 * tplgy/cppcodec {}
-* masnagam/aribb24 {}
-* masnagam/tsduck-arib {}
+* mirakc/aribb24 {}
+* mirakc/tsduck-arib {}
 * DBCTRADO/LibISDB {}
 )";
 

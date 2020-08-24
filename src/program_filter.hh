@@ -131,7 +131,7 @@ class ProgramFilter final : public PacketSink,
 
     if (!packet.hasPCR() || packet.getPCR() == ts::INVALID_PCR) {
       // Many PCR packets in a specific channel have no valid PCR...
-      // See https://github.com/masnagam/mirakc-arib/issues/3
+      // See https://github.com/mirakc/mirakc-arib/issues/3
       MIRAKC_ARIB_TRACE("PCR#{:04X} has no valid PCR...", pid);
       return true;
     }
@@ -192,7 +192,7 @@ class ProgramFilter final : public PacketSink,
     if (pid == pcr_pid_) {
       if (!packet.hasPCR() || packet.getPCR() == ts::INVALID_PCR) {
         // Many PCR packets in a specific channel have no valid PCR...
-        // See https://github.com/masnagam/mirakc-arib/issues/3
+        // See https://github.com/mirakc/mirakc-arib/issues/3
         MIRAKC_ARIB_TRACE("PCR#{:04X} has no valid PCR...", pid);
         return sink_->HandlePacket(packet);
       }
