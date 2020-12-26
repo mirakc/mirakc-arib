@@ -67,3 +67,16 @@ inline int64_t ComparePcr(int64_t lhs, int64_t rhs) {
 }
 
 }  // namespace
+
+// Including <fmt/ostream.h> doesn't work as we expected...
+template <>
+struct fmt::formatter<ts::Time> {
+  constexpr auto parse(format_parse_context& ctx) {
+    return ctx.end();
+  }
+
+  template <typename Context>
+  auto format(const ts::Time& time, Context& ctx) {
+    return format_to(ctx.out(), "{}", time.format().toUTF8());
+  }
+};

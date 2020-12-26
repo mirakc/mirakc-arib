@@ -1,46 +1,29 @@
 diff --git include/spdlog/cfg/env.h include/spdlog/cfg/env.h
-index 115b676f..dbd60489 100644
+index 1f39ebbb..87e3a5f7 100644
 --- include/spdlog/cfg/env.h
 +++ include/spdlog/cfg/env.h
 @@ -25,9 +25,9 @@
  
  namespace spdlog {
  namespace cfg {
--void load_env_levels()
-+void load_env_levels(const char *env_var = "SPDLOG_LEVEL")
+-inline void load_env_levels()
++inline void load_env_levels(const char *env_var = "SPDLOG_LEVEL")
  {
 -    auto env_val = details::os::getenv("SPDLOG_LEVEL");
 +    auto env_val = details::os::getenv(env_var);
-     auto levels = helpers::extract_levels(env_val);
-     details::registry::instance().update_levels(std::move(levels));
- }
-diff --git include/spdlog/cfg/helpers-inl.h include/spdlog/cfg/helpers-inl.h
-index b0915073..8414edf4 100644
---- include/spdlog/cfg/helpers-inl.h
-+++ include/spdlog/cfg/helpers-inl.h
-@@ -88,11 +88,7 @@ SPDLOG_INLINE log_levels extract_levels(const std::string &input)
-         auto &logger_name = name_level.first;
-         auto level_name = to_lower_(name_level.second);
-         auto level = level::from_str(level_name);
--        // fallback to "info" if unrecognized level name
--        if (level == level::off && level_name != "off")
--        {
--            level = level::info;
--        }
-+        // fallback to "off" if unrecognized level name
-         rv.set(logger_name, level);
-     }
-     return rv;
-diff --git include/spdlog/cfg/log_levels.h include/spdlog/cfg/log_levels.h
-index ba3b2f75..60bdf4f3 100644
---- include/spdlog/cfg/log_levels.h
-+++ include/spdlog/cfg/log_levels.h
-@@ -12,7 +12,7 @@ namespace cfg {
- class log_levels
- {
-     std::unordered_map<std::string, spdlog::level::level_enum> levels_;
--    spdlog::level::level_enum default_level_ = level::info;
-+    spdlog::level::level_enum default_level_ = level::off;  // compatible with env_logger
- 
- public:
-     void set(const std::string &logger_name, level::level_enum lvl)
+     if (!env_val.empty())
+     {
+         helpers::load_levels(env_val);
+diff --git include/spdlog/details/registry.h include/spdlog/details/registry.h
+index d9b586a5..e9025d76 100644
+--- include/spdlog/details/registry.h
++++ include/spdlog/details/registry.h
+@@ -97,7 +97,7 @@ private:
+     std::unordered_map<std::string, std::shared_ptr<logger>> loggers_;
+     log_levels log_levels_;
+     std::unique_ptr<formatter> formatter_;
+-    spdlog::level::level_enum global_log_level_ = level::info;
++    spdlog::level::level_enum global_log_level_ = level::off;  // compatible with env_logger in Rust
+     level::level_enum flush_level_ = level::off;
+     void (*err_handler_)(const std::string &msg);
+     std::shared_ptr<thread_pool> tp_;

@@ -16,13 +16,13 @@ set(MIRAKC_ARIB_DOCOPT_VERSION
   "2df2b1cd28a870c810da2e0fcffbb97c9f89708e"
   CACHE STRING "docopt.cpp version to use." FORCE)
 set(MIRAKC_ARIB_FMT_VERSION
-  "6.2.1"
+  "7.1.3"
   CACHE STRING "fmt version to use." FORCE)
 set(MIRAKC_ARIB_SPDLOG_VERSION
-  "v1.6.1"
+  "v1.8.2"
   CACHE STRING "spdlog version to use." FORCE)
 set(MIRAKC_ARIB_RAPIDJSON_VERSION
-  "f56928de85d56add3ca6ae7cf7f119a42ee1585b"
+  "56f215e5c367f71a90af53984148e556ffe83541"
   CACHE STRING "RapidJSON version to use." FORCE)
 set(MIRAKC_ARIB_CPPCODEC_VERSION
   "bd6ddf95129e769b50ef63e0f558fa21364f3f65"
@@ -40,15 +40,20 @@ set(MIRAKC_ARIB_GOOGLETEST_VERSION
   "release-1.10.0"
   CACHE STRING "googletest version to use." FORCE)
 set(MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION
-  "v1.5.1"
+  "v1.5.2"
   CACHE STRING "Google Benchmark version to use." FORCE)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED YES)
+set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+include(CheckCCompilerFlag)
 
 if($ENV{MIRAKC_ARIB_CI})
   # Disable parallel compilation.
@@ -95,12 +100,22 @@ message(STATUS "  CMAKE_SYSTEM_NAME:")
 message(STATUS "    ${CMAKE_SYSTEM_NAME}")
 message(STATUS "  CMAKE_SYSTEM_PROCESSOR:")
 message(STATUS "    ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "  CMAKE_C_COMPILER_ID:")
+message(STATUS "    ${CMAKE_C_COMPILER_ID}")
+message(STATUS "  CMAKE_CXX_COMPILER_ID:")
+message(STATUS "    ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "  CMAKE_RUNTIME_OUTPUT_DIRECTORY:")
 message(STATUS "    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message(STATUS "  CMAKE_ARCHIVE_OUTPUT_DIRECTORY:")
 message(STATUS "    ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
 message(STATUS "  CMAKE_LIBRARY_OUTPUT_DIRECTORY:")
 message(STATUS "    ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+message(STATUS "  CMAKE_C_STANDARD:")
+message(STATUS "    ${CMAKE_C_STANDARD}")
+message(STATUS "  CMAKE_C_STANDARD_REQUIRED:")
+message(STATUS "    ${CMAKE_C_STANDARD_REQUIRED}")
+message(STATUS "  CMAKE_C_EXTENSIONS:")
+message(STATUS "    ${CMAKE_C_EXTENSIONS}")
 message(STATUS "  CMAKE_CXX_STANDARD:")
 message(STATUS "    ${CMAKE_CXX_STANDARD}")
 message(STATUS "  CMAKE_CXX_STANDARD_REQUIRED:")
@@ -418,6 +433,15 @@ if(CMAKE_CROSSCOMPILING)
     CXX=${CMAKE_CXX_COMPILER}
     LD=${CMAKE_C_COMPILER_TARGET}-ld
   )
+elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  # See https://chromium.googlesource.com/external/github.com/AOMediaCodec/libavif/+/refs/heads/master/CMakeLists.txt#132
+  check_c_compiler_flag(-Wpoison-system-directories HAVE_POISON_SYSTEM_DIRECTORIES_WARNING)
+  if(HAVE_POISON_SYSTEM_DIRECTORIES_WARNING)
+    # Disable -Wpoison-system-directories
+    list(APPEND MIRAKC_ARIB_TSDUCK_DEFS
+      CXXFLAGS_EXTRA="-Wno-poison-system-directories"
+    )
+  endif()
 endif()
 
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
