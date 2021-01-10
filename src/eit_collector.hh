@@ -765,11 +765,13 @@ class EitCollector final : public PacketSink,
     rapidjson::Value json(rapidjson::kObjectType);
     json.AddMember("$type", "ShortEvent", allocator);
     LibISDB::ARIBString event_name;
-    desc->GetEventName(&event_name);
-    json.AddMember("eventName", DecodeAribString(event_name), allocator);
+    if (desc->GetEventName(&event_name)) {
+      json.AddMember("eventName", DecodeAribString(event_name), allocator);
+    }
     LibISDB::ARIBString text;
-    desc->GetEventDescription(&text);
-    json.AddMember("text", DecodeAribString(text), allocator);
+    if (desc->GetEventDescription(&text)) {
+      json.AddMember("text", DecodeAribString(text), allocator);
+    }
     return json;
   }
 
@@ -780,6 +782,12 @@ class EitCollector final : public PacketSink,
     json.AddMember("$type", "Component", allocator);
     json.AddMember("streamContent", desc->GetStreamContent(), allocator);
     json.AddMember("componentType", desc->GetComponentType(), allocator);
+    json.AddMember("componentTag", desc->GetComponentTag(), allocator);
+    json.AddMember("languageCode", desc->GetLanguageCode(), allocator);
+    LibISDB::ARIBString text;
+    if (desc->GetText(&text)) {
+      json.AddMember("text", DecodeAribString(text), allocator);
+    }
     return json;
   }
 
@@ -808,8 +816,24 @@ class EitCollector final : public PacketSink,
       rapidjson::Document::AllocatorType& allocator) const {
     rapidjson::Value json(rapidjson::kObjectType);
     json.AddMember("$type", "AudioComponent", allocator);
+    json.AddMember("streamContent", desc->GetStreamContent(), allocator);
     json.AddMember("componentType", desc->GetComponentType(), allocator);
+    json.AddMember("componentTag", desc->GetComponentTag(), allocator);
+    json.AddMember("simulcastGroupTag", desc->GetSimulcastGroupTag(), allocator);
+    json.AddMember(
+        "esMultiLingualFlag", desc->GetESMultiLingualFlag(), allocator);
+    json.AddMember(
+        "mainComponentFlag", desc->GetMainComponentFlag(), allocator);
+    json.AddMember("qualityIndicator", desc->GetQualityIndicator(), allocator);
     json.AddMember("samplingRate", desc->GetSamplingRate(), allocator);
+    json.AddMember("languageCode", desc->GetLanguageCode(), allocator);
+    if (desc->GetESMultiLingualFlag()) {
+      json.AddMember("languageCode2", desc->GetLanguageCode2(), allocator);
+    }
+    LibISDB::ARIBString text;
+    if (desc->GetText(&text)) {
+      json.AddMember("text", DecodeAribString(text), allocator);
+    }
     return json;
   }
 
