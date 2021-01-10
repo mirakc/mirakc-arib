@@ -56,6 +56,7 @@ Usage:
   mirakc-arib filter-service --sid=<SID> [FILE]
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
     --clock-pid=<PID> --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
+    [--audio-tags=<TAG>...] [--video-tags=<TAG>...]
     [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
   mirakc-arib track-airtime --sid=<SID> --eid=<EID> [FILE]
   mirakc-arib seek-start --sid=<SID>
@@ -437,6 +438,7 @@ Program filter
 Usage:
   mirakc-arib filter-program --sid=<SID> --eid=<EID>
     --clock-pid=<PID> --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
+    [--audio-tags=<TAG>...] [--video-tags=<TAG>...]
     [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
 
 Options:
@@ -457,6 +459,20 @@ Options:
 
   --clock-time=<UNIX-TIME-MS>
     UNIX time (ms) correspoinding to the PCR value.
+
+  --audio-tags=<TAG>
+    Only audio streams matching with specified tags will be included.  All audio
+    streams will be included if this option is not specified.
+
+    TAG is a 1-byte unsgined integer value which is specified in the
+    component_tag field in the Audio Component Description.
+
+  --video-tags=<TAG>
+    Only video streams matching with specified tags will be included.  All video
+    streams will be included if this option is not specified.
+
+    TAG is a 1-byte unsgined integer value which is specified in the
+    component_tag field in the Component Description.
 
   --start-margin=<MS> [default: 0]
     Offset (ms) from the start time of the event toward the past.
@@ -716,6 +732,28 @@ void LoadSidSet(const Args& args, const std::string& name, SidSet* sids) {
   }
 }
 
+void LoadComponentTags(const Args& args, const std::string& name,
+    std::unordered_set<uint8_t>* tags) {
+  if (!args.at(name)) {
+    return;
+  }
+
+  auto list = args.at(name).asStringList();
+  for (const auto& str : list) {
+    size_t pos;
+    auto val = std::stoi(str, &pos);
+    MIRAKC_ARIB_ASSERT_MSG(
+        pos == str.length(), "{}: must be a number: {}", name, str);
+    MIRAKC_ARIB_ASSERT_MSG(
+        val >= 0, "{}: must be zero or a positive number: {}", name, str);
+    MIRAKC_ARIB_ASSERT_MSG(
+        val < 256, "{}: must be smaller than 256: {}", name, str);
+    tags->insert(static_cast<uint8_t>(val));
+  }
+
+  MIRAKC_ARIB_INFO("{}: {}", name, fmt::join(*tags, ", "));
+}
+
 void LoadOption(const Args& args, EitCollectorOption* opt) {
   static const std::string kTimeLimit = "--time-limit";
   static const std::string kStreaming = "--streaming";
@@ -750,6 +788,8 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
   static const std::string kClockPid = "--clock-pid";
   static const std::string kClockPcr = "--clock-pcr";
   static const std::string kClockTime = "--clock-time";
+  static const std::string kAudioTags = "--audio-tags";
+  static const std::string kVideoTags = "--video-tags";
   static const std::string kStartMargin = "--start-margin";
   static const std::string kEndMargin = "--end-margin";
   static const std::string kPreStreaming = "--pre-streaming";
@@ -760,6 +800,8 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
   opt->clock_pcr = args.at(kClockPcr).asInt64();
   opt->clock_time = ConvertUnixTimeToJstTime(
       static_cast<ts::MilliSecond>(args.at(kClockTime).asInt64()));
+  LoadComponentTags(args, kAudioTags, &opt->audio_tags);
+  LoadComponentTags(args, kVideoTags, &opt->video_tags);
   if (args.at(kStartMargin)) {
     opt->start_margin =
         static_cast<ts::MilliSecond>(args.at(kStartMargin).asInt64());

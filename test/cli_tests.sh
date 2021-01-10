@@ -49,6 +49,11 @@ assert 0 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=
 assert 0 "$MIRAKC_ARIB filter-program --sid=0xFFFF --eid=0xFFFF --clock-pid=0xFFFF --clock-pcr=0x7FFFFFFFFFFFFFFF --clock-time=-9223372036854775808 --start-margin=1 --end-margin=1 --pre-streaming"
 assert 134 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=0xFFFFFFFFFFFFFFFFF --clock-time=1"
 assert 134 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=1 --clock-time=-9223372036854775809"
+assert 0 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=1 --clock-time=1 --audio-tags=0 --audio-tags=255 --video-tags=0 --video-tags=255"
+assert 134 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=1 --clock-time=1 --audio-tags='-1'"
+assert 134 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=1 --clock-time=1 --audio-tags=256"
+assert 134 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=1 --clock-time=1 --video-tags='-1'"
+assert 134 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=1 --clock-time=1 --video-tags=256"
 
 assert 0 "$MIRAKC_ARIB track-airtime --sid=1 --eid=1"
 assert 0 "$MIRAKC_ARIB track-airtime --sid=0xFFFF --eid=0xFFFF"

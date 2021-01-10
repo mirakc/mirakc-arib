@@ -20,6 +20,8 @@ struct ProgramFilterOption final {
   ts::PID clock_pid = ts::PID_NULL;
   int64_t clock_pcr = 0;
   ts::Time clock_time;  // JST
+  std::unordered_set<uint8_t> audio_tags;
+  std::unordered_set<uint8_t> video_tags;
   ts::MilliSecond start_margin = 0;  // ms
   ts::MilliSecond end_margin = 0;  // ms
   bool pre_streaming = false;  // disabled
@@ -38,6 +40,8 @@ class ProgramFilter final : public PacketSink,
     clock_time_ready_ = true;
     MIRAKC_ARIB_DEBUG("Initial clock: PCR#{:04X}, {:011X} ({})",
                       clock_pid_, clock_pcr_, clock_time_);
+    MIRAKC_ARIB_DEBUG("Video tags: {}", fmt::join(option_.video_tags, ", "));
+    MIRAKC_ARIB_DEBUG("Audio tags: {}", fmt::join(option_.audio_tags, ", "));
 
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
@@ -111,12 +115,6 @@ class ProgramFilter final : public PacketSink,
         last_pat_packets_.clear();
       }
       last_pat_packets_.push_back(packet);
-    } else if (pmt_pid_ != ts::PID_NULL && pid == pmt_pid_) {
-      // Save packets of the last PMT.
-      if (packet.getPUSI()) {
-        last_pmt_packets_.clear();
-      }
-      last_pmt_packets_.push_back(packet);
     } else {
       // Drop other packets.
     }
@@ -160,22 +158,26 @@ class ProgramFilter final : public PacketSink,
 
     MIRAKC_ARIB_INFO("Reached the start PCR");
 
-    // Send pending packets.
+    // Send pending PAT packets.
     if (!option_.pre_streaming) {
       MIRAKC_ARIB_ASSERT(!last_pat_packets_.empty());
-      for (const auto& pat : last_pat_packets_) {
-        if (!sink_->HandlePacket(pat)) {
+      for (const auto& pat_packet : last_pat_packets_) {
+        if (!sink_->HandlePacket(pat_packet)) {
           return false;
         }
       }
       last_pat_packets_.clear();
     }
-    for (const auto& pmt : last_pmt_packets_) {
-      if (!sink_->HandlePacket(pmt)) {
+
+    // Send PMT packets.
+    ts::TSPacket pmt_packet;
+    do {
+      pmt_packetizer_.getNextPacket(pmt_packet);
+      MIRAKC_ARIB_ASSERT(pmt_packet.getPID() == pmt_pid_);
+      if (!sink_->HandlePacket(pmt_packet)) {
         return false;
       }
-      last_pmt_packets_.clear();
-    }
+    } while (!pmt_packetizer_.atCycleBoundary());
 
     state_ = kStreaming;
     return sink_->HandlePacket(packet);
@@ -214,7 +216,25 @@ class ProgramFilter final : public PacketSink,
       }
     }
 
+    if (pid == pmt_pid_) {
+      ts::TSPacket pmt_packet;
+      pmt_packetizer_.getNextPacket(pmt_packet);
+      MIRAKC_ARIB_ASSERT(pmt_packet.getPID() == pmt_pid_);
+      return sink_->HandlePacket(pmt_packet);
+    }
+
+    if (CheckPesBlackListForDrop(pid)) {
+      return true;
+    }
+
     return sink_->HandlePacket(packet);
+  }
+
+  bool CheckPesBlackListForDrop(ts::PID pid) const {
+    if (pes_black_list_.find(pid) != pes_black_list_.end()) {
+      return true;
+    }
+    return false;
   }
 
   void handleTable(ts::SectionDemux&, const ts::BinaryTable& table) override {
@@ -313,6 +333,81 @@ class ProgramFilter final : public PacketSink,
       clock_pcr_ready_ = false;
       clock_time_ready_ = false;
     }
+
+    pes_black_list_.clear();
+    MIRAKC_ARIB_DEBUG("Clear PES black list");
+
+    for (auto it = pmt.streams.begin(); it != pmt.streams.end(); ++it) {
+      auto pid = it->first;
+      const auto& stream = it->second;
+      if (stream.isVideo() && !option_.video_tags.empty()) {
+        uint8_t tag;
+        if (!stream.getComponentTag(tag)) {
+          pes_black_list_.insert(pid);
+          MIRAKC_ARIB_DEBUG("PES black list += PES/Video#{:04X} (no tag)", pid);
+          continue;
+        }
+        const auto& tag_it = std::find(
+            std::begin(option_.video_tags), std::end(option_.video_tags), tag);
+        if (tag_it == std::end(option_.video_tags)) {
+          pes_black_list_.insert(pid);
+          MIRAKC_ARIB_DEBUG(
+              "PES black list += PES/Video#{:04X} (tag:{})", pid, tag);
+          continue;
+        }
+      } else if (stream.isAudio() && !option_.audio_tags.empty()) {
+        uint8_t tag;
+        if (!stream.getComponentTag(tag)) {
+          pes_black_list_.insert(pid);
+          MIRAKC_ARIB_DEBUG("PES black list += PES/Audio#{:04X} (no tag)", pid);
+          continue;
+        }
+        const auto& tag_it = std::find(
+            std::begin(option_.audio_tags), std::end(option_.audio_tags), tag);
+        if (tag_it == std::end(option_.audio_tags)) {
+          pes_black_list_.insert(pid);
+          MIRAKC_ARIB_DEBUG(
+              "PES black list += PES/Audio#{:04X} (tag:{})", pid, tag);
+          continue;
+        }
+      }
+    }
+
+    if (pes_black_list_.empty()) {
+      // Forward PMT packets without modification.
+    } else {
+      // Remove streams included in the PES black list.
+      auto it = pmt.streams.begin();
+      while (it != pmt.streams.end()) {
+        if (pes_black_list_.find(it->first) != pes_black_list_.end()) {
+          it = pmt.streams.erase(it);
+        } else {
+          ++it;
+        }
+      }
+
+      MIRAKC_ARIB_DEBUG("Modified PMT#{:04X}", table.sourcePID());
+      for (auto it = pmt.streams.begin(); it != pmt.streams.end(); ++it) {
+        auto pid = it->first;
+        const auto& stream = it->second;
+        if (stream.isVideo()) {
+          MIRAKC_ARIB_DEBUG("  PES/Video#{:04X}", pid);
+        } else if (stream.isAudio()) {
+          MIRAKC_ARIB_DEBUG("  PES/Audio#{:04X}", pid);
+        } else if (stream.isSubtitles()) {
+          MIRAKC_ARIB_DEBUG("  PES/Subtitle#{:04X}", pid);
+        } else if (IsAribSubtitle(stream)) {
+          MIRAKC_ARIB_DEBUG("  PES/ARIB-Subtitle#{:04X}", pid);
+        } else if (IsAribSuperimposedText(stream)) {
+          MIRAKC_ARIB_DEBUG("  PES/ARIB-SuperimposedText#{:04X}", pid);
+        } else {
+          MIRAKC_ARIB_DEBUG("  Other#{:04X}", pid);
+        }
+      }
+    }
+    pmt_packetizer_.removeAll();
+    pmt_packetizer_.setPID(table.sourcePID());
+    pmt_packetizer_.addTable(context_, pmt);
   }
 
   void HandleEit(const ts::BinaryTable& table) {
@@ -476,7 +571,8 @@ class ProgramFilter final : public PacketSink,
   std::unique_ptr<PacketSink> sink_;
   State state_ = kWaitReady;
   ts::TSPacketVector last_pat_packets_;
-  ts::TSPacketVector last_pmt_packets_;
+  std::unordered_set<ts::PID> pes_black_list_;
+  ts::CyclingPacketizer pmt_packetizer_;
   ts::PID clock_pid_ = ts::PID_NULL;
   int64_t clock_pcr_ = 0;
   ts::Time clock_time_;
