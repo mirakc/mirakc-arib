@@ -9,6 +9,10 @@ endif()
 option(MIRAKC_ARIB_TEST "Build tests." OFF)
 option(MIRAKC_ARIB_VENDOR_TEST "Build tests in vendor libs." OFF)
 
+set(MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS
+  ""
+  CACHE STRING "CXXFLAGS for tsduck-arib.")
+
 set(MIRAKC_ARIB_VERSION
   "0.10.2"  ###version
   CACHE STRING "mirakc-arib version." FORCE)
@@ -142,6 +146,8 @@ message(STATUS "  MIRAKC_ARIB_ARIBB24_VERSION:")
 message(STATUS "    ${MIRAKC_ARIB_ARIBB24_VERSION}")
 message(STATUS "  MIRAKC_ARIB_TSDUCK_ARIB_VERSION:")
 message(STATUS "    ${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}")
+message(STATUS "  MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS:")
+message(STATUS "    ${MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS}")
 message(STATUS "  MIRAKC_ARIB_LIBISDB_VERSION:")
 message(STATUS "    ${MIRAKC_ARIB_LIBISDB_VERSION}")
 message(STATUS "  MIRAKC_ARIB_GOOGLETEST_VERSION:")
@@ -433,16 +439,22 @@ if(CMAKE_CROSSCOMPILING)
     CXX=${CMAKE_CXX_COMPILER}
     LD=${CMAKE_C_COMPILER_TARGET}-ld
   )
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+endif()
+
+set(MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA ${MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS})
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # See https://chromium.googlesource.com/external/github.com/AOMediaCodec/libavif/+/refs/heads/master/CMakeLists.txt#132
   check_cxx_compiler_flag(-Wpoison-system-directories HAVE_POISON_SYSTEM_DIRECTORIES_WARNING)
   if(HAVE_POISON_SYSTEM_DIRECTORIES_WARNING)
     # Disable -Wpoison-system-directories
-    list(APPEND MIRAKC_ARIB_TSDUCK_DEFS
-      CXXFLAGS_EXTRA="-Wno-poison-system-directories"
-    )
+    string(APPEND MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA
+      " -Wno-poison-system-directories")
   endif()
 endif()
+
+list(APPEND MIRAKC_ARIB_TSDUCK_DEFS
+  CXXFLAGS_EXTRA=${MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA})
 
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
   list(APPEND MIRAKC_ARIB_TSDUCK_DEFS DEBUG=1)
