@@ -53,7 +53,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-include(CheckCCompilerFlag)
+include(CheckCXXCompilerFlag)
 
 if($ENV{MIRAKC_ARIB_CI})
   # Disable parallel compilation.
@@ -433,9 +433,9 @@ if(CMAKE_CROSSCOMPILING)
     CXX=${CMAKE_CXX_COMPILER}
     LD=${CMAKE_C_COMPILER_TARGET}-ld
   )
-elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # See https://chromium.googlesource.com/external/github.com/AOMediaCodec/libavif/+/refs/heads/master/CMakeLists.txt#132
-  check_c_compiler_flag(-Wpoison-system-directories HAVE_POISON_SYSTEM_DIRECTORIES_WARNING)
+  check_cxx_compiler_flag(-Wpoison-system-directories HAVE_POISON_SYSTEM_DIRECTORIES_WARNING)
   if(HAVE_POISON_SYSTEM_DIRECTORIES_WARNING)
     # Disable -Wpoison-system-directories
     list(APPEND MIRAKC_ARIB_TSDUCK_DEFS
