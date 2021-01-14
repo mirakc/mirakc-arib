@@ -26,8 +26,7 @@
 
 namespace {
 
-static const std::string kVersion = R"({}
-
+static const std::string kVersion = R"(mirakc-arib {}
 * mirakc/docopt.cpp {}
 * fmtlib/fmt {}
 * gabime/spdlog {} w/ patches/spdlog.patch
