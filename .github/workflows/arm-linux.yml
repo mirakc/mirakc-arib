@@ -22,30 +22,16 @@ jobs:
             docker-arch: arm64v8
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-8-${{ matrix.host-triple }} libtool make ninja-build pkg-config
           sudo update-alternatives --install /usr/bin/${{ matrix.host-triple }}-gcc ${{ matrix.host-triple }}-gcc /usr/bin/${{ matrix.host-triple }}-gcc-8 80
           sudo update-alternatives --install /usr/bin/${{ matrix.host-triple }}-g++ ${{ matrix.host-triple }}-g++ /usr/bin/${{ matrix.host-triple }}-g++-8 80
-      - uses: actions/checkout@v2
       - name: Generate project files
         run: |
-          # On GitHub Actions, the out-of-source build with the toolchain file
-          # causes an cmake error like below:
-          #
-          #   CMake Error at /usr/local/share/cmake-3.17/Modules/CMakeDetermineSystem.cmake:99 (message):
-          #     Could not find toolchain file: /toolchain.cmake.d/debian-arm64.cmake
-          #   Call Stack (most recent call first):
-          #     CMakeLists.txt:3 (project)
-          #
-          #
-          #   CMake Error: CMake was unable to find a build program corresponding to "Ninja".  CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build tool.
-          #   CMake Error: CMAKE_C_COMPILER not set, after EnableLanguage
-          #   CMake Error: CMAKE_CXX_COMPILER not set, after EnableLanguage
-          #
-          # The similar error occurs even without `-G Ninja`.  I don't know the reason of this error...
-          cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON -D CMAKE_TOOLCHAIN_FILE=${{ github.GITHUB_WORKSPACE }}/toolchain.cmake.d/debian-${{ matrix.arch }}.cmake .
+          cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON -D CMAKE_TOOLCHAIN_FILE=toolchain.cmake.d/debian-${{ matrix.arch }}.cmake .
       - name: Build vendor libraries
         run: |
           ninja vendor
@@ -57,10 +43,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y qemu qemu-user-static
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker run --rm ${{ matrix.docker-arch }}/debian:buster-slim uname -a
       - name: Show help
         run: |
-          docker run --rm -v $(pwd):/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib -h
+          docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib -h
       - name: Run test
         run: |
-          docker run --rm -v $(pwd):/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib-test --gtest_shuffle
-          docker run --rm -v $(pwd):/build ${{ matrix.docker-arch }}/debian:buster-slim sh /build/test/cli_tests.sh /build/bin/mirakc-arib
+          docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib-test --gtest_shuffle
+          docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim sh /build/test/cli_tests.sh /build/bin/mirakc-arib
