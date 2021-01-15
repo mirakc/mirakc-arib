@@ -6,13 +6,20 @@ jobs:
   linux-build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - name: Cache for project files and object files
+        uses: actions/cache@v2
+        with:
+          path: build
+          key: ${{ runner.os }}-linux-build-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-linux-build-
       - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-8 libtool make ninja-build pkg-config
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 80
-      - uses: actions/checkout@v2
       - name: Generate project files
         run: |
           cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON

@@ -13,16 +13,38 @@ jobs:
         include:
           - arch: armel
             host-triple: arm-linux-gnueabi
+            elf-machine: 'ARM'
+            elf-flags: 'soft-float'
+            # Use an architecture-specific image instead of a multi-arch image
+            # with --platform=linux/arm/v5.
+            #
+            # Actually, `docker run --rm --platform=linux/arm/v5 debian <cmd...>`
+            # doesn't work properly.  You can see the following error message:
+            #
+            #   does not match the specified platform: wanted linux/arm/v5,
+            #   actual: linux/arm.
+            #
             docker-arch: arm32v5
           - arch: armhf
             host-triple: arm-linux-gnueabihf
+            elf-machine: 'ARM'
+            elf-flags: 'hard-float'
             docker-arch: arm32v7
           - arch: arm64
             host-triple: aarch64-linux-gnu
+            elf-machine: 'AArch64'
+            elf-flags: ''
             docker-arch: arm64v8
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Cache for project files and object files
+        uses: actions/cache@v2
+        with:
+          path: build
+          key: ${{ runner.os }}-arm-build-${{ matrix.arch }}-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-arm-build-${{ matrix.arch }}-
       - name: Install deps
         run: |
           sudo apt-get update
@@ -34,20 +56,20 @@ jobs:
           cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON -D CMAKE_TOOLCHAIN_FILE=toolchain.cmake.d/debian-${{ matrix.arch }}.cmake .
       - name: Build vendor libraries
         run: |
-          ninja vendor
+          ninja -C build vendor
       - name: Build
         run: |
-          ninja
+          ninja -C build
+      - name: Check the binary format
+        run: |
+          readelf -h build/bin/mirakc-arib | grep Machine | grep '${{ matrix.elf-machine }}'
+          readelf -h build/bin/mirakc-arib | grep Flags | grep '${{ matrix.elf-flags }}'
       - name: Setup QEMU user-mode emulation
-        run: |-
-          sudo apt-get update
-          sudo apt-get install -y qemu qemu-user-static
-          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          docker run --rm ${{ matrix.docker-arch }}/debian:buster-slim uname -a
+        uses: docker/setup-qemu-action@v1
       - name: Show help
         run: |
           docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib -h
-      - name: Run test
+      - name: Run tests
         run: |
           docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib-test --gtest_shuffle
-          docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim sh /build/test/cli_tests.sh /build/bin/mirakc-arib
+          docker run --rm -v $(pwd)/build:/build -v $(pwd)/test:/test ${{ matrix.docker-arch }}/debian:buster-slim sh /test/cli_tests.sh /build/bin/mirakc-arib

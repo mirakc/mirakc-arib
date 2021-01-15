@@ -4,12 +4,19 @@ on: [push]
 
 jobs:
   macos-build:
-    runs-on: macOS-latest
+    runs-on: macos-latest
     steps:
+      - uses: actions/checkout@v2
+      - name: Cache for project files and object files
+        uses: actions/cache@v2
+        with:
+          path: build
+          key: ${{ runner.os }}-macos-build-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-macos-build-
       - name: Install deps
         run: |
           brew install autoconf automake gnu-sed grep dos2unix libtool make ninja pkg-config
-      - uses: actions/checkout@v2
       - name: Generate project files
         run: |
           cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON
