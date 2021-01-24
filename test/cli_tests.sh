@@ -24,7 +24,7 @@ do
   assert 0 "$MIRAKC_ARIB $opt"
   for cmd in 'scan-services' 'sync-clocks' 'collect-eits' 'collect-logos' \
              'filter-service' 'filter-program' 'track-airtime' 'seek-start' \
-             'print-timetable'
+             'print-pes'
   do
     assert 0 "$MIRAKC_ARIB $cmd $opt"
   done
@@ -62,4 +62,4 @@ assert 0 "$MIRAKC_ARIB seek-start --sid=1 --max-duration=1"
 assert 0 "$MIRAKC_ARIB seek-start --sid=0xFFFF --max-duration=0x7FFFFFFFFFFFFFFF --max-packets=0x7FFFFFFF"
 assert 134 "$MIRAKC_ARIB seek-start --sid=0xFFFF --max-duration=0xFFFFFFFFFFFFFFFF --max-packets=0x7FFFFFFF"
 
-assert 0 "$MIRAKC_ARIB print-timetable"
+assert 0 "$MIRAKC_ARIB print-pes"

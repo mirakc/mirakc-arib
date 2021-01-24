@@ -16,10 +16,10 @@
 
 namespace {
 
-class TimetablePrinter final : public PacketSink,
-                               public ts::TableHandlerInterface {
+class PesPrinter final : public PacketSink,
+                         public ts::TableHandlerInterface {
  public:
-  TimetablePrinter()
+  PesPrinter()
       : demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
@@ -28,7 +28,7 @@ class TimetablePrinter final : public PacketSink,
     demux_.addPID(ts::PID_TOT);
   }
 
-  ~TimetablePrinter() override {}
+  ~PesPrinter() override {}
 
   bool HandlePacket(const ts::TSPacket& packet) override {
     auto pid = packet.getPID();

@@ -662,11 +662,11 @@ add_executable(mirakc-arib
   src/packet_sink.hh
   src/packet_source.hh
   src/pcr_synchronizer.hh
+  src/pes_printer.hh
   src/program_filter.hh
   src/service_filter.hh
   src/service_scanner.hh
   src/start_seeker.hh
-  src/timetable_printer.hh
   src/tsduck_helper.hh
 )
 

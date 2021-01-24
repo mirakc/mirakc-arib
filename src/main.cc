@@ -22,7 +22,7 @@
 #include "service_filter.hh"
 #include "service_scanner.hh"
 #include "start_seeker.hh"
-#include "timetable_printer.hh"
+#include "pes_printer.hh"
 
 namespace {
 
@@ -44,7 +44,7 @@ Usage:
   mirakc-arib (-h | --help)
     [(scan-services | sync-clocks | collect-eits | collect-logos |
       filter-service | filter-program | track-airtime | seek-start |
-      print-timetable)]
+      print-pes)]
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<sid>...] [--xsids=<sid>...] [<file>]
   mirakc-arib sync-clocks [--sids=<sid>...] [--xsids=<sid>...] [<file>]
@@ -60,7 +60,7 @@ Usage:
   mirakc-arib track-airtime --sid=<sid> --eid=<eid> [<file>]
   mirakc-arib seek-start --sid=<sid>
     [--max-duration=<ms>] [--max-packets=<num>] [<file>]
-  mirakc-arib print-timetable [<file>]
+  mirakc-arib print-pes [<file>]
 
 Description:
   `mirakc-arib <sub-command> -h` shows help for each sub-command.
@@ -589,13 +589,13 @@ Description:
   limitting the memory usage.
 )";
 
-static const std::string kPrintTimetable = "print-timetable";
+static const std::string kPrintPes = "print-pes";
 
-static const std::string kPrintTimetableHelp = R"(
-Print a timetable of a TS stream
+static const std::string kPrintPesHelp = R"(
+Print ES packets in a TS stream
 
 Usage:
-  mirakc-arib print-timetable [<file>]
+  mirakc-arib print-pes [<file>]
 
 Options:
   -h --help
@@ -606,8 +606,8 @@ Arguments:
     Path to a TS file.
 
 Description:
-  `print-timetable` prints a timetable of a TS stream.  Each line is formatted
-  like below:
+  `print-pes` prints ES packets in a TS stream.  Each line is formatted like
+  below:
 
     [DATETIME]|[CLOCK]|<MESSAGE>
 
@@ -629,14 +629,14 @@ Description:
     * EIT p/f Actual
     * TDT/TOT
 
-  At this moment, `print-timetable` doens't support a TS stream which includes
+  At this moment, `print-pes` doens't support a TS stream which includes
   multiple service streams.
 
 Examples:
-  Show the timetable of a specific service stream:
+  Show ES packets in a specific service stream:
 
     $ cat nhk.ts | mirakc-arib filter-service --sid=1024 | \
-        mirakc-arib print-timetable
+        mirakc-arib print-pes
                            |              |PAT: V#7
                            |              |  SID#0400 => PMT#01F0
                            |3172531391+124|PCR#01FF
@@ -704,8 +704,8 @@ void Init(const Args& args) {
     InitLogger(kTrackAirtime);
   } else if (args.at(kSeekStart).asBool()) {
     InitLogger(kSeekStart);
-  } else if (args.at(kPrintTimetable).asBool()) {
-    InitLogger(kPrintTimetable);
+  } else if (args.at(kPrintPes).asBool()) {
+    InitLogger(kPrintPes);
   }
 
   ts::DVBCharset::EnableARIBMode();
@@ -904,8 +904,8 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     seeker->Connect(std::make_unique<StdoutSink>());
     return seeker;
   }
-  if (args.at(kPrintTimetable).asBool()) {
-    return std::make_unique<TimetablePrinter>();
+  if (args.at(kPrintPes).asBool()) {
+    return std::make_unique<PesPrinter>();
   }
   return std::unique_ptr<PacketSink>();
 }
@@ -927,8 +927,8 @@ void ShowHelp(const Args& args) {
     fmt::print(kTrackAirtimeHelp);
   } else if (args.at(kSeekStart).asBool()) {
     fmt::print(kSeekStartHelp);
-  } else if (args.at(kPrintTimetable).asBool()) {
-    fmt::print(kPrintTimetableHelp);
+  } else if (args.at(kPrintPes).asBool()) {
+    fmt::print(kPrintPesHelp);
   } else {
     fmt::print(kUsage);
   }
