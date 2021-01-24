@@ -46,21 +46,21 @@ Usage:
       filter-service | filter-program | track-airtime | seek-start |
       print-timetable)]
   mirakc-arib --version
-  mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
-  mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
-  mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...]
-                           [--time-limit=<MS>] [--streaming]
-                           [--use-unicode-symbol] [FILE]
-  mirakc-arib collect-logos [FILE]
-  mirakc-arib filter-service --sid=<SID> [FILE]
-  mirakc-arib filter-program --sid=<SID> --eid=<EID>
-    --clock-pid=<PID> --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
-    [--audio-tags=<TAG>...] [--video-tags=<TAG>...]
-    [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
-  mirakc-arib track-airtime --sid=<SID> --eid=<EID> [FILE]
-  mirakc-arib seek-start --sid=<SID>
-    [--max-duration=<MS>] [--max-packets=<NUM>] [FILE]
-  mirakc-arib print-timetable [FILE]
+  mirakc-arib scan-services [--sids=<sid>...] [--xsids=<sid>...] [<file>]
+  mirakc-arib sync-clocks [--sids=<sid>...] [--xsids=<sid>...] [<file>]
+  mirakc-arib collect-eits [--sids=<sid>...] [--xsids=<sid>...]
+                           [--time-limit=<ms>] [--streaming]
+                           [--use-unicode-symbol] [<file>]
+  mirakc-arib collect-logos [<file>]
+  mirakc-arib filter-service --sid=<sid> [<file>]
+  mirakc-arib filter-program --sid=<sid> --eid=<eid>
+    --clock-pid=<pid> --clock-pcr=<pcr> --clock-time=<unix-time-ms>
+    [--audio-tags=<tag>...] [--video-tags=<tag>...]
+    [--start-margin=<ms>] [--end-margin=<ms>] [--pre-streaming] [<file>]
+  mirakc-arib track-airtime --sid=<sid> --eid=<eid> [<file>]
+  mirakc-arib seek-start --sid=<sid>
+    [--max-duration=<ms>] [--max-packets=<num>] [<file>]
+  mirakc-arib print-timetable [<file>]
 
 Description:
   `mirakc-arib <sub-command> -h` shows help for each sub-command.
@@ -90,20 +90,20 @@ static const std::string kScanServicesHelp = R"(
 Scan services
 
 Usage:
-  mirakc-arib scan-services [--sids=<SID>...] [--xsids=<SID>...] [FILE]
+  mirakc-arib scan-services [--sids=<sid>...] [--xsids=<sid>...] [<file>]
 
 Options:
   -h --help
     Print help.
 
-  --sids=<SID>
+  --sids=<sid>
     Service ID which must be included.
 
-  --xsids=<SID>
+  --xsids=<sid>
     Service ID which must be excluded.
 
 Arguments:
-  FILE
+  <file>
     Path to a TS file.
 
 Description:
@@ -142,20 +142,20 @@ static const std::string kSyncClocksHelp = R"(
 Synchrohize PCR and TOT/TDT
 
 Usage:
-  mirakc-arib sync-clocks [--sids=<SID>...] [--xsids=<SID>...] [FILE]
+  mirakc-arib sync-clocks [--sids=<sid>...] [--xsids=<sid>...] [<file>]
 
 Options:
   -h --help
     Print help.
 
-  --sids=<SID>
+  --sids=<sid>
     Service ID which must be included.
 
-  --xsids=<SID>
+  --xsids=<sid>
     Service ID which must be excluded.
 
 Arguments:
-  FILE
+  <file>
     Path to a TS file.
 
 Description:
@@ -204,21 +204,21 @@ static const std::string kCollectEitsHelp = R"(
 Collect EIT sections
 
 Usage:
-  mirakc-arib collect-eits [--sids=<SID>...] [--xsids=<SID>...]
-                           [--time-limit=<MS>] [--streaming]
-                           [--use-unicode-symbol] [FILE]
+  mirakc-arib collect-eits [--sids=<sid>...] [--xsids=<sid>...]
+                           [--time-limit=<ms>] [--streaming]
+                           [--use-unicode-symbol] [<file>]
 
 Options:
   -h --help
     Print help.
 
-  --sids=<SID>
+  --sids=<sid>
     Service ID which must be included.
 
-  --xsids=<SID>
+  --xsids=<sid>
     Service ID which must be excluded.
 
-  --time-limit=<MS> [default: 30000]
+  --time-limit=<ms>  [default: 30000]
     Stop collecting if there is no progress for the specified time (ms).
     Elapsed time is computed using TDT/TOT.
 
@@ -241,7 +241,7 @@ Options:
     if this option is specified.
 
 Arguments:
-  FILE
+  <file>
     Path to a TS file.
 
 Description:
@@ -334,14 +334,14 @@ static const std::string kCollectLogosHelp = R"(
 Collect logos
 
 Usage:
-  mirakc-arib collect-logos [FILE]
+  mirakc-arib collect-logos [<file>]
 
 Options:
   -h --help
     Print help.
 
 Arguments:
-  FILE
+  <file>
     Path to a TS file.
 
 Description:
@@ -387,17 +387,17 @@ static const std::string kFilterServiceHelp = R"(
 Service filter
 
 Usage:
-  mirakc-arib filter-service --sid=<SID> [FILE]
+  mirakc-arib filter-service --sid=<sid> [<file>]
 
 Options:
   -h --help
     Print help.
 
-  --sid=<SID>
+  --sid=<sid>
     Service ID.
 
 Arguments:
-  FILE
+  <file>
     Path to a TS file.
 
 Description:
@@ -435,55 +435,55 @@ static const std::string kFilterProgramHelp = R"(
 Program filter
 
 Usage:
-  mirakc-arib filter-program --sid=<SID> --eid=<EID>
-    --clock-pid=<PID> --clock-pcr=<PCR> --clock-time=<UNIX-TIME-MS>
-    [--audio-tags=<TAG>...] [--video-tags=<TAG>...]
-    [--start-margin=<MS>] [--end-margin=<MS>] [--pre-streaming] [FILE]
+  mirakc-arib filter-program --sid=<sid> --eid=<eid>
+    --clock-pid=<pid> --clock-pcr=<pcr> --clock-time=<unix-time-ms>
+    [--audio-tags=<tag>...] [--video-tags=<tag>...]
+    [--start-margin=<ms>] [--end-margin=<ms>] [--pre-streaming] [<file>]
 
 Options:
   -h --help
     Print help.
 
-  --sid=<SID>
+  --sid=<sid>
     Service ID.
 
-  --eid=<EID>
+  --eid=<eid>
     Event ID of a TV program.
 
-  --clock-pid=<PID>
+  --clock-pid=<pid>
     PID of PCR for the service.
 
-  --clock-pcr=<PCR>
+  --clock-pcr=<pcr>
     27MHz, 42bits PCR value.
 
-  --clock-time=<UNIX-TIME-MS>
+  --clock-time=<unix-time-ms>
     UNIX time (ms) correspoinding to the PCR value.
 
-  --audio-tags=<TAG>
+  --audio-tags=<tag>
     Only audio streams matching with specified tags will be included.  All audio
     streams will be included if this option is not specified.
 
     TAG is a 1-byte unsgined integer value which is specified in the
     component_tag field in the Audio Component Description.
 
-  --video-tags=<TAG>
+  --video-tags=<tag>
     Only video streams matching with specified tags will be included.  All video
     streams will be included if this option is not specified.
 
     TAG is a 1-byte unsgined integer value which is specified in the
     component_tag field in the Component Description.
 
-  --start-margin=<MS> [default: 0]
+  --start-margin=<ms>  [default: 0]
     Offset (ms) from the start time of the event toward the past.
 
-  --end-margin=<MS> [default: 0]
+  --end-margin=<ms>  [default: 0]
     Offset (ms) from the end time of the event toward the future.
 
   --pre-streaming
     Output PAT packets before start.
 
 Arguments:
-  FILE
+  <file>
     Path to a TS file.
 
 Description:
@@ -512,20 +512,20 @@ static const std::string kTrackAirtimeHelp = R"(
 Track changes of an event
 
 Usage:
-  mirakc-arib track-airtime --sid=<SID> --eid=<EID> [FILE]
+  mirakc-arib track-airtime --sid=<sid> --eid=<eid> [<file>]
 
 Options:
   -h --help
     Print help.
 
-  --sid=<SID>
+  --sid=<sid>
     Service ID.
 
-  --eid=<EID>
+  --eid=<eid>
     Event ID of a TV program.
 
 Arguments:
-  FILE
+  <file>
     Path to a TS file.
 
 Description:
@@ -552,24 +552,24 @@ static const std::string kSeekStartHelp = R"(
 Seek the start position of a TV program
 
 Usage:
-  mirakc-arib seek-start --sid=<SID>
-    [--max-duration=<MS>] [--max-packets=<NUM>] [FILE]
+  mirakc-arib seek-start --sid=<sid>
+    [--max-duration=<ms>] [--max-packets=<num>] [<file>]
 
 Options:
   -h --help
     Print help.
 
-  --sid=<SID>
+  --sid=<sid>
     Service ID.
 
-  --max-duration=<MS>
+  --max-duration=<ms>
     The maximum duration used for detecting a stream transition point.
 
-  --max-packets=<NUM>
+  --max-packets=<num>
     The maximum number of packets used for detecting a stream transion point.
 
 Arguments:
-  FILE
+  <file>
     Path to a TS file.
 
 Description:
@@ -595,14 +595,14 @@ static const std::string kPrintTimetableHelp = R"(
 Print a timetable of a TS stream
 
 Usage:
-  mirakc-arib print-timetable [FILE]
+  mirakc-arib print-timetable [<file>]
 
 Options:
   -h --help
     Print help.
 
 Arguments:
-  FILE
+  <file>
     Path to a TS file.
 
 Description:
@@ -712,9 +712,9 @@ void Init(const Args& args) {
 }
 
 std::unique_ptr<PacketSource> MakePacketSource(const Args& args) {
-  static const std::string kFILE = "FILE";
+  static const std::string kFile = "<file>";
 
-  std::string path = args.at(kFILE).isString() ? args.at(kFILE).asString() : "";
+  std::string path = args.at(kFile).isString() ? args.at(kFile).asString() : "";
   std::unique_ptr<File> file = std::make_unique<PosixFile>(path);
   return std::make_unique<FileSource>(std::move(file));
 }
