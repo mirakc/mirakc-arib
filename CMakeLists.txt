@@ -382,8 +382,6 @@ ExternalProject_Add(vendor-aribb24
     https://github.com/mirakc/aribb24.git
   GIT_TAG
     ${MIRAKC_ARIB_ARIBB24_VERSION}
-  BUILD_IN_SOURCE
-    YES
   CONFIGURE_COMMAND
     ./bootstrap
   COMMAND
@@ -393,6 +391,8 @@ ExternalProject_Add(vendor-aribb24
       $<$<BOOL:CMAKE_CROSSCOMPILING>:--host=${CMAKE_C_COMPILER_TARGET}>
   BUILD_COMMAND
     make -j ${NPROC}
+  BUILD_IN_SOURCE
+    YES
   EXCLUDE_FROM_ALL
     YES
 )
@@ -469,17 +469,18 @@ ExternalProject_Add(vendor-tsduck-arib
     https://github.com/mirakc/tsduck-arib.git
   GIT_TAG
     ${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}
-  BUILD_IN_SOURCE
-    YES
   CONFIGURE_COMMAND
     ""
   BUILD_COMMAND
+    # There is no way to skip building tsplugins and tstools except for using
+    # the install-devel target.
     PKG_CONFIG_PATH=${MIRAKC_ARIB_VENDOR_DIR}/lib/pkgconfig
-      make -j ${NPROC} ${MIRAKC_ARIB_TSDUCK_DEFS}
+      make -j ${NPROC} install-devel
+        SYSPREFIX=${MIRAKC_ARIB_VENDOR_DIR} ${MIRAKC_ARIB_TSDUCK_DEFS}
+  BUILD_IN_SOURCE
+    YES
   INSTALL_COMMAND
-    PKG_CONFIG_PATH=${MIRAKC_ARIB_VENDOR_DIR}/lib/pkgconfig
-      make install-devel SYSPREFIX=${MIRAKC_ARIB_VENDOR_DIR}
-                         ${MIRAKC_ARIB_TSDUCK_DEFS}
+    ""
   EXCLUDE_FROM_ALL
     YES
 )
