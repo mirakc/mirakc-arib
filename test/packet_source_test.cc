@@ -131,14 +131,14 @@ TEST(PacketSourceTest, WrapAroundWhileResync) {
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(
         [](uint8_t* buf, size_t size) {
-          auto nread = size - 2 * ts::PKT_SIZE;
+          auto nread = ((size / ts::PKT_SIZE) - 2) * ts::PKT_SIZE;
           for (auto* p = buf; p < buf + nread; p += ts::PKT_SIZE) {
             ts::NullPacket.copyTo(p);
           }
           return nread;
         });
     EXPECT_CALL(*sink, HandlePacket)
-        .Times(FileSource::kNumPackets - 2)
+        .Times((FileSource::kReadChunkSize / ts::PKT_SIZE) - 2)
         .WillRepeatedly(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(
         [](uint8_t* buf, size_t) {

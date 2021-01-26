@@ -55,11 +55,21 @@ class PacketSource {
 // Unlike the ts::TSFileInput class, the FileSource implement the resync.
 class FileSource final : public PacketSource {
  public:
+  static constexpr size_t kMaxDropBytes = 2 * ts::PKT_SIZE;
+  static constexpr size_t kMaxResyncBytes = kMaxDropBytes + 3 * ts::PKT_SIZE;
+  static constexpr size_t kBlockSize = 4096;
+  static constexpr size_t kReadChunkSize = 4 * kBlockSize;
+  // TODO:
+  // Constants above should be private, but doing that causes compile errors
+  // like below at least on macOS:
+  //
+  //   ../src/packet_source.hh:58:41: error: use of undeclared identifier
+  //   'kReadChunkSize'
+  //
+  static constexpr size_t kBufferSize = kReadChunkSize + kMaxResyncBytes;
+
   explicit FileSource(std::unique_ptr<File>&& file) : file_(std::move(file)) {}
   ~FileSource() override {}
-
-  static constexpr size_t kNumPackets = 1000;
-  static constexpr size_t kBufferSize = ts::PKT_SIZE * kNumPackets;
 
  private:
   bool GetNextPacket(ts::TSPacket* packet) override {
@@ -83,6 +93,7 @@ class FileSource final : public PacketSource {
   }
 
   inline bool FillBuffer(size_t min_bytes) {
+    MIRAKC_ARIB_ASSERT(min_bytes <= kMaxResyncBytes);
     MIRAKC_ARIB_ASSERT(!eof_);
     MIRAKC_ARIB_ASSERT(pos_ <= end_);
     MIRAKC_ARIB_ASSERT(end_ <= kBufferSize);
@@ -92,33 +103,28 @@ class FileSource final : public PacketSource {
       return true;
     }
 
-    if (max_available_bytes() < min_bytes) {
-      std::memmove(&buf_[0], &buf_[pos_], avail_bytes);
-      pos_ = 0;
-      end_ = avail_bytes;
-    }
+    std::memmove(&buf_[0], &buf_[pos_], avail_bytes);
+    pos_ = 0;
+    end_ = avail_bytes;
 
-    while (available_bytes() < min_bytes) {
-      size_t fill_size = free_bytes();
-      auto nread = file_->Read(&buf_[end_], fill_size);
+    do {
+      MIRAKC_ARIB_ASSERT(free_bytes() >= kReadChunkSize);
+      auto nread = file_->Read(&buf_[end_], kReadChunkSize);
       if (nread <= 0) {
         eof_ = true;
         MIRAKC_ARIB_INFO("EOF reached");
         return false;
       }
       end_ += nread;
-    }
+    } while (end_ < min_bytes);
 
     return true;
   }
 
   inline bool Resync() {
-    static constexpr size_t kMaxDropBytes = 2 * ts::PKT_SIZE;
-    static constexpr size_t kRequiredBytes = kMaxDropBytes + 3 * ts::PKT_SIZE;
-
     MIRAKC_ARIB_WARN("Resync...");
 
-    if (!FillBuffer(kRequiredBytes)) {
+    if (!FillBuffer(kMaxResyncBytes)) {
       return false;
     }
 
@@ -149,10 +155,6 @@ class FileSource final : public PacketSource {
 
   inline size_t available_bytes() const {
     return end_ - pos_;
-  }
-
-  inline size_t max_available_bytes() const {
-    return kBufferSize - pos_;
   }
 
   inline size_t free_bytes() const {
