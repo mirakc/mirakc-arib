@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.13.0)
 
 project(mirakc-arib)
 
@@ -6,6 +6,7 @@ if(NOT UNIX)
   message(FATAL_ERROR "Can be built only on Linux and macOS at this moment")
 endif()
 
+option(MIRAKC_ARIB_COVERAGE "Enable coverage reporting." OFF)
 option(MIRAKC_ARIB_TEST "Build tests." OFF)
 option(MIRAKC_ARIB_VENDOR_TEST "Build tests in vendor libs." OFF)
 
@@ -92,6 +93,10 @@ else()
   ProcessorCount(NPROC)
 endif()
 
+if(MIRAKC_ARIB_COVERAGE AND NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  message(FATAL_ERROR "MIRAKC_ARIB_COVERAGE works only with the debug build")
+endif()
+
 # Display general information
 message(STATUS "Create build system with the following variables:")
 message(STATUS "  CMAKE_BUILD_TYPE:")
@@ -128,6 +133,8 @@ message(STATUS "  CMAKE_CXX_EXTENSIONS:")
 message(STATUS "    ${CMAKE_CXX_EXTENSIONS}")
 message(STATUS "  MIRAKC_ARIB_TEST:")
 message(STATUS "    ${MIRAKC_ARIB_TEST}")
+message(STATUS "  MIRAKC_ARIB_COVERAGE:")
+message(STATUS "    ${MIRAKC_ARIB_COVERAGE}")
 message(STATUS "  NPROC:")
 message(STATUS "    ${NPROC}")
 message(STATUS "  MIRAKC_ARIB_VERSION:")
@@ -699,6 +706,17 @@ target_compile_definitions(mirakc-arib
     MIRAKC_ARIB_LIBISDB_VERSION="${MIRAKC_ARIB_LIBISDB_VERSION}"
 )
 
+if(MIRAKC_ARIB_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  check_cxx_compiler_flag(--coverage HAVE_COVERAGE_OPTION)
+  if(HAVE_COVERAGE_OPTION)
+    target_compile_options(mirakc-arib PRIVATE --coverage)
+    target_link_options(mirakc-arib PRIVATE --coverage)
+  else()
+    target_compile_options(mirakc-arib PRIVATE -fprofile-arcs -ftest-coverage)
+    target_link_options(mirakc-arib PRIVATE -fprofile-arcs -ftest-coverage)
+  endif()
+endif()
+
 if(MIRAKC_ARIB_TEST)
   # test
 
@@ -727,6 +745,17 @@ if(MIRAKC_ARIB_TEST)
     PRIVATE
       SPDLOG_DISABLE_DEFAULT_LOGGER
   )
+
+  if(MIRAKC_ARIB_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    check_cxx_compiler_flag(--coverage HAVE_COVERAGE_OPTION)
+    if(HAVE_COVERAGE_OPTION)
+      target_compile_options(mirakc-arib-test PRIVATE --coverage)
+      target_link_options(mirakc-arib-test PRIVATE --coverage)
+    else()
+      target_compile_options(mirakc-arib-test PRIVATE -fprofile-arcs -ftest-coverage)
+      target_link_options(mirakc-arib-test PRIVATE -fprofile-arcs -ftest-coverage)
+    endif()
+  endif()
 
   target_link_libraries(mirakc-arib-test
     PRIVATE
