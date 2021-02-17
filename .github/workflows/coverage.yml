@@ -1,0 +1,49 @@
+name: Coverage
+
+on: [push]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache for project files and object files
+        uses: actions/cache@v2
+        with:
+          path: build
+          key: ${{ runner.os }}-coverage-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-coverage-
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-8 libtool make ninja-build pkg-config
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 80
+      - name: Generate project files
+        run: |
+          cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Debug -D MIRAKC_ARIB_TEST=ON -D MIRAKC_ARIB_COVERAGE=ON
+      - name: Build vendor libraries
+        run: |
+          ninja -C build vendor
+      - name: Build
+        run: |
+          ninja -C build
+      - name: Run test
+        run: |
+          ninja -C build test
+          ninja -C build cli-tests
+      - name: Install grcov
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: grcov
+      - name: Generate coverage data
+        run: >-
+          grcov build --branch --llvm --ignore-not-existing -s . -p ../
+          --ignore 'test/*'
+          -t lcov -o lcov.info
+      - name: Update to codecov.io
+        uses: codecov/codecov-action@v1
+        with:
+          file: lcov.info
