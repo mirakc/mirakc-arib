@@ -1,7 +1,12 @@
 #include <cerrno>
+#include <cstddef>
 #include <cstring>
 #include <map>
+#include <memory>
 #include <string>
+
+#include <unistd.h>
+#include <sys/types.h>
 
 #include <docopt/docopt.h>
 #include <fmt/format.h>
@@ -19,7 +24,9 @@
 #include "packet_source.hh"
 #include "pcr_synchronizer.hh"
 #include "program_filter.hh"
+#include "ring_file_sink.hh"
 #include "service_filter.hh"
+#include "service_recorder.hh"
 #include "service_scanner.hh"
 #include "start_seeker.hh"
 #include "pes_printer.hh"
@@ -43,8 +50,8 @@ Tools to process ARIB TS streams.
 Usage:
   mirakc-arib (-h | --help)
     [(scan-services | sync-clocks | collect-eits | collect-logos |
-      filter-service | filter-program | track-airtime | seek-start |
-      print-pes)]
+      filter-service | filter-program | record-service | track-airtime |
+      seek-start | print-pes)]
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<sid>...] [--xsids=<sid>...] [<file>]
   mirakc-arib sync-clocks [--sids=<sid>...] [--xsids=<sid>...] [<file>]
@@ -57,6 +64,8 @@ Usage:
     --clock-pid=<pid> --clock-pcr=<pcr> --clock-time=<unix-time-ms>
     [--audio-tags=<tag>...] [--video-tags=<tag>...]
     [--start-margin=<ms>] [--end-margin=<ms>] [--pre-streaming] [<file>]
+  mirakc-arib record-service --id=<id> --sid=<sid> --file=<file>
+    --chunk-size=<bytes> --num-chunks=<num> [<file>]
   mirakc-arib track-airtime --sid=<sid> --eid=<eid> [<file>]
   mirakc-arib seek-start --sid=<sid>
     [--max-duration=<ms>] [--max-packets=<num>] [<file>]
@@ -232,13 +241,10 @@ Options:
     status will be updated in order to drop EIT sections which have already been
     collected.
 
+Obsoleted Options:
   --use-unicode-symbol
-    Use Unicode symbols like enclosed ideographic supplement characters.
-
-    This option is added just for backword-compatibility.  It's not recommended
-    to use this option in normal use cases.  Because some functions of
-    EPGStation like the de-duplication of recorded programs won't work properly
-    if this option is specified.
+    Use the `MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS` environment variable instead of
+    this option.
 
 Arguments:
   <file>
@@ -326,6 +332,16 @@ Description:
         ...
       ]
     }}
+
+Environment Variables:
+  MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS
+    Set `1` if you like to keep Unicode symbols like enclosed ideographic
+    supplement characters.
+
+    This option is added just for backword-compatibility.  It's not recommended
+    to use this option in normal use cases.  Because some functions of
+    EPGStation like the de-duplication of recorded programs won't work properly
+    if this option is specified.
 )";
 
 static const std::string kCollectLogos = "collect-logos";
@@ -506,6 +522,143 @@ Description:
   synchronization.
 )";
 
+static const std::string kRecordService = "record-service";
+
+static const std::string kRecordServiceHelp = R"(
+Record a service stream into a ring buffer file
+
+Usage:
+  mirakc-arib record-service --id=<id> --sid=<sid> --file=<file>
+    --chunk-size=<bytes> --num-chunks=<num> [<file>]
+
+Options:
+  -h --help
+    Print help.
+
+  --id=<id>
+    ID used to distinguish recording tasks.
+
+  --sid=<sid>
+    Service ID.
+
+  --file=<file>
+    Path to the ring buffer file.
+
+  --chunk-size=<bytes>
+    Chunk size of the ring buffer file.
+    The chunk size must be a multiple of 8192.
+
+  --num-chunks=<num>
+    The number of chunks in the ring buffer file.
+
+Arguments:
+  <file>
+    Path to a TS file.
+
+Description:
+  `record-service` records a service stream using a ring buffer file.
+
+JSON Messages:
+  start
+    The `start` message is sent when `record-service` starts.  The message
+    structure is like below:
+
+      {{
+        "type": "start",
+        "data": {{
+          "id": "<id>"
+        }}
+      }}
+
+    where:
+      id
+        ID specified in the `--id` option.
+
+  end
+    The `end` message is sent when `record-service` ends.  The message structure
+    is like below:
+
+      {{
+        "type": "end",
+        "data": {{
+          "id": "<id>",
+          "reset": false,
+        }}
+      }}
+
+    where:
+      reset
+        Application using `record-service` needs to reset data regarding this
+        record before restarting new recording using the same record file.
+
+  chunk-timestamp
+    The `chunk-timestamp` message is sent before writing data into a chunk.  The
+    message structure is like below:
+
+      {{
+        "type": "chunk-timestamp",
+        "data": {{
+          "id": "<id>",
+          "chunk": {{
+            "timestamp": <unix-time-ms>,
+            "pos": 0,
+          }}
+        }}
+      }}
+
+    where:
+      timestamp
+        Unix time value in ms when started recording data in this chunk.  The
+        Unix time value is calculated using TOT/TDT packets and PCR values.
+
+      pos
+        File offset in bytes.  The value is a multiple of the chunk size.
+
+  event-start
+    The `event-start` message is sent when started recoring a program.  The
+    message structure is like below:
+
+      {{
+        "type": "event-start",
+        "data": {{
+          "id": "<id>",
+          "originalNetworkId": 1,
+          "transportStreamId": 2,
+          "serviceId": 3,
+          "event": {{ ... }},
+          "record": {{ ... }}
+        }}
+      }}
+
+    where:
+      event
+        Information about the program.  It's the same structure as the `events`
+        property output from `collect-eits`.
+
+      record
+        Unix time value and file offset when started recording the program.
+        It's the same structure as the `chunk` property in the `chunk-timestamp`
+        message.
+
+  event-update
+    The `event-update` message is sent when flushed a chunk.  The message
+    structure is the same as the `event-start` message.
+
+  event-end
+    The `event-end` message is sent when ended recoring a program.  The message
+    structure is the same as the `event-start` message.
+
+Environment Variables:
+  MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS
+    Set `1` if you like to keep Unicode symbols like enclosed ideographic
+    supplement characters.
+
+    This option is added just for backword-compatibility.  It's not recommended
+    to use this option in normal use cases.  Because some functions of
+    EPGStation like the de-duplication of recorded programs won't work properly
+    if this option is specified.
+)";
+
 static const std::string kTrackAirtime = "track-airtime";
 
 static const std::string kTrackAirtimeHelp = R"(
@@ -653,14 +806,18 @@ Examples:
 
 class PosixFile final : public File {
  public:
-  PosixFile(const std::string& path) {
+  enum class Mode { kWrite };
+
+  PosixFile(const std::string& path)
+      : path_(path) {
     if  (path.empty()) {
-      fd_ = 0;
+      stdio_ = true;
+      path_ = "<stdin>";
+      fd_ = STDIN_FILENO;
       MIRAKC_ARIB_INFO("Read packets from STDIN...");
     } else {
       fd_ = open(path.c_str(), O_RDONLY);
       if (fd_ > 0) {
-        need_close_ = true;
         MIRAKC_ARIB_INFO("Read packets from {}...", path);
       } else {
         MIRAKC_ARIB_ERROR(
@@ -669,22 +826,98 @@ class PosixFile final : public File {
     }
   }
 
+  PosixFile(const std::string& path, Mode)
+      : path_(path) {
+    if (path.empty()) {
+      stdio_ = true;
+      path_ = "<stdout>";
+      fd_ = STDOUT_FILENO;
+      MIRAKC_ARIB_INFO("Write packets to STDOUT...");
+    } else {
+      fd_ = open(path.c_str(), O_CREAT | O_RDWR);
+      if (fd_ > 0) {
+        MIRAKC_ARIB_INFO("Write packets to {}...", path);
+      } else {
+        MIRAKC_ARIB_ERROR(
+            "Failed to open {}: {} ({})", path, std::strerror(errno), errno);
+      }
+    }
+  }
+
   ~PosixFile() override {
-    if (need_close_) {
+    if (!stdio_) {
       close(fd_);
     }
   }
 
+  const std::string& path() const override {
+    return path_;
+  }
+
   ssize_t Read(uint8_t* buf, size_t len) override {
-    if (fd_ < 0) {
-      return 0;
+    auto result = read(fd_, reinterpret_cast<void*>(buf), len);
+    if (result < 0) {
+      MIRAKC_ARIB_ERROR("Failed to read from {}: {} ({})", path_, std::strerror(errno), errno);
     }
-    return read(fd_, reinterpret_cast<void*>(buf), len);
+    return result;
+  }
+
+  ssize_t Write(uint8_t* buf, size_t len) override {
+    auto result = write(fd_, reinterpret_cast<void*>(buf), len);
+    if (result < 0) {
+      MIRAKC_ARIB_ERROR("Failed to write to {}: {} ({})", path_, std::strerror(errno), errno);
+    }
+    return result;
+  }
+
+  bool Sync() override {
+    MIRAKC_ARIB_ASSERT(!stdio_);
+    if (fsync(fd_) < 0) {
+      MIRAKC_ARIB_ERROR("Failed to sync {}: {} ({})", path_, std::strerror(errno), errno);
+      return false;
+    }
+    return true;
+  }
+
+  bool Trunc(int64_t size) override {
+    MIRAKC_ARIB_ASSERT(!stdio_);
+    auto result = ftruncate(fd_, static_cast<off_t>(size));
+    if (result < 0) {
+      MIRAKC_ARIB_ERROR("Failed to truncate {} to {}: {} ({})",
+          path_, size, std::strerror(errno), errno);
+      return false;
+    }
+    return true;
+  }
+
+  int64_t Seek(int64_t offset, SeekMode mode) override {
+    MIRAKC_ARIB_ASSERT(!stdio_);
+    int whence;
+    switch (mode) {
+      case SeekMode::kSet:
+        whence = SEEK_SET;
+        break;
+      case SeekMode::kCur:
+        whence = SEEK_CUR;
+        break;
+      case SeekMode::kEnd:
+        whence = SEEK_END;
+        break;
+    }
+
+    auto result = lseek(fd_, static_cast<off_t>(offset), whence);
+    if (result < 0) {
+      MIRAKC_ARIB_ERROR("Failed to seek {}: {} ({})", path_, std::strerror(errno), errno);
+      return -1;
+    }
+
+    return static_cast<int64_t>(result);
   }
 
  private:
+  std::string path_;
   int fd_ = -1;
-  bool need_close_ = false;
+  bool stdio_ = false;
 };
 
 void Init(const Args& args) {
@@ -700,6 +933,8 @@ void Init(const Args& args) {
     InitLogger(kFilterService);
   } else if (args.at(kFilterProgram).asBool()) {
     InitLogger(kFilterProgram);
+  } else if (args.at(kRecordService).asBool()) {
+    InitLogger(kRecordService);
   } else if (args.at(kTrackAirtime).asBool()) {
     InitLogger(kTrackAirtime);
   } else if (args.at(kSeekStart).asBool()) {
@@ -729,6 +964,24 @@ void LoadSidSet(const Args& args, const std::string& name, SidSet* sids) {
     sids->Add(list);
     MIRAKC_ARIB_INFO("{} SIDs: {}", name, fmt::join(list, ", "));
   }
+}
+
+void LoadClockBaseline(const Args& args, ClockBaseline* cbl) {
+  static const std::string kClockPid = "--clock-pid";
+  static const std::string kClockPcr = "--clock-pcr";
+  static const std::string kClockTime = "--clock-time";
+
+  ts::PID pid = static_cast<uint16_t>(args.at(kClockPid).asLong());
+  auto pcr = args.at(kClockPcr).asInt64();
+  auto time = ConvertUnixTimeToJstTime(
+      static_cast<ts::MilliSecond>(args.at(kClockTime).asInt64()));
+
+  // Don't change the order of the following method calls.
+  cbl->SetPid(pid);
+  cbl->SetPcr(pcr);
+  cbl->SetTime(time);
+
+  MIRAKC_ARIB_INFO("Clock: PID={:04X} PCR={:011X} Time={}", pid, pcr, time);
 }
 
 void LoadComponentTags(const Args& args, const std::string& name,
@@ -765,9 +1018,12 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
         static_cast<ts::MilliSecond>(args.at(kTimeLimit).asInt64());
   }
   opt->streaming = args.at(kStreaming).asBool();
-  opt->use_unicode_symbol = args.at(kUseUnicodeSymbol).asBool();
+  auto use_unicode_symbol = args.at(kUseUnicodeSymbol).asBool();
+  if (use_unicode_symbol) {
+    g_KeepUnicodeSymbols = true;
+  }
   MIRAKC_ARIB_INFO("Options: time-limit={}, streaming={} use-unicode-symbol={}",
-                   opt->time_limit, opt->streaming, opt->use_unicode_symbol);
+                   opt->time_limit, opt->streaming, use_unicode_symbol);
 }
 
 void LoadOption(const Args& args, ServiceFilterOption* opt) {
@@ -815,6 +1071,23 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
       " margin=({}, {}) pre-streaming={}",
       opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time,
       opt->start_margin, opt->end_margin, opt->pre_streaming);
+}
+
+void LoadOption(const Args& args, ServiceRecorderOption* opt) {
+  static const std::string kId = "--id";
+  static const std::string kSid = "--sid";
+  static const std::string kFile = "--file";
+  static const std::string kChunkSize = "--chunk-size";
+  static const std::string kNumChunks = "--num-chunks";
+
+  opt->id = args.at(kId).asString();
+  opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
+  opt->file = args.at(kFile).asString();
+  opt->chunk_size = static_cast<size_t>(args.at(kChunkSize).asLong());
+  opt->num_chunks = static_cast<size_t>(args.at(kNumChunks).asLong());
+  MIRAKC_ARIB_INFO(
+      "Options: id={} sid={:04X} file={} chunk-size={} num-chunks={}",
+      opt->id, opt->sid, opt->file, opt->chunk_size, opt->num_chunks);
 }
 
 void LoadOption(const Args& args, AirtimeTrackerOption* opt) {
@@ -890,6 +1163,17 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     filter->Connect(std::make_unique<StdoutSink>());
     return filter;
   }
+  if (args.at(kRecordService).asBool()) {
+    ServiceRecorderOption option;
+    LoadOption(args, &option);
+    auto file = std::make_unique<PosixFile>(option.file, PosixFile::Mode::kWrite);
+    auto sink = std::make_unique<RingFileSink>(
+        std::move(file), option.chunk_size, option.num_chunks);
+    auto recorder = std::make_unique<ServiceRecorder>(option);
+    recorder->ServiceRecorder::Connect(std::move(sink));
+    recorder->JsonlSource::Connect(std::move(std::make_unique<StdoutJsonlSink>()));
+    return recorder;
+  }
   if (args.at(kTrackAirtime).asBool()) {
     AirtimeTrackerOption option;
     LoadOption(args, &option);
@@ -923,6 +1207,8 @@ void ShowHelp(const Args& args) {
     fmt::print(kFilterServiceHelp);
   } else if (args.at(kFilterProgram).asBool()) {
     fmt::print(kFilterProgramHelp);
+  } else if (args.at(kRecordService).asBool()) {
+    fmt::print(kRecordServiceHelp);
   } else if (args.at(kTrackAirtime).asBool()) {
     fmt::print(kTrackAirtimeHelp);
   } else if (args.at(kSeekStart).asBool()) {
@@ -938,6 +1224,11 @@ void ShowHelp(const Args& args) {
 
 int main(int argc, char* argv[]) {
   spdlog::cfg::load_env_levels("MIRAKC_ARIB_LOG");
+
+  auto keep_unicode_symbols = std::getenv("MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS");
+  if (keep_unicode_symbols != nullptr && std::string(keep_unicode_symbols) == "1") {
+    g_KeepUnicodeSymbols = true;
+  }
 
   auto version = fmt::format(kVersion,
                              MIRAKC_ARIB_VERSION,

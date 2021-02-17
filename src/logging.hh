@@ -30,6 +30,9 @@ inline void InitLogger(const std::string& name) {
 #define MIRAKC_ARIB_WARN(...) MIRAKC_ARIB_LOG(spdlog::level::warn, __VA_ARGS__)
 #define MIRAKC_ARIB_ERROR(...) MIRAKC_ARIB_LOG(spdlog::level::err, __VA_ARGS__)
 
+// In the future, the following macros might be disabled in the release build if
+// that improves the performance significantly.
+
 #define MIRAKC_ARIB_ASSERT(cond) \
   ((cond) ? (void)0 : \
    (MIRAKC_ARIB_LOG(spdlog::level::critical, \

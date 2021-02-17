@@ -57,7 +57,6 @@ class FileSource final : public PacketSource {
  public:
   static constexpr size_t kMaxDropBytes = 2 * ts::PKT_SIZE;
   static constexpr size_t kMaxResyncBytes = kMaxDropBytes + 3 * ts::PKT_SIZE;
-  static constexpr size_t kBlockSize = 4096;
   static constexpr size_t kReadChunkSize = 4 * kBlockSize;
   // TODO:
   // Constants above should be private, but doing that causes compile errors

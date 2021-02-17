@@ -19,7 +19,18 @@ class MockFile final : public File {
   MockFile() = default;
   ~MockFile() override = default;
 
+  const std::string& path() const override {
+    return path_;
+  }
+
   MOCK_METHOD(ssize_t, Read, (uint8_t* buf, size_t len), (override));
+  MOCK_METHOD(ssize_t, Write, (uint8_t* buf, size_t len), (override));
+  MOCK_METHOD(bool, Sync, (), (override));
+  MOCK_METHOD(bool, Trunc, (int64_t), (override));
+  MOCK_METHOD(int64_t, Seek, (int64_t, SeekMode), (override));
+
+ private:
+  std::string path_ = "<mock>";
 };
 
 class MockSource final : public PacketSource {
@@ -38,6 +49,62 @@ class MockSink final : public PacketSink {
   MOCK_METHOD(bool, Start, (), (override));
   MOCK_METHOD(bool, End, (), (override));
   MOCK_METHOD(bool, HandlePacket, (const ts::TSPacket&), (override));
+};
+
+class MockRingSink final : public PacketRingSink {
+ public:
+  MockRingSink(size_t chunk_size, size_t num_chunks)
+      : chunk_size_(chunk_size),
+        ring_size_(chunk_size * num_chunks) {}
+  ~MockRingSink() override = default;
+
+  MOCK_METHOD(bool, Start, (), (override));
+  MOCK_METHOD(bool, End, (), (override));
+
+  bool HandlePacket(const ts::TSPacket& packet) override {
+    switch (packet.getPID()) {
+      case 0x0FFF:
+        return false;
+      case 0x0FFE:
+        pos_ = 0;
+        observer_->OnWrappedAround(pos_);
+        return true;
+      case 0x0FFD:
+        pos_ = ((pos_ + chunk_size_) / chunk_size_) * chunk_size_;
+        observer_->OnChunkFlushed(pos_, chunk_size_, ring_size_);
+        return true;
+      default:
+        pos_ += ts::PKT_SIZE;
+        return true;
+    }
+  }
+
+  size_t pos() const override {
+    return pos_;
+  }
+
+  size_t sync_pos() const override {
+    return (pos_ / chunk_size_) * chunk_size_;
+  }
+
+  bool SetPosition(size_t pos) override {
+    if (pos == 0xFFFFFFFF) {
+      return false;
+    }
+    pos_ = pos;
+    return true;
+  }
+
+  void SetObserver(PacketRingObserver* observer) override {
+    observer_ = observer;
+  }
+
+ private:
+  size_t chunk_size_;
+  size_t ring_size_;
+  size_t pos_ = 0;
+  size_t sync_pos_ = 0;
+  PacketRingObserver* observer_ = nullptr;
 };
 
 class TableSource final : public PacketSource {

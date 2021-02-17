@@ -665,7 +665,9 @@ add_executable(mirakc-arib
   src/pcr_synchronizer.hh
   src/pes_printer.hh
   src/program_filter.hh
+  src/ring_file_sink.hh
   src/service_filter.hh
+  src/service_recorder.hh
   src/service_scanner.hh
   src/start_seeker.hh
   src/tsduck_helper.hh
@@ -707,7 +709,9 @@ if(MIRAKC_ARIB_TEST)
     test/packet_source_test.cc
     test/pcr_synchronizer_test.cc
     test/program_filter_test.cc
+    test/ring_file_sink_test.cc
     test/service_filter_test.cc
+    test/service_recorder_test.cc
     test/service_scanner_test.cc
     test/start_seeker_test.cc
     test/test.cc

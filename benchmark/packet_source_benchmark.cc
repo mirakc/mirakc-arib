@@ -19,6 +19,10 @@ class BenchmarkFile final : public File {
 
   ~BenchmarkFile() override {}
 
+  const std::string& path() const override {
+    return path_;
+  }
+
   ssize_t Read(uint8_t* buf, size_t len) override {
     auto remaining = kNumPackets - nread_;
     if (remaining == 0) {
@@ -30,8 +34,25 @@ class BenchmarkFile final : public File {
     return static_cast<ssize_t>(ncopy);
   }
 
+  ssize_t Write(uint8_t*, size_t) override {
+    return 0;
+  }
+
+  bool Sync() override {
+    return true;
+  }
+
+  bool Trunc(int64_t) override {
+    return true;
+  }
+
+  int64_t Seek(int64_t, SeekMode) override {
+    return 0;
+  }
+
  private:
   static constexpr size_t kBufSize = ts::PKT_SIZE * kNumPackets;
+  std::string path_ = "<benchmark>";
   size_t nread_ = 0;
   uint8_t buf_[kBufSize];
 };
