@@ -62,7 +62,7 @@ class ServiceScanner final : public PacketSink,
  private:
   bool completed() const {
     // Stop when all tables are ready.
-    return !pat_.isNull() && !sdt_.isNull() && !nit_.isNull();
+    return pat_ && sdt_ && nit_;
   }
 
   void handleTable(ts::SectionDemux&, const ts::BinaryTable& table) override {
@@ -88,7 +88,7 @@ class ServiceScanner final : public PacketSink,
       return;
     }
 
-    ts::SafePtr<ts::PAT> pat(new ts::PAT(context_, table));
+    std::unique_ptr<ts::PAT> pat = std::make_unique<ts::PAT>(context_, table);
 
     if (!pat->isValid()) {
       MIRAKC_ARIB_WARN("Broken PAT, skip");
@@ -100,31 +100,31 @@ class ServiceScanner final : public PacketSink,
       return;
     }
 
-    pat_ = pat;
-    MIRAKC_ARIB_INFO("PAT ready");
-
-    if (pat_->nit_pid != ts::PID_NULL && pat_->nit_pid != ts::PID_NIT) {
+    if (pat->nit_pid != ts::PID_NULL && pat->nit_pid != ts::PID_NIT) {
       MIRAKC_ARIB_INFO("Non-standard NIT#{:04X}, reset NIT", pat->nit_pid);
       nit_.reset();
       demux_.removePID(ts::PID_NIT);
       demux_.addPID(pat->nit_pid);
     }
+
+    pat_ = std::move(pat);
+    MIRAKC_ARIB_INFO("PAT ready");
   }
 
   void HandleNit(const ts::BinaryTable& table) {
-    ts::SafePtr<ts::NIT> nit(new ts::NIT(context_, table));
+    std::unique_ptr<ts::NIT> nit = std::make_unique<ts::NIT>(context_, table);
 
     if (!nit->isValid()) {
       MIRAKC_ARIB_WARN("Broken NIT, skip");
       return;
     }
 
-    nit_ = nit;
+    nit_ = std::move(nit);
     MIRAKC_ARIB_INFO("NIT ready");
   }
 
   void HandleSdt(const ts::BinaryTable& table) {
-    ts::SafePtr<ts::SDT> sdt(new ts::SDT(context_, table));
+    std::unique_ptr<ts::SDT> sdt = std::make_unique<ts::SDT>(context_, table);
 
     if (!sdt->isValid()) {
       MIRAKC_ARIB_WARN("Broken SDT, skip");
@@ -136,17 +136,17 @@ class ServiceScanner final : public PacketSink,
       return;
     }
 
-    sdt_ = sdt;
+    sdt_ = std::move(sdt);
     MIRAKC_ARIB_INFO("SDT ready");
   }
 
   void CollectServices(rapidjson::Document* doc) {
-    if (pat_.isNull()) {
+    if (!pat_) {
       MIRAKC_ARIB_ERROR("No PAT found");
       return;
     }
 
-    if (sdt_.isNull()) {
+    if (!sdt_) {
       MIRAKC_ARIB_ERROR("No SDT found");
       return;
     }
@@ -211,7 +211,7 @@ class ServiceScanner final : public PacketSink,
   }
 
   uint8_t GetRemoteControlKeyId() {
-    if (nit_.isNull()) {
+    if (!nit_) {
       return 0;
     }
 
@@ -236,9 +236,9 @@ class ServiceScanner final : public PacketSink,
   const ServiceScannerOption option_;
   ts::DuckContext context_;
   ts::SectionDemux demux_;
-  ts::SafePtr<ts::PAT> pat_;
-  ts::SafePtr<ts::SDT> sdt_;
-  ts::SafePtr<ts::NIT> nit_;
+  std::unique_ptr<ts::PAT> pat_;
+  std::unique_ptr<ts::SDT> sdt_;
+  std::unique_ptr<ts::NIT> nit_;
 
   MIRAKC_ARIB_NON_COPYABLE(ServiceScanner);
 };
