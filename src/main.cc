@@ -834,7 +834,7 @@ class PosixFile final : public File {
       fd_ = STDOUT_FILENO;
       MIRAKC_ARIB_INFO("Write packets to STDOUT...");
     } else {
-      fd_ = open(path.c_str(), O_CREAT | O_RDWR);
+      fd_ = open(path.c_str(), O_CREAT | O_RDWR, 0644);
       if (fd_ > 0) {
         MIRAKC_ARIB_INFO("Write packets to {}...", path);
       } else {
