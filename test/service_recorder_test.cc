@@ -13,7 +13,7 @@ namespace {
 constexpr size_t kNumBuffers = 2;
 constexpr size_t kNumChunks = 2;
 constexpr size_t kChunkSize = RingFileSink::kBufferSize * kNumBuffers;
-constexpr size_t kRingSize = kChunkSize * kNumChunks;
+constexpr uint64_t kRingSize = kChunkSize * kNumChunks;
 const ServiceRecorderOption kOption { "id", "/dev/null", 3, kChunkSize, kNumChunks };
 }
 

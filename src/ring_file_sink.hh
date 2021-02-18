@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 
 #include <tsduck/tsduck.h>
@@ -57,15 +58,16 @@ class RingFileSink final : public PacketRingSink {
     return true;
   }
 
-  size_t pos() const override {
+  uint64_t pos() const override {
     return ring_pos_;
   }
 
-  size_t sync_pos() const override {
+  uint64_t sync_pos() const override {
     return (ring_pos_ / chunk_size_) * chunk_size_;
   }
 
-  bool SetPosition(size_t pos) override {
+  bool SetPosition(uint64_t pos) override {
+    MIRAKC_ARIB_ASSERT(pos <= std::numeric_limits<int64_t>::max());
     MIRAKC_ARIB_ASSERT(pos % kBufferSize == 0);
     MIRAKC_ARIB_ASSERT_MSG(
         pos < ring_size_,
@@ -198,9 +200,9 @@ class RingFileSink final : public PacketRingSink {
   uint8_t buf_[kBufferSize];
   std::unique_ptr<File> file_;
   PacketRingObserver* observer_ = nullptr;
-  const size_t ring_size_;
+  const uint64_t ring_size_;
+  uint64_t ring_pos_ = 0;
   const size_t chunk_size_;
-  size_t ring_pos_ = 0;
   size_t buf_pos_ = 0;
   size_t chunk_pos_ = 0;
   bool broken_ = false;

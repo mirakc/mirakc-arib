@@ -95,11 +95,11 @@ class ServiceRecorder final : public PacketSink,
     }
   }
 
-  void OnChunkFlushed(size_t pos, size_t chunk_size, size_t ring_size) override {
+  void OnChunkFlushed(uint64_t pos, size_t chunk_size, uint64_t ring_size) override {
     chunk_flushed_ = true;
   }
 
-  void OnWrappedAround(size_t ring_size) override {}
+  void OnWrappedAround(uint64_t ring_size) override {}
 
  private:
   enum class State {
@@ -319,7 +319,7 @@ class ServiceRecorder final : public PacketSink,
     return sink_->HandlePacket(packet);
   }
 
-  void UpdateEventBoundary(const ts::Time& time, size_t pos) {
+  void UpdateEventBoundary(const ts::Time& time, uint64_t pos) {
     MIRAKC_ARIB_DEBUG("Update event boundary with {}@{}", time, pos);
     event_boundary_time_ = time;
     event_boundary_pos_ = pos;
@@ -388,7 +388,7 @@ class ServiceRecorder final : public PacketSink,
   }
 
   void SendEventUpdateMessage(
-      const std::shared_ptr<ts::EIT>& eit, const ts::Time& time, size_t pos) {
+      const std::shared_ptr<ts::EIT>& eit, const ts::Time& time, uint64_t pos) {
     MIRAKC_ARIB_ASSERT(eit);
     MIRAKC_ARIB_INFO("Event#{:04X}: Updated: {}@{}", GetEvent(eit).event_id, time, pos);
     SendEventMessage("event-update", eit, time, pos);
@@ -403,7 +403,7 @@ class ServiceRecorder final : public PacketSink,
 
   void SendEventMessage(
       const std::string& type, const std::shared_ptr<ts::EIT>& eit,
-      const ts::Time& time, size_t pos) {
+      const ts::Time& time, uint64_t pos) {
     MIRAKC_ARIB_ASSERT(eit);
 
     rapidjson::Document doc(rapidjson::kObjectType);
@@ -496,7 +496,7 @@ class ServiceRecorder final : public PacketSink,
   std::unique_ptr<PacketRingSink> sink_;
   Clock clock_;
   ts::Time event_boundary_time_;
-  size_t event_boundary_pos_;
+  uint64_t event_boundary_pos_;
   std::shared_ptr<ts::EIT> eit_;
   std::shared_ptr<ts::EIT> new_eit_;
   ts::PID pmt_pid_ = ts::PID_NULL;

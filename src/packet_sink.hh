@@ -26,8 +26,8 @@ class PacketRingObserver {
  public:
   PacketRingObserver() = default;
   virtual ~PacketRingObserver() = default;
-  virtual void OnChunkFlushed(size_t pos, size_t chunk_size, size_t ring_size) = 0;
-  virtual void OnWrappedAround(size_t ring_size) = 0;
+  virtual void OnChunkFlushed(uint64_t pos, size_t chunk_size, uint64_t ring_size) = 0;
+  virtual void OnWrappedAround(uint64_t ring_size) = 0;
 
  private:
   MIRAKC_ARIB_NON_COPYABLE(PacketRingObserver);
@@ -37,9 +37,9 @@ class PacketRingSink : public PacketSink {
  public:
   PacketRingSink() = default;
   ~PacketRingSink() override = default;
-  virtual size_t pos() const = 0;
-  virtual size_t sync_pos() const = 0;
-  virtual bool SetPosition(size_t pos) = 0;
+  virtual uint64_t pos() const = 0;
+  virtual uint64_t sync_pos() const = 0;
+  virtual bool SetPosition(uint64_t pos) = 0;
   virtual void SetObserver(PacketRingObserver* observer) = 0;
 
  private:

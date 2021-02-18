@@ -13,14 +13,14 @@ namespace {
 constexpr size_t kNumBuffers = 2;
 constexpr size_t kNumChunks = 2;
 constexpr size_t kChunkSize = RingFileSink::kBufferSize * kNumBuffers;
-constexpr size_t kRingSize = kChunkSize * kNumChunks;
+constexpr uint64_t kRingSize = kChunkSize * kNumChunks;
 
 class MockPacketRingObserver final : public PacketRingObserver {
  public:
   MockPacketRingObserver() = default;
   ~MockPacketRingObserver() override = default;
-  MOCK_METHOD(void, OnChunkFlushed, (size_t, size_t, size_t), (override));
-  MOCK_METHOD(void, OnWrappedAround, (size_t), (override));
+  MOCK_METHOD(void, OnChunkFlushed, (uint64_t, size_t, uint64_t), (override));
+  MOCK_METHOD(void, OnWrappedAround, (uint64_t), (override));
 };
 
 }  // namespace
@@ -75,7 +75,7 @@ TEST(RingFileSinkTest, OnePacket) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -121,7 +121,7 @@ TEST(RingFileSinkTest, TwoPackets) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -167,7 +167,7 @@ TEST(RingFileSinkTest, ReachBufferSize) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -220,7 +220,7 @@ TEST(RingFileSinkTest, ReachChunkSize) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -233,14 +233,14 @@ TEST(RingFileSinkTest, ReachChunkSize) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize * 2, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
-        .WillOnce([](size_t size) {
-          EXPECT_EQ(kRingSize, size);
+        .WillOnce([](int64_t size) {
+          EXPECT_EQ(kRingSize, static_cast<uint64_t>(size));
           return true;
         });
     EXPECT_CALL(*ring, Seek)
@@ -250,7 +250,7 @@ TEST(RingFileSinkTest, ReachChunkSize) {
           return 0;
         });
     EXPECT_CALL(observer, OnWrappedAround)
-        .WillOnce([](size_t ring_size) {
+        .WillOnce([](uint64_t ring_size) {
           EXPECT_EQ(kRingSize, ring_size);
         });
   }
@@ -300,7 +300,7 @@ TEST(RingFileSinkTest, ReachRingSize) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -330,13 +330,13 @@ TEST(RingFileSinkTest, ReachRingSize) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize * 2, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
-        .WillOnce([](size_t size) {
+        .WillOnce([](int64_t size) {
           EXPECT_EQ(kRingSize, size);
           return true;
         });
@@ -347,7 +347,7 @@ TEST(RingFileSinkTest, ReachRingSize) {
           return 0;
         });
     EXPECT_CALL(observer, OnWrappedAround)
-        .WillOnce([](size_t ring_size) {
+        .WillOnce([](uint64_t ring_size) {
           EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*file, Read)
@@ -358,7 +358,7 @@ TEST(RingFileSinkTest, ReachRingSize) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -489,7 +489,7 @@ TEST(RingFileSinkTest, FailTruncInFlush) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -519,7 +519,7 @@ TEST(RingFileSinkTest, FailTruncInFlush) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize * 2, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -576,7 +576,7 @@ TEST(RingFileSinkTest, FailSeekInFlush) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -606,14 +606,14 @@ TEST(RingFileSinkTest, FailSeekInFlush) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize * 2, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
-        .WillOnce([](size_t size) {
-          EXPECT_EQ(kRingSize, size);
+        .WillOnce([](int64_t size) {
+          EXPECT_EQ(kRingSize, static_cast<uint64_t>(size));
           return true;
         });
     EXPECT_CALL(*ring, Seek)
@@ -730,7 +730,7 @@ TEST(RingFileSinkTest, FailTruncInEnd) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -756,7 +756,7 @@ TEST(RingFileSinkTest, FailTruncInEnd) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize * 2, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -812,7 +812,7 @@ TEST(RingFileSinkTest, FailSeekInEnd) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
@@ -838,14 +838,14 @@ TEST(RingFileSinkTest, FailSeekInEnd) {
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](size_t pos, size_t chunk_size, size_t ring_size) {
+        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
           EXPECT_EQ(kChunkSize * 2, pos);
           EXPECT_EQ(kChunkSize, chunk_size);
           EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
-        .WillOnce([](size_t size) {
-          EXPECT_EQ(kRingSize, size);
+        .WillOnce([](int64_t size) {
+          EXPECT_EQ(kRingSize, static_cast<uint64_t>(size));
           return true;
         });
     EXPECT_CALL(*ring, Seek)

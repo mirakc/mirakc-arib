@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <limits>
 #include <memory>
 #include <queue>
 
@@ -79,16 +80,16 @@ class MockRingSink final : public PacketRingSink {
     }
   }
 
-  size_t pos() const override {
+  uint64_t pos() const override {
     return pos_;
   }
 
-  size_t sync_pos() const override {
+  uint64_t sync_pos() const override {
     return (pos_ / chunk_size_) * chunk_size_;
   }
 
-  bool SetPosition(size_t pos) override {
-    if (pos == 0xFFFFFFFF) {
+  bool SetPosition(uint64_t pos) override {
+    if (pos > std::numeric_limits<int64_t>::max()) {
       return false;
     }
     pos_ = pos;
@@ -100,9 +101,9 @@ class MockRingSink final : public PacketRingSink {
   }
 
  private:
+  uint64_t ring_size_;
+  uint64_t pos_ = 0;
   size_t chunk_size_;
-  size_t ring_size_;
-  size_t pos_ = 0;
   size_t sync_pos_ = 0;
   PacketRingObserver* observer_ = nullptr;
 };
