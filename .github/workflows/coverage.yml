@@ -40,7 +40,7 @@ jobs:
           args: grcov
       - name: Generate coverage data
         run: >-
-          grcov build --branch --llvm --ignore-not-existing -s . -p ../
+          grcov build --branch --ignore-not-existing -s . -p ../
           --ignore 'test/*'
           -t lcov -o lcov.info
       - name: Update to codecov.io
