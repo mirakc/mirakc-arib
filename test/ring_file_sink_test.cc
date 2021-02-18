@@ -1,5 +1,6 @@
 #include <memory>
 
+#include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -24,6 +25,18 @@ class MockPacketRingObserver final : public PacketRingObserver {
 };
 
 }  // namespace
+
+TEST(RingFileSinkTest, RingSize) {
+  auto ring = std::make_unique<MockFile>();
+  constexpr size_t kMaxChunkSize = 0x7FFFE000;
+  constexpr size_t kMaxNumChunks = 0x7FFFFFFF;
+  RingFileSink sink(std::move(ring), kMaxChunkSize, kMaxNumChunks);
+  constexpr uint64_t kMaxRingSize = static_cast<uint64_t>(kMaxChunkSize) *
+      static_cast<uint64_t>(kMaxNumChunks);
+  EXPECT_EQ(0x3FFFEFFF80002000, kMaxRingSize);
+  EXPECT_EQ("3FFFEFFF80002000", fmt::format("{:X}", kMaxRingSize));
+  EXPECT_EQ(kMaxRingSize, sink.ring_size());
+}
 
 TEST(RingFileSinkTest, EmptyFile) {
   auto file = std::make_unique<MockFile>();

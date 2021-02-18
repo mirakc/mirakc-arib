@@ -18,7 +18,7 @@ class RingFileSink final : public PacketRingSink {
   RingFileSink(std::unique_ptr<File>&& file, size_t chunk_size, size_t num_chunks)
       : file_(std::move(file)),
         chunk_size_(chunk_size),
-        ring_size_(chunk_size * num_chunks) {
+        ring_size_(static_cast<uint64_t>(chunk_size) * static_cast<uint64_t>(num_chunks)) {
     MIRAKC_ARIB_ASSERT(chunk_size > 0);
     MIRAKC_ARIB_ASSERT(num_chunks > 0);
     MIRAKC_ARIB_ASSERT_MSG(
@@ -56,6 +56,10 @@ class RingFileSink final : public PacketRingSink {
     MIRAKC_ARIB_ASSERT(nwritten == ts::PKT_SIZE);
 
     return true;
+  }
+
+  uint64_t ring_size() const {
+    return ring_size_;
   }
 
   uint64_t pos() const override {
