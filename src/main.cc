@@ -1104,9 +1104,17 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
     MIRAKC_ARIB_ERROR("chunk-size must be a multiple of {}", RingFileSink::kBufferSize);
     std::abort();
   }
+  if (opt->chunk_size > RingFileSink::kMaxChunkSize) {
+    MIRAKC_ARIB_ERROR("chunk-size must be less than {}", RingFileSink::kMaxChunkSize);
+    std::abort();
+  }
   opt->num_chunks = static_cast<size_t>(args.at(kNumChunks).asLong());
   if (opt->num_chunks == 0) {
     MIRAKC_ARIB_ERROR("chunk-size must be a positive integer");
+    std::abort();
+  }
+  if (opt->num_chunks > RingFileSink::kMaxNumChunks) {
+    MIRAKC_ARIB_ERROR("chunk-size must be less than {}", RingFileSink::kMaxNumChunks);
     std::abort();
   }
   MIRAKC_ARIB_INFO(
