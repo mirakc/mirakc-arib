@@ -28,9 +28,9 @@ class MockPacketRingObserver final : public PacketRingObserver {
 
 TEST(RingFileSinkTest, MaxValues) {
   EXPECT_EQ(0x7FFFE000, RingFileSink::kMaxChunkSize);
-  EXPECT_EQ(0xFFFFFFFF, RingFileSink::kMaxNumChunks);
-  EXPECT_EQ(0x7FFFDFFF80002000, RingFileSink::kMaxRingSize);
-  EXPECT_EQ("7FFFDFFF80002000", fmt::format("{:X}", RingFileSink::kMaxRingSize));
+  EXPECT_EQ(0x7FFFFFFF, RingFileSink::kMaxNumChunks);
+  EXPECT_EQ(0x3FFFEFFF80002000, RingFileSink::kMaxRingSize);
+  EXPECT_EQ("3FFFEFFF80002000", fmt::format("{:X}", RingFileSink::kMaxRingSize));
 
   auto ring = std::make_unique<MockFile>();
   RingFileSink sink(std::move(ring), RingFileSink::kMaxChunkSize, RingFileSink::kMaxNumChunks);

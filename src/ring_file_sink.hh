@@ -34,7 +34,7 @@ class RingFileSink final : public PacketRingSink {
 
   static constexpr size_t kBufferSize = 2 * kBlockSize;
   static constexpr size_t kMaxChunkSize = kBufferSize * 0x3FFFF;
-  static constexpr size_t kMaxNumChunks = 0xFFFFFFFF;
+  static constexpr size_t kMaxNumChunks = 0x7FFFFFFF;
   static constexpr uint64_t kMaxRingSize =
       static_cast<uint64_t>(kMaxChunkSize) * static_cast<uint64_t>(kMaxNumChunks);
 
