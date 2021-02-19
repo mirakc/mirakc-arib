@@ -41,8 +41,7 @@ static const std::string kVersion = R"(mirakc-arib {}
 * tplgy/cppcodec {}
 * mirakc/aribb24 {}
 * mirakc/tsduck-arib {}
-* DBCTRADO/LibISDB {}
-)";
+* DBCTRADO/LibISDB {})";
 
 static const std::string kUsage = R"(
 Tools to process ARIB TS streams.
