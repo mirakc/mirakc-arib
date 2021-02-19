@@ -24,6 +24,8 @@ class RingFileSink final : public PacketRingSink {
     MIRAKC_ARIB_ASSERT_MSG(
         chunk_size % kBufferSize == 0,
         "The chunk size must be a multiple of the buffer size");
+    MIRAKC_ARIB_INFO("{}: {} bytes * {} chunks = {} bytes",
+                     file_->path(), chunk_size, num_chunks, ring_size_);
   }
 
   ~RingFileSink() override = default;
@@ -98,8 +100,8 @@ class RingFileSink final : public PacketRingSink {
 
  private:
   bool ZeroizeFreeSpaceInLastChunk() {
-    MIRAKC_ARIB_DEBUG("Zeroize {} bytes of free space in the last chunk",
-                      chunk_size_ - chunk_pos_);
+    MIRAKC_ARIB_DEBUG("{}: Zeroize {} bytes of free space in the last chunk",
+                      file_->path(), chunk_size_ - chunk_pos_);
     auto zero_bytes = free_bytes();
 
     // Zeroize free space in the buffer.
@@ -153,7 +155,7 @@ class RingFileSink final : public PacketRingSink {
     size_t nwritten = 0;
 
     while (nwritten < kBufferSize) {
-      MIRAKC_ARIB_TRACE("Write the buffer to {}", file_->path());
+      MIRAKC_ARIB_TRACE("{}: Write the buffer", file_->path());
       auto result = file_->Write(buf_ + nwritten, kBufferSize - nwritten);
       if (result <= 0) {
         return false;
@@ -168,7 +170,7 @@ class RingFileSink final : public PacketRingSink {
     MIRAKC_ARIB_ASSERT(chunk_pos_ <= chunk_size_);
 
     if (chunk_pos_ != 0 && chunk_pos_ == chunk_size_) {
-      MIRAKC_ARIB_DEBUG("Reached the chunk boundary {}, sync {}", ring_pos_, file_->path());
+      MIRAKC_ARIB_DEBUG("{}: Reached the chunk boundary {}, sync", file_->path(), ring_pos_);
       if (!file_->Sync()) {
         return false;
       }
@@ -179,12 +181,12 @@ class RingFileSink final : public PacketRingSink {
     }
 
     if (ring_pos_ == ring_size_) {
-      MIRAKC_ARIB_DEBUG("Reached the end of the ring buffer, truncate {} at {}",
+      MIRAKC_ARIB_DEBUG("{}: Reached the end of the ring buffer, truncate at {}",
                         file_->path(), ring_pos_);
       if (!file_->Trunc(ring_size_)) {
         return false;
       }
-      MIRAKC_ARIB_DEBUG("Reset the position");
+      MIRAKC_ARIB_DEBUG("{}: Reset the position", file_->path());
       if (file_->Seek(0, SeekMode::kSet) != 0) {
         return false;
       }
