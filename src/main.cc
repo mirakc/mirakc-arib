@@ -992,13 +992,26 @@ void LoadComponentTags(const Args& args, const std::string& name,
   auto list = args.at(name).asStringList();
   for (const auto& str : list) {
     size_t pos;
+    // NOTE
+    // ----
+    // std::stoul() does NOT throw a std::out_of_range for negative values as described in:
+    // https://stackoverflow.com/questions/19327845/why-does-stdstoul-convert-negative-numbers
+    //
+    // As a workaround, the program aborts if conditions are not met.  Don't use assertion macros
+    // to ensure the conditions.  Assertion macros may be disabled.
     auto val = std::stoi(str, &pos);
-    MIRAKC_ARIB_ASSERT_MSG(
-        pos == str.length(), "{}: must be a number: {}", name, str);
-    MIRAKC_ARIB_ASSERT_MSG(
-        val >= 0, "{}: must be zero or a positive number: {}", name, str);
-    MIRAKC_ARIB_ASSERT_MSG(
-        val < 256, "{}: must be smaller than 256: {}", name, str);
+    if (pos != str.length()) {
+      MIRAKC_ARIB_ERROR("{}: must be a number: {}", name, str);
+      std::abort();
+    }
+    if (val < 0) {
+      MIRAKC_ARIB_ERROR("{}: must be zero or a positive number: {}", name, str);
+      std::abort();
+    }
+    if (val >= 256) {
+      MIRAKC_ARIB_ERROR("{}: must be smaller than 256: {}", name, str);
+      std::abort();
+    }
     tags->insert(static_cast<uint8_t>(val));
   }
 
