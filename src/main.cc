@@ -1096,7 +1096,19 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   opt->file = args.at(kFile).asString();
   opt->chunk_size = static_cast<size_t>(args.at(kChunkSize).asLong());
+  if (opt->chunk_size == 0) {
+    MIRAKC_ARIB_ERROR("chunk-size must be a positive integer");
+    std::abort();
+  }
+  if (opt->chunk_size % RingFileSink::kBufferSize != 0) {
+    MIRAKC_ARIB_ERROR("chunk-size must be a multiple of {}", RingFileSink::kBufferSize);
+    std::abort();
+  }
   opt->num_chunks = static_cast<size_t>(args.at(kNumChunks).asLong());
+  if (opt->num_chunks == 0) {
+    MIRAKC_ARIB_ERROR("chunk-size must be a positive integer");
+    std::abort();
+  }
   MIRAKC_ARIB_INFO(
       "Options: id={} sid={:04X} file={} chunk-size={} num-chunks={}",
       opt->id, opt->sid, opt->file, opt->chunk_size, opt->num_chunks);

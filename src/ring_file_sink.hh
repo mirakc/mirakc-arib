@@ -20,7 +20,9 @@ class RingFileSink final : public PacketRingSink {
         chunk_size_(chunk_size),
         ring_size_(static_cast<uint64_t>(chunk_size) * static_cast<uint64_t>(num_chunks)) {
     MIRAKC_ARIB_ASSERT(chunk_size > 0);
+    MIRAKC_ARIB_ASSERT(chunk_size <= kMaxChunkSize);
     MIRAKC_ARIB_ASSERT(num_chunks > 0);
+    MIRAKC_ARIB_ASSERT(num_chunks <= kMaxNumChunks);
     MIRAKC_ARIB_ASSERT_MSG(
         chunk_size % kBufferSize == 0,
         "The chunk size must be a multiple of the buffer size");
@@ -31,6 +33,10 @@ class RingFileSink final : public PacketRingSink {
   ~RingFileSink() override = default;
 
   static constexpr size_t kBufferSize = 2 * kBlockSize;
+  static constexpr size_t kMaxChunkSize = kBufferSize * 0x3FFFF;
+  static constexpr size_t kMaxNumChunks = 0xFFFFFFFF;
+  static constexpr uint64_t kMaxRingSize =
+      static_cast<uint64_t>(kMaxChunkSize) * static_cast<uint64_t>(kMaxNumChunks);
 
   bool End() override {
     if (broken_) {
