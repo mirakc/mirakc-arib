@@ -16,9 +16,10 @@ inline void InitLogger(const std::string& name) {
   spdlog::set_default_logger(logger);
 }
 
-#if MIRAKC_ARIB_LOG_SHOW_SOURCE_LOC
-#define MIRAKC_ARIB_SOURCE_LOC \
-  (spdlog::source_loc { __FILE__, __LINE__, SPDLOG_FUNCTION })
+}  // namespace
+
+#if defined(MIRAKC_ARIB_ENABLE_LOGGING_SOURCE_LOC)
+#define MIRAKC_ARIB_SOURCE_LOC (spdlog::source_loc { __FILE__, __LINE__, SPDLOG_FUNCTION })
 #else
 #define MIRAKC_ARIB_SOURCE_LOC (spdlog::source_loc {})
 #endif
@@ -46,4 +47,23 @@ inline void InitLogger(const std::string& name) {
 #define MIRAKC_ARIB_NEVER_REACH(...) \
   (MIRAKC_ARIB_LOG(spdlog::level::critical, __VA_ARGS__), std::abort())
 
-}  // namespace
+#if defined(MIRAKC_ARIB_DISABLE_LOGGING)
+#undef MIRAKC_ARIB_LOG
+#undef MIRAKC_ARIB_TRACE
+#undef MIRAKC_ARIB_DEBUG
+#undef MIRAKC_ARIB_INFO
+#undef MIRAKC_ARIB_WARN
+#undef MIRAKC_ARIB_ERROR
+#undef MIRAKC_ARIB_ASSERT
+#undef MIRAKC_ARIB_ASSERT_MSG
+#undef MIRAKC_ARIB_NEVER_REACH
+#define MIRAKC_ARIB_LOG(...) ((void)0)
+#define MIRAKC_ARIB_TRACE(...) ((void)0)
+#define MIRAKC_ARIB_DEBUG(...) ((void)0)
+#define MIRAKC_ARIB_INFO(...) ((void)0)
+#define MIRAKC_ARIB_WARN(...) ((void)0)
+#define MIRAKC_ARIB_ERROR(...) ((void)0)
+#define MIRAKC_ARIB_ASSERT(cond) ((void)0)
+#define MIRAKC_ARIB_ASSERT_MSG(cond, ...) ((void)0)
+#define MIRAKC_ARIB_NEVER_REACH(...) ((void)0)
+#endif  // defined(MIRAKC_ARIB_DISABLE_LOGGING)

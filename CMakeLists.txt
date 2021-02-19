@@ -706,14 +706,20 @@ target_compile_definitions(mirakc-arib
     MIRAKC_ARIB_LIBISDB_VERSION="${MIRAKC_ARIB_LIBISDB_VERSION}"
 )
 
-if(MIRAKC_ARIB_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  check_cxx_compiler_flag(--coverage HAVE_COVERAGE_OPTION)
-  if(HAVE_COVERAGE_OPTION)
-    target_compile_options(mirakc-arib PRIVATE --coverage)
-    target_link_options(mirakc-arib PRIVATE --coverage)
-  else()
-    target_compile_options(mirakc-arib PRIVATE -fprofile-arcs -ftest-coverage)
-    target_link_options(mirakc-arib PRIVATE -fprofile-arcs -ftest-coverage)
+if(MIRAKC_ARIB_COVERAGE)
+  target_compile_definitions(mirakc-arib
+    PRIVATE
+      MIRAKC_ARIB_DISABLE_LOGGING
+  )
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    check_cxx_compiler_flag(--coverage HAVE_COVERAGE_OPTION)
+    if(HAVE_COVERAGE_OPTION)
+      target_compile_options(mirakc-arib PRIVATE --coverage)
+      target_link_options(mirakc-arib PRIVATE --coverage)
+    else()
+      target_compile_options(mirakc-arib PRIVATE -fprofile-arcs -ftest-coverage)
+      target_link_options(mirakc-arib PRIVATE -fprofile-arcs -ftest-coverage)
+    endif()
   endif()
 endif()
 
