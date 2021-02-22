@@ -95,11 +95,9 @@ class ServiceRecorder final : public PacketSink,
     }
   }
 
-  void OnChunkFlushed(uint64_t pos, size_t chunk_size, uint64_t ring_size) override {
-    chunk_flushed_ = true;
+  void OnEndOfChunk(uint64_t) override {
+    end_of_chunk_ = true;
   }
-
-  void OnWrappedAround(uint64_t ring_size) override {}
 
  private:
   enum class State {
@@ -251,8 +249,8 @@ class ServiceRecorder final : public PacketSink,
 
       auto now = clock_.Now();
 
-      SendChunkTimestampMessage(now, sink_->sync_pos());
-      chunk_flushed_ = false;
+      SendChunkMessage(now, sink_->sync_pos());
+      end_of_chunk_ = false;
 
       UpdateEventBoundary(now, sink_->pos());
 
@@ -271,14 +269,13 @@ class ServiceRecorder final : public PacketSink,
 
   bool OnRecording(const ts::TSPacket& packet) {
     auto now = clock_.Now();
-    if (chunk_flushed_) {
-      // The `event-update` message must be sent before the `chunk-timestamp`
-      // message.  The application may purge expired programs in the message
-      // handler for the `chunk-timestamp` message.  So, the program data must
-      // be updated before that.
+    if (end_of_chunk_) {
+      // The `event-update` message must be sent before the `chunk` message.
+      // The application may purge expired programs in the message handler for
+      // the `chunk` message.  So, the program data must be updated before that.
       SendEventUpdateMessage(eit_, now, sink_->sync_pos());
-      SendChunkTimestampMessage(now, sink_->sync_pos());
-      chunk_flushed_ = false;
+      SendChunkMessage(now, sink_->sync_pos());
+      end_of_chunk_ = false;
     }
 
     // Copy the safe pointers on the stack in order to hold EIT objects.
@@ -356,8 +353,8 @@ class ServiceRecorder final : public PacketSink,
     FeedDocument(doc);
   }
 
-  void SendChunkTimestampMessage(const ts::Time& time, int64_t pos) {
-    MIRAKC_ARIB_INFO("{}: Chunk timestamp ({}@{})", option_.id, time, pos);
+  void SendChunkMessage(const ts::Time& time, int64_t pos) {
+    MIRAKC_ARIB_INFO("{}: Reached next chunk: {}@{}", option_.id, time, pos);
 
     rapidjson::Document doc(rapidjson::kObjectType);
     auto& allocator = doc.GetAllocator();
@@ -374,7 +371,7 @@ class ServiceRecorder final : public PacketSink,
     data.AddMember("id", option_.id, allocator);
     data.AddMember("chunk", chunk, allocator);
 
-    doc.AddMember("type", "chunk-timestamp", allocator);
+    doc.AddMember("type", "chunk", allocator);
     doc.AddMember("data", data, allocator);
 
     FeedDocument(doc);
@@ -502,7 +499,7 @@ class ServiceRecorder final : public PacketSink,
   std::shared_ptr<ts::EIT> new_eit_;
   ts::PID pmt_pid_ = ts::PID_NULL;
   State state_ = State::kPreparing;
-  bool chunk_flushed_ = false;
+  bool end_of_chunk_ = false;
   bool event_started_ = false;
 
   MIRAKC_ARIB_NON_COPYABLE(ServiceRecorder);

@@ -182,7 +182,7 @@ class RingFileSink final : public PacketRingSink {
       }
       chunk_pos_ = 0;
       if (observer_ != nullptr) {
-        observer_->OnChunkFlushed(ring_pos_, chunk_size_, ring_size_);
+        observer_->OnEndOfChunk(ring_pos_);
       }
     }
 
@@ -197,9 +197,6 @@ class RingFileSink final : public PacketRingSink {
         return false;
       }
       ring_pos_ = 0;
-      if (observer_ != nullptr) {
-        observer_->OnWrappedAround(ring_size_);
-      }
     }
 
     return true;

@@ -67,12 +67,8 @@ class MockRingSink final : public PacketRingSink {
       case 0x0FFF:
         return false;
       case 0x0FFE:
-        pos_ = 0;
-        observer_->OnWrappedAround(pos_);
-        return true;
-      case 0x0FFD:
         pos_ = ((pos_ + chunk_size_) / chunk_size_) * chunk_size_;
-        observer_->OnChunkFlushed(pos_, chunk_size_, ring_size_);
+        observer_->OnEndOfChunk(pos_);
         return true;
       default:
         pos_ += ts::PKT_SIZE;

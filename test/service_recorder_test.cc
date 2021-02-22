@@ -100,7 +100,7 @@ TEST(ServiceRecorderTest, EventStart) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk-timestamp","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"id":"id","chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -184,7 +184,7 @@ TEST(ServiceRecorderTest, EventProgress) {
         <event event_id="5" start_time="2021-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0FFD" />
+      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0FFE" />
       <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
     </tsduck>
   )");
@@ -203,7 +203,7 @@ TEST(ServiceRecorderTest, EventProgress) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk-timestamp","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"id":"id","chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -258,7 +258,7 @@ TEST(ServiceRecorderTest, EventProgress) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk-timestamp","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"id":"id","chunk":{)"
                 R"("timestamp":1609426800000,"pos":16384)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -341,7 +341,7 @@ TEST(ServiceRecorderTest, EventEnd) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk-timestamp","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"id":"id","chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -496,7 +496,7 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk-timestamp","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"id":"id","chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -651,7 +651,7 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk-timestamp","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"id":"id","chunk":{)"
                 R"("timestamp":1609426801000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));

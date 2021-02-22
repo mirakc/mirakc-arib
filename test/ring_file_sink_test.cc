@@ -20,8 +20,7 @@ class MockPacketRingObserver final : public PacketRingObserver {
  public:
   MockPacketRingObserver() = default;
   ~MockPacketRingObserver() override = default;
-  MOCK_METHOD(void, OnChunkFlushed, (uint64_t, size_t, uint64_t), (override));
-  MOCK_METHOD(void, OnWrappedAround, (uint64_t), (override));
+  MOCK_METHOD(void, OnEndOfChunk, (uint64_t), (override));
 };
 
 }  // namespace
@@ -51,8 +50,7 @@ TEST(RingFileSinkTest, EmptyFile) {
   EXPECT_CALL(*ring, Sync).Times(0);  // never called
   EXPECT_CALL(*ring, Trunc).Times(0);  // never called
   EXPECT_CALL(*ring, Seek).Times(0);   // never called
-  EXPECT_CALL(observer, OnChunkFlushed).Times(0);  // never called
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
+  EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -86,17 +84,14 @@ TEST(RingFileSinkTest, OnePacket) {
         .WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
   }
 
   EXPECT_CALL(*ring, Trunc).Times(0);  // never called
   EXPECT_CALL(*ring, Seek).Times(0);  // never called
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -132,17 +127,14 @@ TEST(RingFileSinkTest, TwoPackets) {
         .WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
   }
 
   EXPECT_CALL(*ring, Trunc).Times(0);  // never called
   EXPECT_CALL(*ring, Seek).Times(0);  // never called
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -178,17 +170,14 @@ TEST(RingFileSinkTest, ReachBufferSize) {
         .WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
   }
 
   EXPECT_CALL(*ring, Trunc).Times(0);  // never called
   EXPECT_CALL(*ring, Seek).Times(0);  // never called
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -231,11 +220,9 @@ TEST(RingFileSinkTest, ReachChunkSize) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*file, Read)
         .WillOnce(testing::Return(0));  // EOF
@@ -244,11 +231,9 @@ TEST(RingFileSinkTest, ReachChunkSize) {
         .WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize * 2, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
         .WillOnce([](int64_t size) {
@@ -260,10 +245,6 @@ TEST(RingFileSinkTest, ReachChunkSize) {
           EXPECT_EQ(0, offset);
           EXPECT_EQ(SeekMode::kSet, mode);
           return 0;
-        });
-    EXPECT_CALL(observer, OnWrappedAround)
-        .WillOnce([](uint64_t ring_size) {
-          EXPECT_EQ(kRingSize, ring_size);
         });
   }
 
@@ -311,11 +292,9 @@ TEST(RingFileSinkTest, ReachRingSize) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets3 - kNumPackets2)
@@ -341,11 +320,9 @@ TEST(RingFileSinkTest, ReachRingSize) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize * 2, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
         .WillOnce([](int64_t size) {
@@ -358,10 +335,6 @@ TEST(RingFileSinkTest, ReachRingSize) {
           EXPECT_EQ(SeekMode::kSet, mode);
           return 0;
         });
-    EXPECT_CALL(observer, OnWrappedAround)
-        .WillOnce([](uint64_t ring_size) {
-          EXPECT_EQ(kRingSize, ring_size);
-        });
     EXPECT_CALL(*file, Read)
         .WillOnce(testing::Return(0));  // EOF
     EXPECT_CALL(*ring, Write)
@@ -369,11 +342,9 @@ TEST(RingFileSinkTest, ReachRingSize) {
         .WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
   }
 
@@ -406,7 +377,7 @@ TEST(RingFileSinkTest, FailWriteInFlush) {
   EXPECT_CALL(*ring, Sync).Times(0);  // never called
   EXPECT_CALL(*ring, Trunc).Times(0);  // never called
   EXPECT_CALL(*ring, Seek).Times(0);   // never called
-  EXPECT_CALL(observer, OnChunkFlushed).Times(0);  // never called
+  EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -453,8 +424,7 @@ TEST(RingFileSinkTest, FailSyncInFlush) {
 
   EXPECT_CALL(*ring, Trunc).Times(0);  // never called
   EXPECT_CALL(*ring, Seek).Times(0);  // never called
-  EXPECT_CALL(observer, OnChunkFlushed).Times(0);  // never called
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
+  EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -500,11 +470,9 @@ TEST(RingFileSinkTest, FailTruncInFlush) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets3 - kNumPackets2)
@@ -530,18 +498,15 @@ TEST(RingFileSinkTest, FailTruncInFlush) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize * 2, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
         .WillOnce(testing::Return(false));
   }
 
   EXPECT_CALL(*ring, Seek).Times(0);  // never called
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -587,11 +552,9 @@ TEST(RingFileSinkTest, FailSeekInFlush) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets3 - kNumPackets2)
@@ -617,11 +580,9 @@ TEST(RingFileSinkTest, FailSeekInFlush) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize * 2, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
         .WillOnce([](int64_t size) {
@@ -631,8 +592,6 @@ TEST(RingFileSinkTest, FailSeekInFlush) {
     EXPECT_CALL(*ring, Seek)
         .WillOnce(testing::Return(-1));
   }
-
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -662,8 +621,7 @@ TEST(RingFileSinkTest, FailWriteInEnd) {
   EXPECT_CALL(*ring, Sync).Times(0);  // never called
   EXPECT_CALL(*ring, Trunc).Times(0);  // never called
   EXPECT_CALL(*ring, Seek).Times(0);   // never called
-  EXPECT_CALL(observer, OnChunkFlushed).Times(0);  // never called
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
+  EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -695,8 +653,7 @@ TEST(RingFileSinkTest, FailSyncInEnd) {
 
   EXPECT_CALL(*ring, Trunc).Times(0);  // never called
   EXPECT_CALL(*ring, Seek).Times(0);  // never called
-  EXPECT_CALL(observer, OnChunkFlushed).Times(0);  // never called
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
+  EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -741,11 +698,9 @@ TEST(RingFileSinkTest, FailTruncInEnd) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets3 - kNumPackets2)
@@ -767,18 +722,15 @@ TEST(RingFileSinkTest, FailTruncInEnd) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize * 2, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
         .WillOnce(testing::Return(false));
   }
 
   EXPECT_CALL(*ring, Seek).Times(0);  // never called
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
@@ -823,11 +775,9 @@ TEST(RingFileSinkTest, FailSeekInEnd) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets3 - kNumPackets2)
@@ -849,11 +799,9 @@ TEST(RingFileSinkTest, FailSeekInEnd) {
         });
     EXPECT_CALL(*ring, Sync)
         .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnChunkFlushed)
-        .WillOnce([](uint64_t pos, size_t chunk_size, uint64_t ring_size) {
+    EXPECT_CALL(observer, OnEndOfChunk)
+        .WillOnce([](uint64_t pos) {
           EXPECT_EQ(kChunkSize * 2, pos);
-          EXPECT_EQ(kChunkSize, chunk_size);
-          EXPECT_EQ(kRingSize, ring_size);
         });
     EXPECT_CALL(*ring, Trunc)
         .WillOnce([](int64_t size) {
@@ -863,8 +811,6 @@ TEST(RingFileSinkTest, FailSeekInEnd) {
     EXPECT_CALL(*ring, Seek)
         .WillOnce(testing::Return(-1));
   }
-
-  EXPECT_CALL(observer, OnWrappedAround).Times(0);  // never called
 
   FileSource src(std::move(file));
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);

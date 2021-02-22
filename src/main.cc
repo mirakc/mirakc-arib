@@ -590,12 +590,12 @@ JSON Messages:
         Application using `record-service` needs to reset data regarding this
         record before restarting new recording using the same record file.
 
-  chunk-timestamp
-    The `chunk-timestamp` message is sent before writing data into a chunk.  The
-    message structure is like below:
+  chunk
+    The `chunk` message is sent when the next chunk is reached.  The message
+    structure is like below:
 
       {{
-        "type": "chunk-timestamp",
+        "type": "chunk",
         "data": {{
           "id": "<id>",
           "chunk": {{

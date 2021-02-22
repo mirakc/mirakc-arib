@@ -26,8 +26,7 @@ class PacketRingObserver {
  public:
   PacketRingObserver() = default;
   virtual ~PacketRingObserver() = default;
-  virtual void OnChunkFlushed(uint64_t pos, size_t chunk_size, uint64_t ring_size) = 0;
-  virtual void OnWrappedAround(uint64_t ring_size) = 0;
+  virtual void OnEndOfChunk(uint64_t pos) = 0;
 
  private:
   MIRAKC_ARIB_NON_COPYABLE(PacketRingObserver);
