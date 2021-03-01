@@ -14,7 +14,7 @@ constexpr size_t kNumBuffers = 2;
 constexpr size_t kNumChunks = 2;
 constexpr size_t kChunkSize = RingFileSink::kBufferSize * kNumBuffers;
 constexpr uint64_t kRingSize = kChunkSize * kNumChunks;
-const ServiceRecorderOption kOption { "id", "/dev/null", 3, kChunkSize, kNumChunks };
+const ServiceRecorderOption kOption { "/dev/null", 3, kChunkSize, kNumChunks };
 }
 
 TEST(ServiceRecorderTest, NoPacket) {
@@ -29,14 +29,14 @@ TEST(ServiceRecorderTest, NoPacket) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"start","data":{"id":"id"}})",
+              R"({"type":"start"})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"stop","data":{"id":"id","reset":false}})",
+              R"({"type":"stop","data":{"reset":false}})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
@@ -93,14 +93,14 @@ TEST(ServiceRecorderTest, EventStart) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"start","data":{"id":"id"}})",
+              R"({"type":"start"})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -110,7 +110,6 @@ TEST(ServiceRecorderTest, EventStart) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-start","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -132,7 +131,7 @@ TEST(ServiceRecorderTest, EventStart) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"stop","data":{"id":"id","reset":false}})",
+              R"({"type":"stop","data":{"reset":false}})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
@@ -196,14 +195,14 @@ TEST(ServiceRecorderTest, EventProgress) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"start","data":{"id":"id"}})",
+              R"({"type":"start"})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -213,7 +212,6 @@ TEST(ServiceRecorderTest, EventProgress) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-start","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -236,7 +234,6 @@ TEST(ServiceRecorderTest, EventProgress) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-update","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -258,7 +255,7 @@ TEST(ServiceRecorderTest, EventProgress) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":16384)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -269,7 +266,7 @@ TEST(ServiceRecorderTest, EventProgress) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"stop","data":{"id":"id","reset":false}})",
+              R"({"type":"stop","data":{"reset":false}})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
@@ -334,14 +331,14 @@ TEST(ServiceRecorderTest, EventEnd) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"start","data":{"id":"id"}})",
+              R"({"type":"start"})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -351,7 +348,6 @@ TEST(ServiceRecorderTest, EventEnd) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-start","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -374,7 +370,6 @@ TEST(ServiceRecorderTest, EventEnd) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-end","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -397,7 +392,6 @@ TEST(ServiceRecorderTest, EventEnd) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-start","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -419,7 +413,7 @@ TEST(ServiceRecorderTest, EventEnd) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"stop","data":{"id":"id","reset":false}})",
+              R"({"type":"stop","data":{"reset":false}})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
@@ -489,14 +483,14 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"start","data":{"id":"id"}})",
+              R"({"type":"start"})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -506,7 +500,6 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-start","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -529,7 +522,6 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-end","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -552,7 +544,6 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-start","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -574,7 +565,7 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"stop","data":{"id":"id","reset":false}})",
+              R"({"type":"stop","data":{"reset":false}})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
@@ -644,14 +635,14 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"start","data":{"id":"id"}})",
+              R"({"type":"start"})",
               MockJsonlSink::Stringify(doc));
           return true;
         });
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"chunk","data":{"id":"id","chunk":{)"
+              R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426801000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
@@ -661,7 +652,6 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
               R"({"type":"event-start","data":{)"
-                R"("id":"id",)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
@@ -683,7 +673,7 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
     EXPECT_CALL(*json_sink, HandleDocument)
         .WillOnce([](const rapidjson::Document& doc) {
           EXPECT_EQ(
-              R"({"type":"stop","data":{"id":"id","reset":false}})",
+              R"({"type":"stop","data":{"reset":false}})",
               MockJsonlSink::Stringify(doc));
           return true;
         });

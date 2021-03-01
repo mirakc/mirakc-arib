@@ -65,7 +65,7 @@ Usage:
     --clock-pid=<pid> --clock-pcr=<pcr> --clock-time=<unix-time-ms>
     [--audio-tags=<tag>...] [--video-tags=<tag>...]
     [--start-margin=<ms>] [--end-margin=<ms>] [--pre-streaming] [<file>]
-  mirakc-arib record-service --id=<id> --sid=<sid> --file=<file>
+  mirakc-arib record-service --sid=<sid> --file=<file>
     --chunk-size=<bytes> --num-chunks=<num> [<file>]
   mirakc-arib track-airtime --sid=<sid> --eid=<eid> [<file>]
   mirakc-arib seek-start --sid=<sid>
@@ -529,15 +529,12 @@ static const std::string kRecordServiceHelp = R"(
 Record a service stream into a ring buffer file
 
 Usage:
-  mirakc-arib record-service --id=<id> --sid=<sid> --file=<file>
+  mirakc-arib record-service --sid=<sid> --file=<file>
     --chunk-size=<bytes> --num-chunks=<num> [<file>]
 
 Options:
   -h --help
     Print help.
-
-  --id=<id>
-    ID used to distinguish recording tasks.
 
   --sid=<sid>
     Service ID.
@@ -565,15 +562,8 @@ JSON Messages:
     structure is like below:
 
       {{
-        "type": "start",
-        "data": {{
-          "id": "<id>"
-        }}
+        "type": "start"
       }}
-
-    where:
-      id
-        ID specified in the `--id` option.
 
   end
     The `end` message is sent when `record-service` ends.  The message structure
@@ -582,7 +572,6 @@ JSON Messages:
       {{
         "type": "end",
         "data": {{
-          "id": "<id>",
           "reset": false,
         }}
       }}
@@ -599,7 +588,6 @@ JSON Messages:
       {{
         "type": "chunk",
         "data": {{
-          "id": "<id>",
           "chunk": {{
             "timestamp": <unix-time-ms>,
             "pos": 0,
@@ -622,7 +610,6 @@ JSON Messages:
       {{
         "type": "event-start",
         "data": {{
-          "id": "<id>",
           "originalNetworkId": 1,
           "transportStreamId": 2,
           "serviceId": 3,
@@ -1088,13 +1075,11 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
 }
 
 void LoadOption(const Args& args, ServiceRecorderOption* opt) {
-  static const std::string kId = "--id";
   static const std::string kSid = "--sid";
   static const std::string kFile = "--file";
   static const std::string kChunkSize = "--chunk-size";
   static const std::string kNumChunks = "--num-chunks";
 
-  opt->id = args.at(kId).asString();
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   opt->file = args.at(kFile).asString();
   opt->chunk_size = static_cast<size_t>(args.at(kChunkSize).asLong());
@@ -1120,8 +1105,8 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
     std::abort();
   }
   MIRAKC_ARIB_INFO(
-      "Options: id={} sid={:04X} file={} chunk-size={} num-chunks={}",
-      opt->id, opt->sid, opt->file, opt->chunk_size, opt->num_chunks);
+      "Options: sid={:04X} file={} chunk-size={} num-chunks={}",
+      opt->sid, opt->file, opt->chunk_size, opt->num_chunks);
 }
 
 void LoadOption(const Args& args, AirtimeTrackerOption* opt) {
