@@ -1183,15 +1183,19 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     return filter;
   }
   if (args.at(kRecordService).asBool()) {
-    ServiceRecorderOption option;
-    LoadOption(args, &option);
-    auto file = std::make_unique<PosixFile>(option.file, PosixFile::Mode::kWrite);
+    ServiceRecorderOption recorder_option;
+    LoadOption(args, &recorder_option);
+    auto file = std::make_unique<PosixFile>(recorder_option.file, PosixFile::Mode::kWrite);
     auto sink = std::make_unique<RingFileSink>(
-        std::move(file), option.chunk_size, option.num_chunks);
-    auto recorder = std::make_unique<ServiceRecorder>(option);
+        std::move(file), recorder_option.chunk_size, recorder_option.num_chunks);
+    auto recorder = std::make_unique<ServiceRecorder>(recorder_option);
     recorder->ServiceRecorder::Connect(std::move(sink));
     recorder->JsonlSource::Connect(std::move(std::make_unique<StdoutJsonlSink>()));
-    return recorder;
+    ServiceFilterOption filter_option;
+    LoadOption(args, &filter_option);
+    auto filter = std::make_unique<ServiceFilter>(filter_option);
+    filter->Connect(std::move(recorder));
+    return filter;
   }
   if (args.at(kTrackAirtime).asBool()) {
     AirtimeTrackerOption option;
