@@ -1033,7 +1033,7 @@ void LoadOption(const Args& args, ServiceFilterOption* opt) {
   if (args.at(kSid)) {
     opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
     if (opt->sid != 0) {
-      MIRAKC_ARIB_INFO("Options: sid=#{:04X}", opt->sid);
+      MIRAKC_ARIB_INFO("ServiceFilterOptions: sid=#{:04X}", opt->sid);
     }
   }
 }
@@ -1068,7 +1068,7 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
   }
   opt->pre_streaming = args.at(kPreStreaming).asBool();
   MIRAKC_ARIB_INFO(
-      "Options: sid={:04X} eid={:04X} clock=({:04X}, {:011X}, {})"
+      "ProgramFilterOptions: sid={:04X} eid={:04X} clock=({:04X}, {:011X}, {})"
       " margin=({}, {}) pre-streaming={}",
       opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time,
       opt->start_margin, opt->end_margin, opt->pre_streaming);
@@ -1105,7 +1105,7 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
     std::abort();
   }
   MIRAKC_ARIB_INFO(
-      "Options: sid={:04X} file={} chunk-size={} num-chunks={}",
+      "ServiceRecorderOptions: sid={:04X} file={} chunk-size={} num-chunks={}",
       opt->sid, opt->file, opt->chunk_size, opt->num_chunks);
 }
 
@@ -1176,11 +1176,15 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     return filter;
   }
   if (args.at(kFilterProgram).asBool()) {
-    ProgramFilterOption option;
-    LoadOption(args, &option);
-    auto filter = std::make_unique<ProgramFilter>(option);
-    filter->Connect(std::make_unique<StdoutSink>());
-    return filter;
+    ProgramFilterOption program_filter_option;
+    LoadOption(args, &program_filter_option);
+    auto program_filter = std::make_unique<ProgramFilter>(program_filter_option);
+    program_filter->Connect(std::make_unique<StdoutSink>());
+    ServiceFilterOption service_filter_option;
+    LoadOption(args, &service_filter_option);
+    auto service_filter = std::make_unique<ServiceFilter>(service_filter_option);
+    service_filter->Connect(std::move(program_filter));
+    return service_filter;
   }
   if (args.at(kRecordService).asBool()) {
     ServiceRecorderOption recorder_option;
