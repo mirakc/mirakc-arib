@@ -13,6 +13,17 @@
 #include "packet_source.hh"
 #include "tsduck_helper.hh"
 
+#define MIRAKC_ARIB_SERVICE_FILTER_TRACE(...) \
+  MIRAKC_ARIB_TRACE("service-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_FILTER_DEBUG(...) \
+  MIRAKC_ARIB_DEBUG("service-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_FILTER_INFO(...) \
+  MIRAKC_ARIB_INFO("service-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_FILTER_WARN(...) \
+  MIRAKC_ARIB_WARN("service-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_FILTER_ERROR(...) \
+  MIRAKC_ARIB_ERROR("service-filter: " __VA_ARGS__)
+
 namespace {
 
 struct ServiceFilterOption final {
@@ -29,12 +40,12 @@ class ServiceFilter final : public PacketSink,
         pat_packetizer_(ts::PID_PAT, ts::CyclingPacketizer::ALWAYS) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
-    MIRAKC_ARIB_DEBUG("Demux PAT");
+    MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Demux PAT");
     demux_.addPID(ts::PID_CAT);
-    MIRAKC_ARIB_DEBUG("Demux CAT for detecting EMM PIDs");
+    MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Demux CAT for detecting EMM PIDs");
     if (option_.time_limit.has_value()) {
       demux_.addPID(ts::PID_TOT);
-      MIRAKC_ARIB_DEBUG("Demux TDT/TOT for checking the time limit");
+      MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Demux TDT/TOT for checking the time limit");
     }
   }
 
@@ -46,7 +57,7 @@ class ServiceFilter final : public PacketSink,
 
   bool Start() override {
     if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink has not been connected");
       return false;
     }
 
@@ -56,7 +67,7 @@ class ServiceFilter final : public PacketSink,
 
   bool End() override {
     if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink has not been connected");
       return false;
     }
 
@@ -65,7 +76,7 @@ class ServiceFilter final : public PacketSink,
 
   bool HandlePacket(const ts::TSPacket& packet) override {
     if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink has not been connected");
       return false;
     }
 
@@ -131,7 +142,7 @@ class ServiceFilter final : public PacketSink,
 
   void HandlePat(const ts::BinaryTable& table) {
     if (table.sourcePID() != ts::PID_PAT) {
-      MIRAKC_ARIB_WARN(
+      MIRAKC_ARIB_SERVICE_FILTER_WARN(
           "PAT delivered with PID#{:04X}, skip", table.sourcePID());
       return;
     }
@@ -139,31 +150,31 @@ class ServiceFilter final : public PacketSink,
     ts::PAT pat(context_, table);
 
     if (!pat.isValid()) {
-      MIRAKC_ARIB_WARN("Broken PAT, skip");
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("Broken PAT, skip");
       return;
     }
 
     if (pat.ts_id == 0) {
-      MIRAKC_ARIB_WARN("PAT for TSID#0000, skip");
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("PAT for TSID#0000, skip");
       return;
     }
 
     if (pat.pmts.find(option_.sid) == pat.pmts.end()) {
-      MIRAKC_ARIB_ERROR("SID#{:04X} not found in PAT", option_.sid);
+      MIRAKC_ARIB_SERVICE_FILTER_ERROR("SID#{:04X} not found in PAT", option_.sid);
       done_ = true;
       return;
     }
 
     psi_filter_.clear();
-    MIRAKC_ARIB_DEBUG("Clear PSI/SI filter");
+    MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Clear PSI/SI filter");
 
     auto new_pmt_pid = pat.pmts[option_.sid];
 
     if (pmt_pid_ != ts::PID_NULL) {
-      MIRAKC_ARIB_INFO("PID of PMT has been changed: {:04X} -> {:04X}",
-                       pmt_pid_, new_pmt_pid);
+      MIRAKC_ARIB_SERVICE_FILTER_INFO(
+          "PID of PMT has been changed: {:04X} -> {:04X}", pmt_pid_, new_pmt_pid);
       demux_.removePID(pmt_pid_);
-      MIRAKC_ARIB_DEBUG("Stop to demux PMT#{:04X}", pmt_pid_);
+      MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Stop to demux PMT#{:04X}", pmt_pid_);
       pmt_pid_ = ts::PID_NULL;
 
       // content_filter_ is not cleared at this point.  This will be cleared
@@ -172,7 +183,7 @@ class ServiceFilter final : public PacketSink,
 
     pmt_pid_ = new_pmt_pid;
     demux_.addPID(pmt_pid_);
-    MIRAKC_ARIB_DEBUG("Demux PMT#{:04X}", pmt_pid_);
+    MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Demux PMT#{:04X}", pmt_pid_);
 
     // Remove other services from PAT.
     for (auto it = pat.pmts.begin(); it != pat.pmts.end(); ) {
@@ -199,7 +210,7 @@ class ServiceFilter final : public PacketSink,
     psi_filter_.insert(ts::PID_BIT);
     psi_filter_.insert(ts::PID_CDT);
     psi_filter_.insert(pmt_pid_);
-    MIRAKC_ARIB_DEBUG(
+    MIRAKC_ARIB_SERVICE_FILTER_DEBUG(
         "PSI/SI filter += PAT CAT NIT SDT EIT RST TDT/TOT BIT CDT PMT#{:04X}",
         pmt_pid_);
   }
@@ -208,18 +219,18 @@ class ServiceFilter final : public PacketSink,
     ts::CAT cat(context_, table);
 
     if (!cat.isValid()) {
-      MIRAKC_ARIB_WARN("Broken CAT, skip");
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("Broken CAT, skip");
       return;
     }
 
     emm_filter_.clear();
-    MIRAKC_ARIB_DEBUG("Clear EMM filter");
+    MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Clear EMM filter");
 
     auto i = cat.descs.search(ts::DID_CA);
     while (i < cat.descs.size()) {
       ts::CADescriptor desc(context_, *cat.descs[i]);
       emm_filter_.insert(desc.ca_pid);
-      MIRAKC_ARIB_DEBUG("EMM filter += EMM#{:04X}", desc.ca_pid);
+      MIRAKC_ARIB_SERVICE_FILTER_DEBUG("EMM filter += EMM#{:04X}", desc.ca_pid);
       i = cat.descs.search(ts::DID_CA, i + 1);
     }
   }
@@ -228,26 +239,26 @@ class ServiceFilter final : public PacketSink,
     ts::PMT pmt(context_, table);
 
     if (!pmt.isValid()) {
-      MIRAKC_ARIB_WARN("Broken PMT, skip");
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("Broken PMT, skip");
       return;
     }
 
     if (pmt.service_id != option_.sid) {
-      MIRAKC_ARIB_WARN("PMT.SID#{} unmatched, skip", pmt.service_id);
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("PMT.SID#{} unmatched, skip", pmt.service_id);
       return;
     }
 
     content_filter_.clear();
-    MIRAKC_ARIB_DEBUG("Clear content filter");
+    MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Clear content filter");
 
     content_filter_.insert(pmt.pcr_pid);
-    MIRAKC_ARIB_DEBUG("Content filter += PCR#{:04X}", pmt.pcr_pid);
+    MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += PCR#{:04X}", pmt.pcr_pid);
 
     auto i = pmt.descs.search(ts::DID_CA);
     while (i < pmt.descs.size()) {
       ts::CADescriptor desc(context_, *pmt.descs[i]);
       content_filter_.insert(desc.ca_pid);
-      MIRAKC_ARIB_DEBUG("Content filter += ECM#{:04X}", desc.ca_pid);
+      MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += ECM#{:04X}", desc.ca_pid);
       i = pmt.descs.search(ts::DID_CA, i + 1);
     }
 
@@ -257,18 +268,18 @@ class ServiceFilter final : public PacketSink,
 
       const auto& stream = it->second;
       if (stream.isVideo()) {
-        MIRAKC_ARIB_DEBUG("Content filter += PES/Video#{:04X}", pid);
+        MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += PES/Video#{:04X}", pid);
       } else if (stream.isAudio()) {
-        MIRAKC_ARIB_DEBUG("Content filter += PES/Audio#{:04X}", pid);
+        MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += PES/Audio#{:04X}", pid);
       } else if (stream.isSubtitles()) {
-        MIRAKC_ARIB_DEBUG("Content filter += PES/Subtitle#{:04X}", pid);
+        MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += PES/Subtitle#{:04X}", pid);
       } else if (IsAribSubtitle(stream)) {
-        MIRAKC_ARIB_DEBUG("Content filter += PES/ARIB-Subtitle#{:04X}", pid);
+        MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += PES/ARIB-Subtitle#{:04X}", pid);
       } else if (IsAribSuperimposedText(stream)) {
-        MIRAKC_ARIB_DEBUG(
+        MIRAKC_ARIB_SERVICE_FILTER_DEBUG(
             "Content filter += PES/ARIB-SuperimposedText#{:04X}", pid);
       } else {
-        MIRAKC_ARIB_DEBUG("Content filter += Other#{:04X}", pid);
+        MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += Other#{:04X}", pid);
       }
     }
   }
@@ -277,7 +288,7 @@ class ServiceFilter final : public PacketSink,
     ts::TDT tdt(context_, table);
 
     if (!tdt.isValid()) {
-      MIRAKC_ARIB_WARN("Broken TDT, skip");
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("Broken TDT, skip");
       return;
     }
 
@@ -288,7 +299,7 @@ class ServiceFilter final : public PacketSink,
     ts::TOT tot(context_, table);
 
     if (!tot.isValid()) {
-      MIRAKC_ARIB_WARN("Broken TOT, skip");
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("Broken TOT, skip");
       return;
     }
 
@@ -301,7 +312,7 @@ class ServiceFilter final : public PacketSink,
     }
 
     done_ = true;
-    MIRAKC_ARIB_INFO("Over the time limit, stop streaming");
+    MIRAKC_ARIB_SERVICE_FILTER_INFO("Over the time limit, stop streaming");
   }
 
   const ServiceFilterOption option_;

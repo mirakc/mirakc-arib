@@ -12,6 +12,17 @@
 #include "packet_source.hh"
 #include "tsduck_helper.hh"
 
+#define MIRAKC_ARIB_PROGRAM_FILTER_TRACE(...) \
+  MIRAKC_ARIB_TRACE("program-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(...) \
+  MIRAKC_ARIB_DEBUG("program-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_PROGRAM_FILTER_INFO(...) \
+  MIRAKC_ARIB_INFO("program-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_PROGRAM_FILTER_WARN(...) \
+  MIRAKC_ARIB_WARN("program-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_PROGRAM_FILTER_ERROR(...) \
+  MIRAKC_ARIB_ERROR("program-filter: " __VA_ARGS__)
+
 namespace {
 
 struct ProgramFilterOption final {
@@ -38,16 +49,16 @@ class ProgramFilter final : public PacketSink,
     clock_time_ = option_.clock_time;
     clock_pcr_ready_ = true;
     clock_time_ready_ = true;
-    MIRAKC_ARIB_DEBUG("Initial clock: PCR#{:04X}, {:011X} ({})",
-                      clock_pid_, clock_pcr_, clock_time_);
-    MIRAKC_ARIB_DEBUG("Video tags: {}", fmt::join(option_.video_tags, ", "));
-    MIRAKC_ARIB_DEBUG("Audio tags: {}", fmt::join(option_.audio_tags, ", "));
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
+        "Initial clock: PCR#{:04X}, {:011X} ({})", clock_pid_, clock_pcr_, clock_time_);
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Video tags: {}", fmt::join(option_.video_tags, ", "));
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Audio tags: {}", fmt::join(option_.audio_tags, ", "));
 
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
     demux_.addPID(ts::PID_EIT);
     demux_.addPID(ts::PID_TOT);
-    MIRAKC_ARIB_DEBUG("Demux += PAT EIT TDT/TOT");
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Demux += PAT EIT TDT/TOT");
   }
 
   virtual ~ProgramFilter() override {}
@@ -58,7 +69,7 @@ class ProgramFilter final : public PacketSink,
 
   bool Start() override {
     if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink has not been connected");
       return false;
     }
 
@@ -68,7 +79,7 @@ class ProgramFilter final : public PacketSink,
 
   bool End() override {
     if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink has not been connected");
       return false;
     }
 
@@ -77,7 +88,7 @@ class ProgramFilter final : public PacketSink,
 
   bool HandlePacket(const ts::TSPacket& packet) override {
     if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink has not been connected");
       return false;
     }
 
@@ -100,7 +111,7 @@ class ProgramFilter final : public PacketSink,
 
   bool WaitReady(const ts::TSPacket& packet) {
     if (stop_) {
-      MIRAKC_ARIB_WARN("Canceled");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("Canceled");
       return false;
     }
 
@@ -130,7 +141,7 @@ class ProgramFilter final : public PacketSink,
     if (!packet.hasPCR() || packet.getPCR() == ts::INVALID_PCR) {
       // Many PCR packets in a specific channel have no valid PCR...
       // See https://github.com/mirakc/mirakc-arib/issues/3
-      MIRAKC_ARIB_TRACE("PCR#{:04X} has no valid PCR...", pid);
+      MIRAKC_ARIB_PROGRAM_FILTER_TRACE("PCR#{:04X} has no valid PCR...", pid);
       return true;
     }
 
@@ -148,7 +159,7 @@ class ProgramFilter final : public PacketSink,
     // We can implement the comparison below using operator>=() defined in the
     // Pcr class.  This coding style looks elegant, but requires more typing.
     if (ComparePcr(pcr, end_pcr_) >= 0) {  // pcr >= end_pcr_
-      MIRAKC_ARIB_INFO("Reached the end PCR");
+      MIRAKC_ARIB_PROGRAM_FILTER_INFO("Reached the end PCR");
       return false;
     }
 
@@ -156,7 +167,7 @@ class ProgramFilter final : public PacketSink,
       return true;
     }
 
-    MIRAKC_ARIB_INFO("Reached the start PCR");
+    MIRAKC_ARIB_PROGRAM_FILTER_INFO("Reached the start PCR");
 
     // Send pending PAT packets.
     if (!option_.pre_streaming) {
@@ -185,7 +196,7 @@ class ProgramFilter final : public PacketSink,
 
   bool DoStreaming(const ts::TSPacket& packet) {
     if (stop_) {
-      MIRAKC_ARIB_INFO("Done");
+      MIRAKC_ARIB_PROGRAM_FILTER_INFO("Done");
       return false;
     }
 
@@ -195,7 +206,7 @@ class ProgramFilter final : public PacketSink,
       if (!packet.hasPCR() || packet.getPCR() == ts::INVALID_PCR) {
         // Many PCR packets in a specific channel have no valid PCR...
         // See https://github.com/mirakc/mirakc-arib/issues/3
-        MIRAKC_ARIB_TRACE("PCR#{:04X} has no valid PCR...", pid);
+        MIRAKC_ARIB_PROGRAM_FILTER_TRACE("PCR#{:04X} has no valid PCR...", pid);
         return sink_->HandlePacket(packet);
       }
 
@@ -211,7 +222,7 @@ class ProgramFilter final : public PacketSink,
       }
 
       if (ComparePcr(pcr, end_pcr_) >= 0) {  // pcr >= end_pcr_
-        MIRAKC_ARIB_INFO("Reached the end PCR");
+        MIRAKC_ARIB_PROGRAM_FILTER_INFO("Reached the end PCR");
         return false;
       }
     }
@@ -274,20 +285,20 @@ class ProgramFilter final : public PacketSink,
     //       ...
     //
     if (table.sourcePID() != ts::PID_PAT) {
-      MIRAKC_ARIB_WARN("PAT delivered with PID#{:04X}, skip",
-                       table.sourcePID());
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN(
+          "PAT delivered with PID#{:04X}, skip", table.sourcePID());
       return;
     }
 
     ts::PAT pat(context_, table);
 
     if (!pat.isValid()) {
-      MIRAKC_ARIB_WARN("Broken PAT, skip");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("Broken PAT, skip");
       return;
     }
 
     if (pat.ts_id == 0) {
-      MIRAKC_ARIB_WARN("PAT for TSID#0000, skip");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("PAT for TSID#0000, skip");
       return;
     }
 
@@ -297,36 +308,36 @@ class ProgramFilter final : public PacketSink,
     auto new_pmt_pid = pat.pmts[option_.sid];
 
     if (pmt_pid_ != ts::PID_NULL) {
-      MIRAKC_ARIB_DEBUG("Demux -= PMT#{:04X}", pmt_pid_);
+      MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Demux -= PMT#{:04X}", pmt_pid_);
       demux_.removePID(pmt_pid_);
       pmt_pid_ = ts::PID_NULL;
     }
 
     pmt_pid_ = new_pmt_pid;
     demux_.addPID(pmt_pid_);
-    MIRAKC_ARIB_DEBUG("Demux += PMT#{:04X}", pmt_pid_);
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Demux += PMT#{:04X}", pmt_pid_);
   }
 
   void HandlePmt(const ts::BinaryTable& table) {
     ts::PMT pmt(context_, table);
 
     if (!pmt.isValid()) {
-      MIRAKC_ARIB_WARN("Broken PMT, skip");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("Broken PMT, skip");
       return;
     }
 
     if (pmt.service_id != option_.sid) {
-      MIRAKC_ARIB_WARN("PMT.SID#{} unmatched, skip", pmt.service_id);
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("PMT.SID#{} unmatched, skip", pmt.service_id);
       return;
     }
 
     pcr_pid_ = pmt.pcr_pid;
-    MIRAKC_ARIB_DEBUG("PCR#{:04X}", pcr_pid_);
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("PCR#{:04X}", pcr_pid_);
 
     pcr_pid_ready_ = true;
 
     if (clock_pid_ != pcr_pid_) {
-      MIRAKC_ARIB_WARN(
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN(
           "PID of PCR has been changed: {:04X} -> {:04X}, need resync",
           clock_pid_, pcr_pid_);
       clock_pid_ = pcr_pid_;
@@ -335,7 +346,7 @@ class ProgramFilter final : public PacketSink,
     }
 
     pes_black_list_.clear();
-    MIRAKC_ARIB_DEBUG("Clear PES black list");
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Clear PES black list");
 
     for (auto it = pmt.streams.begin(); it != pmt.streams.end(); ++it) {
       auto pid = it->first;
@@ -344,14 +355,14 @@ class ProgramFilter final : public PacketSink,
         uint8_t tag;
         if (!stream.getComponentTag(tag)) {
           pes_black_list_.insert(pid);
-          MIRAKC_ARIB_DEBUG("PES black list += PES/Video#{:04X} (no tag)", pid);
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("PES black list += PES/Video#{:04X} (no tag)", pid);
           continue;
         }
         const auto& tag_it = std::find(
             std::begin(option_.video_tags), std::end(option_.video_tags), tag);
         if (tag_it == std::end(option_.video_tags)) {
           pes_black_list_.insert(pid);
-          MIRAKC_ARIB_DEBUG(
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
               "PES black list += PES/Video#{:04X} (tag:{})", pid, tag);
           continue;
         }
@@ -359,14 +370,14 @@ class ProgramFilter final : public PacketSink,
         uint8_t tag;
         if (!stream.getComponentTag(tag)) {
           pes_black_list_.insert(pid);
-          MIRAKC_ARIB_DEBUG("PES black list += PES/Audio#{:04X} (no tag)", pid);
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("PES black list += PES/Audio#{:04X} (no tag)", pid);
           continue;
         }
         const auto& tag_it = std::find(
             std::begin(option_.audio_tags), std::end(option_.audio_tags), tag);
         if (tag_it == std::end(option_.audio_tags)) {
           pes_black_list_.insert(pid);
-          MIRAKC_ARIB_DEBUG(
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
               "PES black list += PES/Audio#{:04X} (tag:{})", pid, tag);
           continue;
         }
@@ -386,22 +397,22 @@ class ProgramFilter final : public PacketSink,
         }
       }
 
-      MIRAKC_ARIB_DEBUG("Modified PMT#{:04X}", table.sourcePID());
+      MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Modified PMT#{:04X}", table.sourcePID());
       for (auto it = pmt.streams.begin(); it != pmt.streams.end(); ++it) {
         auto pid = it->first;
         const auto& stream = it->second;
         if (stream.isVideo()) {
-          MIRAKC_ARIB_DEBUG("  PES/Video#{:04X}", pid);
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("  PES/Video#{:04X}", pid);
         } else if (stream.isAudio()) {
-          MIRAKC_ARIB_DEBUG("  PES/Audio#{:04X}", pid);
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("  PES/Audio#{:04X}", pid);
         } else if (stream.isSubtitles()) {
-          MIRAKC_ARIB_DEBUG("  PES/Subtitle#{:04X}", pid);
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("  PES/Subtitle#{:04X}", pid);
         } else if (IsAribSubtitle(stream)) {
-          MIRAKC_ARIB_DEBUG("  PES/ARIB-Subtitle#{:04X}", pid);
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("  PES/ARIB-Subtitle#{:04X}", pid);
         } else if (IsAribSuperimposedText(stream)) {
-          MIRAKC_ARIB_DEBUG("  PES/ARIB-SuperimposedText#{:04X}", pid);
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("  PES/ARIB-SuperimposedText#{:04X}", pid);
         } else {
-          MIRAKC_ARIB_DEBUG("  Other#{:04X}", pid);
+          MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("  Other#{:04X}", pid);
         }
       }
     }
@@ -414,7 +425,7 @@ class ProgramFilter final : public PacketSink,
     ts::EIT eit(context_, table);
 
     if (!eit.isValid()) {
-      MIRAKC_ARIB_WARN("Broken EIT, skip");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("Broken EIT, skip");
       return;
     }
 
@@ -423,32 +434,32 @@ class ProgramFilter final : public PacketSink,
     }
 
     if (eit.events.size() == 0) {
-      MIRAKC_ARIB_ERROR("No event in EIT, stop");
+      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No event in EIT, stop");
       stop_ = true;
       return;
     }
 
     const auto& present = eit.events[0];
     if (present.event_id == option_.eid) {
-      MIRAKC_ARIB_DEBUG("Event#{:04X} has started", option_.eid);
+      MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Event#{:04X} has started", option_.eid);
       UpdateEventTime(present);
       return;
     }
 
     if (eit.events.size() < 2) {
-      MIRAKC_ARIB_WARN("No following event in EIT");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("No following event in EIT");
       if (state_ == kStreaming) {
         // Continue streaming until PCR reaches `end_pcr_`.
         return;
       }
-      MIRAKC_ARIB_ERROR("Event#{:04X} might have been canceled", option_.eid);
+      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("Event#{:04X} might have been canceled", option_.eid);
       stop_ = true;
       return;
     }
 
     const auto& following = eit.events[1];
     if (following.event_id == option_.eid) {
-      MIRAKC_ARIB_DEBUG("Event#{:04X} will start soon", option_.eid);
+      MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Event#{:04X} will start soon", option_.eid);
       UpdateEventTime(following);
       return;
     }
@@ -460,7 +471,7 @@ class ProgramFilter final : public PacketSink,
       return;
     }
 
-    MIRAKC_ARIB_ERROR("Event#{:04X} might have been canceled", option_.eid);
+    MIRAKC_ARIB_PROGRAM_FILTER_ERROR("Event#{:04X} might have been canceled", option_.eid);
     stop_ = true;
     return;
   }
@@ -469,7 +480,7 @@ class ProgramFilter final : public PacketSink,
     ts::TDT tdt(context_, table);
 
     if (!tdt.isValid()) {
-      MIRAKC_ARIB_WARN("Broken TDT, skip");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("Broken TDT, skip");
       return;
     }
 
@@ -484,7 +495,7 @@ class ProgramFilter final : public PacketSink,
     ts::TOT tot(context_, table);
 
     if (!tot.isValid()) {
-      MIRAKC_ARIB_WARN("Broken TOT, skip");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("Broken TOT, skip");
       return;
     }
 
@@ -500,8 +511,8 @@ class ProgramFilter final : public PacketSink,
 
     event_start_time_ = event.start_time - option_.start_margin;
     event_end_time_ = event.start_time + duration;
-    MIRAKC_ARIB_INFO("Updated event time: ({}) .. ({})",
-                     event_start_time_, event_end_time_);
+    MIRAKC_ARIB_PROGRAM_FILTER_INFO(
+        "Updated event time: ({}) .. ({})", event_start_time_, event_end_time_);
 
     event_time_ready_ = true;
 
@@ -514,7 +525,7 @@ class ProgramFilter final : public PacketSink,
     MIRAKC_ARIB_ASSERT(NeedClockSync());
 
     clock_pcr_ = pcr;
-    MIRAKC_ARIB_TRACE("Updated clock PCR: {:011X}", pcr);
+    MIRAKC_ARIB_PROGRAM_FILTER_TRACE("Updated clock PCR: {:011X}", pcr);
 
     clock_pcr_ready_ = true;
 
@@ -527,7 +538,7 @@ class ProgramFilter final : public PacketSink,
     MIRAKC_ARIB_ASSERT(!clock_time_ready_);
 
     clock_time_ = time;
-    MIRAKC_ARIB_TRACE("Updated clock time: {}", time);
+    MIRAKC_ARIB_PROGRAM_FILTER_TRACE("Updated clock time: {}", time);
 
     clock_time_ready_ = true;
 
@@ -547,8 +558,9 @@ class ProgramFilter final : public PacketSink,
 
     start_pcr_ = ConvertTimeToPcr(event_start_time_);
     end_pcr_ = ConvertTimeToPcr(event_end_time_);
-    MIRAKC_ARIB_INFO("Updated PCR range: {:011X} ({}) .. {:011X} ({})",
-                     start_pcr_, event_start_time_, end_pcr_, event_end_time_);
+    MIRAKC_ARIB_PROGRAM_FILTER_INFO(
+        "Updated PCR range: {:011X} ({}) .. {:011X} ({})",
+        start_pcr_, event_start_time_, end_pcr_, event_end_time_);
   }
 
   int64_t ConvertTimeToPcr(const ts::Time& time) {
