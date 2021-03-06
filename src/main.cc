@@ -1111,11 +1111,12 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
   }
   if (args.at(kStartPos)) {
     opt->start_pos = args.at(kStartPos).asUint64();
-    if (opt->start_pos % opt->chunk_size != 0) {
+    if (opt->start_pos % static_cast<uint64_t>(opt->chunk_size) != 0) {
       MIRAKC_ARIB_ERROR("start-pos must be a multiple of chunk-size");
       std::abort();
     }
-    if (opt->start_pos >= opt->chunk_size * opt->num_chunks) {
+    if (opt->start_pos >=
+        static_cast<uint64_t>(opt->chunk_size) * static_cast<uint64_t>(opt->num_chunks)) {
       MIRAKC_ARIB_ERROR("start-pos must be a less than the maximum file size");
       std::abort();
     }
