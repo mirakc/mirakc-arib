@@ -31,6 +31,7 @@ struct ServiceRecorderOption final {
   uint16_t sid = 0;
   size_t chunk_size = 0;
   size_t num_chunks = 0;
+  uint64_t start_pos = 0;
 };
 
 class ServiceRecorder final : public PacketSink,
@@ -64,6 +65,11 @@ class ServiceRecorder final : public PacketSink,
     }
     if (!sink_->Start()) {
       return false;
+    }
+    if (option_.start_pos != 0) {
+      if (!sink_->SetPosition(option_.start_pos)) {
+        return false;
+      }
     }
     SendStartMessage();
     return true;

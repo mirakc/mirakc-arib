@@ -66,7 +66,7 @@ Usage:
     [--audio-tags=<tag>...] [--video-tags=<tag>...]
     [--start-margin=<ms>] [--end-margin=<ms>] [--pre-streaming] [<file>]
   mirakc-arib record-service --sid=<sid> --file=<file>
-    --chunk-size=<bytes> --num-chunks=<num> [<file>]
+    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [<file>]
   mirakc-arib track-airtime --sid=<sid> --eid=<eid> [<file>]
   mirakc-arib seek-start --sid=<sid>
     [--max-duration=<ms>] [--max-packets=<num>] [<file>]
@@ -530,7 +530,7 @@ Record a service stream into a ring buffer file
 
 Usage:
   mirakc-arib record-service --sid=<sid> --file=<file>
-    --chunk-size=<bytes> --num-chunks=<num> [<file>]
+    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [<file>]
 
 Options:
   -h --help
@@ -548,6 +548,10 @@ Options:
 
   --num-chunks=<num>
     The number of chunks in the ring buffer file.
+
+  --start-pos=<pos>  [default: 0]
+    A file position to start recoring.
+    The value must be a multiple of the chunk size.
 
 Arguments:
   <file>
@@ -601,7 +605,7 @@ JSON Messages:
         Unix time value is calculated using TOT/TDT packets and PCR values.
 
       pos
-        File offset in bytes.  The value is a multiple of the chunk size.
+        File position in bytes.  The value is a multiple of the chunk size.
 
   event-start
     The `event-start` message is sent when started recoring a program.  The
@@ -1079,6 +1083,7 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
   static const std::string kFile = "--file";
   static const std::string kChunkSize = "--chunk-size";
   static const std::string kNumChunks = "--num-chunks";
+  static const std::string kStartPos = "--start-pos";
 
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   opt->file = args.at(kFile).asString();
@@ -1092,7 +1097,7 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
     std::abort();
   }
   if (opt->chunk_size > RingFileSink::kMaxChunkSize) {
-    MIRAKC_ARIB_ERROR("chunk-size must be less than {}", RingFileSink::kMaxChunkSize);
+    MIRAKC_ARIB_ERROR("chunk-size must be less than or equal to {}", RingFileSink::kMaxChunkSize);
     std::abort();
   }
   opt->num_chunks = static_cast<size_t>(args.at(kNumChunks).asLong());
@@ -1101,12 +1106,23 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
     std::abort();
   }
   if (opt->num_chunks > RingFileSink::kMaxNumChunks) {
-    MIRAKC_ARIB_ERROR("chunk-size must be less than {}", RingFileSink::kMaxNumChunks);
+    MIRAKC_ARIB_ERROR("chunk-size must be less than or equal to {}", RingFileSink::kMaxNumChunks);
     std::abort();
   }
+  if (args.at(kStartPos)) {
+    opt->start_pos = args.at(kStartPos).asUint64();
+    if (opt->start_pos % opt->chunk_size != 0) {
+      MIRAKC_ARIB_ERROR("start-pos must be a multiple of chunk-size");
+      std::abort();
+    }
+    if (opt->start_pos >= opt->chunk_size * opt->num_chunks) {
+      MIRAKC_ARIB_ERROR("start-pos must be a less than the maximum file size");
+      std::abort();
+    }
+  }
   MIRAKC_ARIB_INFO(
-      "ServiceRecorderOptions: sid={:04X} file={} chunk-size={} num-chunks={}",
-      opt->sid, opt->file, opt->chunk_size, opt->num_chunks);
+      "ServiceRecorderOptions: sid={:04X} file={} chunk-size={} num-chunks={} start-pos={}",
+      opt->sid, opt->file, opt->chunk_size, opt->num_chunks, opt->start_pos);
 }
 
 void LoadOption(const Args& args, AirtimeTrackerOption* opt) {
