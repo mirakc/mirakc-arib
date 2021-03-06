@@ -42,11 +42,8 @@ class RingFileSink final : public PacketRingSink {
     if (broken_) {
       return false;
     }
-    if (buf_pos_ == 0 && chunk_pos_ == 0) {
-      // No free space in the last chunk.
-      return true;
-    }
-    return ZeroizeFreeSpaceInLastChunk();
+    // No need to flush the buffer.
+    return true;
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {
@@ -105,42 +102,6 @@ class RingFileSink final : public PacketRingSink {
   }
 
  private:
-  bool ZeroizeFreeSpaceInLastChunk() {
-    MIRAKC_ARIB_DEBUG("{}: Zeroize {} bytes of free space in the last chunk",
-                      file_->path(), chunk_size_ - chunk_pos_);
-    auto zero_bytes = free_bytes();
-
-    // Zeroize free space in the buffer.
-    std::memset(buf_ + buf_pos_, 0, zero_bytes);
-    buf_pos_ += zero_bytes;
-    MIRAKC_ARIB_ASSERT(buf_pos_ == kBufferSize);
-    ring_pos_ += zero_bytes;
-    MIRAKC_ARIB_ASSERT(ring_pos_ <= ring_size_);
-    MIRAKC_ARIB_ASSERT(NeedFlush());
-    if (!Flush()) {
-      return false;
-    }
-
-    MIRAKC_ARIB_ASSERT(buf_pos_ == 0);
-
-    // Zeroize the buffer.
-    std::memset(buf_, 0, kBufferSize - zero_bytes);
-
-    while (chunk_pos_ != 0) {
-      // The buffer has already been zeroized.
-      // Just move the cursors.
-      buf_pos_ = kBufferSize;
-      ring_pos_ += kBufferSize;
-      MIRAKC_ARIB_ASSERT(ring_pos_ <= ring_size_);
-      MIRAKC_ARIB_ASSERT(NeedFlush());
-      if (!Flush()) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   size_t FillBuffer(const uint8_t* data, size_t size) {
     auto fill_bytes = std::min(size, free_bytes());
     std::memcpy(buf_ + buf_pos_, data, fill_bytes);
