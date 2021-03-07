@@ -94,7 +94,8 @@ class AirtimeTracker final : public PacketSink,
   }
 
   void WriteEventInfo(const ts::EIT& eit, const ts::EIT::Event& event) {
-    ts::MilliSecond start_time = event.start_time - ts::Time::UnixEpoch;
+    ts::Time start_time = event.start_time - kJstTzOffset;  // JST -> UTC
+    ts::MilliSecond start_time_unix = start_time - ts::Time::UnixEpoch;
     ts::MilliSecond duration = event.duration * ts::MilliSecPerSec;
 
     rapidjson::Document json(rapidjson::kObjectType);
@@ -103,7 +104,7 @@ class AirtimeTracker final : public PacketSink,
     json.AddMember("tsid", eit.ts_id, allocator);
     json.AddMember("sid", eit.service_id, allocator);
     json.AddMember("eid", event.event_id, allocator);
-    json.AddMember("startTime", start_time, allocator);
+    json.AddMember("startTime", start_time_unix, allocator);
     json.AddMember("duration", duration, allocator);
 
     FeedDocument(json);

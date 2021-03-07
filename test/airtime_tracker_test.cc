@@ -40,9 +40,9 @@ TEST(AirtimeTrackerTest, Present) {
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
            test-pid="0x0012">
-        <event event_id="0x0004" start_time="1970-01-01 00:00:00"
+        <event event_id="0x0004" start_time="1970-01-01 09:00:00"
                duration="00:0:01" running_status="undefined" CA_mode="true" />
-        <event event_id="0x0005" start_time="1970-01-01 0:00:01"
+        <event event_id="0x0005" start_time="1970-01-01 09:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
    </tsduck>
@@ -75,9 +75,9 @@ TEST(AirtimeTrackerTest, Following) {
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
            test-pid="0x0012">
-        <event event_id="0x0003" start_time="1970-01-01 00:00:00"
+        <event event_id="0x0003" start_time="1970-01-01 09:00:00"
                duration="00:0:01" running_status="undefined" CA_mode="true" />
-        <event event_id="0x0004" start_time="1970-01-01 00:00:01"
+        <event event_id="0x0004" start_time="1970-01-01 09:00:01"
                duration="0:00:01" running_status="undefined" CA_mode="true" />
       </EIT>
    </tsduck>
@@ -110,27 +110,27 @@ TEST(AirtimeTrackerTest, Changes) {
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
            test-pid="0x0012" test-cc="0">
-        <event event_id="0x0003" start_time="1970-01-01 00:00:00"
+        <event event_id="0x0003" start_time="1970-01-01 09:00:00"
                duration="00:0:01" running_status="undefined" CA_mode="true" />
-        <event event_id="0x0004" start_time="1970-01-01 00:00:01"
+        <event event_id="0x0004" start_time="1970-01-01 09:00:01"
                duration="0:00:01" running_status="undefined" CA_mode="true" />
       </EIT>
       <EIT type="pf" version="2" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
            test-pid="0x0012" test-cc="1">
-        <event event_id="0x0003" start_time="1970-01-01 00:00:00"
+        <event event_id="0x0003" start_time="1970-01-01 09:00:00"
                duration="00:0:02" running_status="undefined" CA_mode="true" />
-        <event event_id="0x0004" start_time="1970-01-01 00:00:02"
+        <event event_id="0x0004" start_time="1970-01-01 09:00:02"
                duration="0:00:01" running_status="undefined" CA_mode="true" />
       </EIT>
       <EIT type="pf" version="3" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
            test-pid="0x0012" test-cc="3">
-        <event event_id="0x0004" start_time="1970-01-01 00:00:02"
+        <event event_id="0x0004" start_time="1970-01-01 09:00:02"
                duration="0:00:01" running_status="undefined" CA_mode="true" />
-        <event event_id="0x0005" start_time="1970-01-01 00:00:03"
+        <event event_id="0x0005" start_time="1970-01-01 09:00:03"
                duration="00:0:01" running_status="undefined" CA_mode="true" />
       </EIT>
    </tsduck>
@@ -180,9 +180,9 @@ TEST(AirtimeTrackerTest, EitSidUnmatched) {
            service_id="0x1000" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
            test-pid="0x0012">
-        <event event_id="0x0003" start_time="1970-01-01 00:00:00"
+        <event event_id="0x0003" start_time="1970-01-01 09:00:00"
                duration="00:0:01" running_status="undefined" CA_mode="true" />
-        <event event_id="0x0004" start_time="1970-01-01 00:00:01"
+        <event event_id="0x0004" start_time="1970-01-01 09:00:01"
                duration="0:00:01" running_status="undefined" CA_mode="true" />
       </EIT>
    </tsduck>
@@ -209,9 +209,9 @@ TEST(AirtimeTrackerTest, EventNotFound) {
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
            test-pid="0x0012">
-        <event event_id="0x1000" start_time="1970-01-01 00:00:00"
+        <event event_id="0x1000" start_time="1970-01-01 09:00:00"
                duration="00:0:01" running_status="undefined" CA_mode="true" />
-        <event event_id="0x2000" start_time="1970-01-01 00:00:01"
+        <event event_id="0x2000" start_time="1970-01-01 09:00:01"
                duration="0:00:01" running_status="undefined" CA_mode="true" />
       </EIT>
    </tsduck>
