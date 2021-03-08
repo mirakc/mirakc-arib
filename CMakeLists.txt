@@ -460,6 +460,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   endif()
 endif()
 
+check_cxx_compiler_flag(-Wpoison-system-directories HAVE_DOCUMENTATION_UNKNOWN_COMMAND_WARNING)
+if(HAVE_DOCUMENTATION_UNKNOWN_COMMAND_WARNING)
+  # Disable -Wdocumentation-unknown-command
+  string(APPEND MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA " -Wno-documentation-unknown-command")
+endif()
+
 list(APPEND MIRAKC_ARIB_TSDUCK_DEFS
   CXXFLAGS_EXTRA=${MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA})
 
@@ -479,15 +485,14 @@ ExternalProject_Add(vendor-tsduck-arib
   CONFIGURE_COMMAND
     ""
   BUILD_COMMAND
-    # There is no way to skip building tsplugins and tstools except for using
-    # the install-devel target.
+    rm -rf src/tsplugins src/tstools
+  COMMAND
     PKG_CONFIG_PATH=${MIRAKC_ARIB_VENDOR_DIR}/lib/pkgconfig
-      make -j ${NPROC} install-devel
-        SYSPREFIX=${MIRAKC_ARIB_VENDOR_DIR} ${MIRAKC_ARIB_TSDUCK_DEFS}
+      make -j ${NPROC} SYSPREFIX=${MIRAKC_ARIB_VENDOR_DIR} ${MIRAKC_ARIB_TSDUCK_DEFS}
   BUILD_IN_SOURCE
     YES
   INSTALL_COMMAND
-    ""
+    make -j ${NPROC} install-devel SYSPREFIX=${MIRAKC_ARIB_VENDOR_DIR} ${MIRAKC_ARIB_TSDUCK_DEFS}
   EXCLUDE_FROM_ALL
     YES
 )
