@@ -5,8 +5,46 @@ BASEDIR="$(cd $(dirname $0); pwd)"
 PROJDIR="$(cd $BASEDIR/..; pwd)"
 
 MARKER='###version'
+CURRENT=$(git describe --abbrev=0)
 
-VERSION="$1"
+help() {
+    cat <<EOF >&2
+USAGE:
+  $PROGNAME (major|minor|patch)
+  $PROGNAME -h | --help
+
+OPTIONS:
+  -h, --help
+
+ARGUMENTS:
+  major
+    Update the major version.
+
+  minor
+    Update the minor version.
+
+  patch
+    Update the patch version.
+EOF
+    exit 0
+}
+
+while [ $# -gt 0 ]
+do
+  case "$1" in
+    '-h' | '--help')
+      help
+      ;;
+    'major' | 'minor' | 'patch')
+      break
+      ;;
+    *)
+      help
+      ;;
+  esac
+done
+
+VERSION=$(npx semver $CURRENT -i $1)
 
 echo "Bumping the version to $VERSION..."
 # Don't use the -i option of `sed`.
