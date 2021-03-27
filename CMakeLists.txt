@@ -15,7 +15,7 @@ set(MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS
   CACHE STRING "CXXFLAGS for tsduck-arib.")
 
 set(MIRAKC_ARIB_VERSION
-  "0.14.2"  ###version
+  "0.14.3"  ###version
   CACHE STRING "mirakc-arib version." FORCE)
 set(MIRAKC_ARIB_DOCOPT_VERSION
   "2df2b1cd28a870c810da2e0fcffbb97c9f89708e"
