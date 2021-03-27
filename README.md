@@ -114,7 +114,7 @@ mirakc-arib is static-linked against the following libraries:
 * [tplgy/cppcodec] (MIT)
 * [mirakc/tsduck-arib] forked from [tsduck/tsduck] (BSD 2-Clause)
 * [mirakc/aribb24] forked from [nkoriyama/aribb24] (LGPL-3.0)
-* [DBCTRADO/LibISDB] (GPLv2)
+* [DBCTRADO/LibISDB] w/ [patches/LibISDB.patch](./patches/LibISDB.patch) (GPLv2)
 
 The following libraries are used for testing purposes:
 
@@ -124,7 +124,6 @@ The following libraries are used for testing purposes:
 ## TODO
 
 * Add more unit tests
-* Collect code coverage using gcov while testing
 
 ## ARIB STD Specifications
 

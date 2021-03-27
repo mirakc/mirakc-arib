@@ -15,7 +15,7 @@ index 1f39ebbb..87e3a5f7 100644
      {
          helpers::load_levels(env_val);
 diff --git include/spdlog/details/registry.h include/spdlog/details/registry.h
-index d9b586a5..e9025d76 100644
+index b069c3f5..f0e25abe 100644
 --- include/spdlog/details/registry.h
 +++ include/spdlog/details/registry.h
 @@ -97,7 +97,7 @@ private:
@@ -25,5 +25,5 @@ index d9b586a5..e9025d76 100644
 -    spdlog::level::level_enum global_log_level_ = level::info;
 +    spdlog::level::level_enum global_log_level_ = level::off;  // compatible with env_logger in Rust
      level::level_enum flush_level_ = level::off;
-     void (*err_handler_)(const std::string &msg);
+     void (*err_handler_)(const std::string &msg) = nullptr;
      std::shared_ptr<thread_pool> tp_;

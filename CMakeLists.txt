@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13.0)
+cmake_minimum_required(VERSION 3.18.0)
 
 project(mirakc-arib)
 
@@ -24,10 +24,10 @@ set(MIRAKC_ARIB_FMT_VERSION
   "7.1.3"
   CACHE STRING "fmt version to use." FORCE)
 set(MIRAKC_ARIB_SPDLOG_VERSION
-  "v1.8.2"
+  "v1.8.5"
   CACHE STRING "spdlog version to use." FORCE)
 set(MIRAKC_ARIB_RAPIDJSON_VERSION
-  "56f215e5c367f71a90af53984148e556ffe83541"
+  "cd5ee4dfe9814fa88b7ba66c1f9d8176d154c62f"
   CACHE STRING "RapidJSON version to use." FORCE)
 set(MIRAKC_ARIB_CPPCODEC_VERSION
   "bd6ddf95129e769b50ef63e0f558fa21364f3f65"
@@ -39,7 +39,7 @@ set(MIRAKC_ARIB_TSDUCK_ARIB_VERSION
   "c400025b7d31e26c0c15471e81adf2ad50632281"
   CACHE STRING "tsduck-arib version to use." FORCE)
 set(MIRAKC_ARIB_LIBISDB_VERSION
-  "911e4c5262ec3c68a9758ffac112f11047613234"
+  "ae14668bfc601d1b94851e666c82fe409afd8f31"
   CACHE STRING "LibISDB version to use." FORCE)
 set(MIRAKC_ARIB_GOOGLETEST_VERSION
   "release-1.10.0"
@@ -229,6 +229,8 @@ ExternalProject_Add(vendor-fmt
     https://github.com/fmtlib/fmt.git
   GIT_TAG
     ${MIRAKC_ARIB_FMT_VERSION}
+  GIT_SHALLOW
+    YES
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -270,6 +272,10 @@ ExternalProject_Add(vendor-spdlog
     https://github.com/gabime/spdlog.git
   GIT_TAG
     ${MIRAKC_ARIB_SPDLOG_VERSION}
+  GIT_SHALLOW
+    YES
+  GIT_REMOTE_UPDATE_STRATEGY
+    CHECKOUT
   PATCH_COMMAND
     git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/spdlog.patch
   CMAKE_ARGS
@@ -533,6 +539,8 @@ ExternalProject_Add(vendor-libisdb
     https://github.com/DBCTRADO/LibISDB.git
   GIT_TAG
     ${MIRAKC_ARIB_LIBISDB_VERSION}
+  GIT_REMOTE_UPDATE_STRATEGY
+    CHECKOUT
   PATCH_COMMAND
     git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/LibISDB.patch
   CMAKE_ARGS
@@ -578,6 +586,8 @@ if(MIRAKC_ARIB_TEST)
       https://github.com/google/googletest.git
     GIT_TAG
       ${MIRAKC_ARIB_GOOGLETEST_VERSION}
+    GIT_SHALLOW
+      YES
     CMAKE_ARGS
       -D CMAKE_BUILD_TYPE=Release
       -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -618,6 +628,8 @@ if(MIRAKC_ARIB_TEST)
       https://github.com/google/benchmark.git
     GIT_TAG
       ${MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION}
+    GIT_SHALLOW
+      YES
     CMAKE_ARGS
       -D CMAKE_BUILD_TYPE=Release
       -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
