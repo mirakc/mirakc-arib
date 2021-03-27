@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18.0)
+cmake_minimum_required(VERSION 3.13.0)  # makes it possible to build on Debian/Buster
 
 project(mirakc-arib)
 
@@ -274,8 +274,6 @@ ExternalProject_Add(vendor-spdlog
     ${MIRAKC_ARIB_SPDLOG_VERSION}
   GIT_SHALLOW
     YES
-  GIT_REMOTE_UPDATE_STRATEGY
-    CHECKOUT
   PATCH_COMMAND
     git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/spdlog.patch
   CMAKE_ARGS
@@ -539,8 +537,6 @@ ExternalProject_Add(vendor-libisdb
     https://github.com/DBCTRADO/LibISDB.git
   GIT_TAG
     ${MIRAKC_ARIB_LIBISDB_VERSION}
-  GIT_REMOTE_UPDATE_STRATEGY
-    CHECKOUT
   PATCH_COMMAND
     git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/LibISDB.patch
   CMAKE_ARGS
