@@ -71,11 +71,6 @@ class ClockBaseline final {
 
   explicit ClockBaseline(const ClockBaseline& cbl) = default;
 
-  ClockBaseline(ts::PID pid, int64_t pcr, const ts::Time& time)
-      : pid_(pid),
-        pcr_(pcr),
-        time_(time) {}
-
   ~ClockBaseline() = default;
 
   ts::PID pid() const {
@@ -125,13 +120,13 @@ class ClockBaseline final {
     MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
     pcr_ = pcr;
     pcr_ready_ = true;
-    MIRAKC_ARIB_TRACE("Updated clock PCR: {:011X}", pcr);
+    MIRAKC_ARIB_TRACE("Updated baseline clock PCR: {:011X}", pcr);
   }
 
   void SetTime(const ts::Time& time) {
     time_ = time;
     time_ready_ = true;
-    MIRAKC_ARIB_TRACE("Updated clock time: {}", time);
+    MIRAKC_ARIB_TRACE("Updated baseline clock time: {}", time);
   }
 
   void Invalidate() {
@@ -173,7 +168,12 @@ class Clock final {
 
   ts::Time Now() const {
     if (IsReady()) {
-      return baseline_.PcrToTime(last_pcr_);
+      auto last_pcr = last_pcr_;
+      if (pcr_wrap_around_) {
+        last_pcr += kPcrUpperBound;
+        MIRAKC_ARIB_ASSERT(last_pcr > 0);
+      }
+      return baseline_.PcrToTime(last_pcr);
     }
     // Compute the current TS time using the current local time while switching
     // the PCR PID.
@@ -190,15 +190,20 @@ class Clock final {
     baseline_.SetTime(time);
     baseline_local_time_ = ts::Time::CurrentLocalTime();
     if (ready_) {
-      baseline_.SetPcr(last_pcr_);
+      SyncPcr();
     }
   }
 
   void UpdatePcr(int64_t pcr) {
+    MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
+    if (pcr < last_pcr_) {
+      MIRAKC_ARIB_TRACE("PCR wrap-around: {:011X} -> {:011X}", last_pcr_, pcr);
+      pcr_wrap_around_ = true;
+    }
     last_pcr_ = pcr;
     ready_ = true;
     if (!baseline_.IsReady()) {
-      baseline_.SetPcr(pcr);
+      SyncPcr();
     }
   }
 
@@ -207,14 +212,21 @@ class Clock final {
   }
 
   ts::Time PcrToTime(int64_t pcr) const {
+    MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
     return baseline_.PcrToTime(pcr);
   }
 
  private:
+  void SyncPcr() {
+    baseline_.SetPcr(last_pcr_);
+    pcr_wrap_around_ = false;
+  }
+
   ClockBaseline baseline_;
   ts::Time baseline_local_time_;
   int64_t last_pcr_ = 0;
   bool ready_ = false;
+  bool pcr_wrap_around_ = false;
 
   MIRAKC_ARIB_NON_COPYABLE(Clock);
 };

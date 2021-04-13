@@ -741,6 +741,7 @@ if(MIRAKC_ARIB_TEST)
 
   add_executable(mirakc-arib-test
     test/airtime_tracker_test.cc
+    test/base_test.cc
     test/eit_collector_test.cc
     test/logo_collector_test.cc
     test/packet_source_test.cc
