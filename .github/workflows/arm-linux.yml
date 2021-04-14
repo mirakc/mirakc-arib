@@ -48,9 +48,7 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-8-${{ matrix.host-triple }} libtool make ninja-build pkg-config
-          sudo update-alternatives --install /usr/bin/${{ matrix.host-triple }}-gcc ${{ matrix.host-triple }}-gcc /usr/bin/${{ matrix.host-triple }}-gcc-8 80
-          sudo update-alternatives --install /usr/bin/${{ matrix.host-triple }}-g++ ${{ matrix.host-triple }}-g++ /usr/bin/${{ matrix.host-triple }}-g++-8 80
+          sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-${{ matrix.host-triple }} libtool make ninja-build pkg-config
       - name: Generate project files
         run: |
           cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON -D CMAKE_TOOLCHAIN_FILE=toolchain.cmake.d/debian-${{ matrix.arch }}.cmake .
