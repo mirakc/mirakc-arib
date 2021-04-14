@@ -58,15 +58,10 @@ jobs:
           args: grcov
       - name: Generate coverage data
         run: >-
-          grcov build --branch --ignore-not-existing -s . -p ..
+          grcov build --branch --llvm --ignore-not-existing -s . -p ..
           --ignore 'test/*'
           -t lcov -o lcov.info
       - name: Update to codecov.io
-        # codecov/codecov-action@1 seems not to work properly for this repository.
-        #uses: codecov/codecov-action@v1
-        #with:
-        #  file: lcov.info
-        run: >-
-          bash <(curl -s https://codecov.io/bash) -f lcov.info
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        uses: codecov/codecov-action@v1
+        with:
+         file: lcov.info
