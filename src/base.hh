@@ -197,7 +197,7 @@ class Clock final {
   void UpdatePcr(int64_t pcr) {
     MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
     if (pcr < last_pcr_) {
-      MIRAKC_ARIB_TRACE("PCR wrap-around: {:011X} -> {:011X}", last_pcr_, pcr);
+      MIRAKC_ARIB_DEBUG("PCR wrap-around: {:011X} -> {:011X}", last_pcr_, pcr);
       pcr_wrap_around_ = true;
     }
     last_pcr_ = pcr;
