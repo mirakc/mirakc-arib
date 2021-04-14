@@ -7,13 +7,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Cache for project files and object files
+      - name: Cache for external projects
         uses: actions/cache@v2
         with:
-          path: build
+          path: build/vendor
           key: ${{ runner.os }}-coverage-${{ hashFiles('CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-coverage-
+      - name: Cache for grcov
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-grcov
       - name: Install deps
         run: |
           sudo apt-get update
@@ -40,7 +47,7 @@ jobs:
           args: grcov
       - name: Generate coverage data
         run: >-
-          grcov build --branch --ignore-not-existing -s . -p ../
+          grcov build --branch --ignore-not-existing -s . -p ..
           --ignore 'test/*'
           -t lcov -o lcov.info
       - name: Update to codecov.io

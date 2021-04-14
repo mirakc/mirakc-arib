@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Cache for project files and object files
+      - name: Cache for external projects
         uses: actions/cache@v2
         with:
-          path: build
+          path: build/vendor
           key: ${{ runner.os }}-linux-build-${{ hashFiles('CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-linux-build-
