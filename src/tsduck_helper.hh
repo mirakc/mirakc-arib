@@ -168,6 +168,9 @@ struct EitSection {
     const auto* data = events_data;
     auto remain = events_size;
 
+    // At least, one event must be contained.
+    MIRAKC_ARIB_ASSERT(remain >= EitSection::EIT_EVENT_FIXED_SIZE);
+
     rapidjson::Value events(rapidjson::kArrayType);
 
     while (remain >= EitSection::EIT_EVENT_FIXED_SIZE) {

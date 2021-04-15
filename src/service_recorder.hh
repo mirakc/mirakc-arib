@@ -233,6 +233,7 @@ class ServiceRecorder final : public PacketSink,
       // It's a subclass of std::map.
       eit->events.erase(i);
     }
+    MIRAKC_ARIB_ASSERT(eit->events.size() == 1);
 
     // For keeping the locality of side effects, we don't update eit_ here.  It will be updated
     // in the implementation of the state machine.
@@ -422,16 +423,14 @@ class ServiceRecorder final : public PacketSink,
 
     // TODO
     // ----
-    // We create a binary EIT sections in order to reuse the same JSON
-    // serialization methods used in EitCollector.  However, the current
-    // strategy is inefficient.
+    // We create a binary EIT sections in order to reuse the same JSON serialization methods used
+    // in EitCollector.  However, the current strategy is inefficient.
     //
     // NOTE
     // ----
-    // ts::EIT::serializeContent() sorts events in order of start time.  This
-    // works well in most cases, but might break the original order of the
-    // events.  For example, midnight in Feb 13th, 2021, a big earthquake
-    // suddenly occurred.  NHK canceled original programs and broadcast an
+    // ts::EIT::serializeContent() sorts events in order of start time.  This  works well in most
+    // cases, but might break the original order of the events.  For example, midnight in Feb 13th,
+    // 2021, a big earthquake suddenly occurred.  NHK canceled original programs and broadcast an
     // emergency program like below:
     //
     //   EIT p/f Actual, TID 78 (0x4E), PID 18 (0x0012)
@@ -459,15 +458,16 @@ class ServiceRecorder final : public PacketSink,
     //       Running status: undefined
     //       CA mode: free
     //
-    // For a workaround, we creates a temporal EIT which contains a single event
-    // that we need to serialize.
+    // For a workaround, we've modified the EIT in HandleEit() to contain only the first section
+    // that we need to serialize here.
+    MIRAKC_ARIB_ASSERT(eit->events.size() == 1);
     ts::BinaryTable table;
     eit->serialize(context_, table);
     auto section = table.sectionAt(0);
     EitSection eit_section(*section);
     auto events = eit_section.MakeEventsJsonValue(allocator);
 
-    MIRAKC_ARIB_ASSERT(events.Size() > 0);
+    MIRAKC_ARIB_ASSERT(events.Size() == 1);
     auto event = events[0].GetObject();
 
     rapidjson::Value record(rapidjson::kObjectType);
