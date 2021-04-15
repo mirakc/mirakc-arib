@@ -36,8 +36,8 @@ class PesPrinter final : public PacketSink,
     if (packet.hasPCR() && packet.getPCR() != ts::INVALID_PCR) {
       if (it != clock_map_.end()) {
         auto pcr = static_cast<int64_t>(packet.getPCR());
-        Print(pid, pcr, fmt::format("PCR#{:04X}", pid));
         it->second.UpdatePcr(pcr);
+        Print(pid, pcr, fmt::format("PCR#{:04X}", pid));
       }
     }
     if (packet.hasPTS() && packet.getPTS() != ts::INVALID_PTS) {

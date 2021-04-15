@@ -130,7 +130,6 @@ class ClockBaseline final {
   }
 
   void Invalidate() {
-    pid_ = ts::PID_NULL;
     pcr_ready_ = false;
     time_ready_ = false;
   }
@@ -196,6 +195,16 @@ class Clock final {
 
   void UpdatePcr(int64_t pcr) {
     MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
+    if (IsReady()) {
+      auto delta = ComputeDelta(pcr, last_pcr_);
+      MIRAKC_ARIB_ASSERT(delta >= 0);
+      if (delta >= kPcrTicksPerSec) {  // delta >= 1s
+        MIRAKC_ARIB_WARN("PCR#{:04X}: too large delta {} -> {}, invalidate the clock for resync",
+                         baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
+        Invalidate();
+        return;
+      }
+    }
     if (pcr < last_pcr_) {
       MIRAKC_ARIB_DEBUG("PCR#{:04X}: wrap-around {} -> {}",
                         baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
@@ -218,6 +227,20 @@ class Clock final {
   }
 
  private:
+  static int64_t ComputeDelta(int64_t pcr, int64_t base_pcr) {
+    if (pcr < base_pcr) {
+      return kPcrUpperBound - base_pcr + pcr;
+    }
+    return pcr - base_pcr;
+  }
+
+  void Invalidate() {
+    baseline_.Invalidate();
+    last_pcr_ = 0;
+    ready_ = false;
+    pcr_wrap_around_ = false;
+  }
+
   void SyncPcr() {
     baseline_.SetPcr(last_pcr_);
     pcr_wrap_around_ = false;

@@ -300,8 +300,7 @@ TEST(ServiceRecorderTest, EventEnd) {
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
       <TOT UTC_time="2021-01-01 00:00:00" test-pid="0x0014" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
-           test-pcr="0" />
+      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-pcr="0" />
       <EIT type="pf" version="1" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
@@ -311,9 +310,9 @@ TEST(ServiceRecorderTest, EventEnd) {
         <event event_id="5" start_time="2021-01-01 00:00:01"
                duration="00:00:01" running_status="undefined" CA_mode="true" />
       </EIT>
+      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-pcr="1" />
       <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="1"
-           test-pcr="27000000" />
+      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-pcr="27000000" />
       <EIT type="pf" version="2" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
@@ -382,7 +381,7 @@ TEST(ServiceRecorderTest, EventEnd) {
                 R"(},)"
                 R"("record":{)"
                   R"("timestamp":1609426801000,)"
-                  R"("pos":188)"
+                  R"("pos":376)"
                 R"(})"
               R"(}})",
               MockJsonlSink::Stringify(doc));
@@ -404,7 +403,7 @@ TEST(ServiceRecorderTest, EventEnd) {
                 R"(},)"
                 R"("record":{)"
                   R"("timestamp":1609426801000,)"
-                  R"("pos":188)"
+                  R"("pos":376)"
                 R"(})"
               R"(}})",
               MockJsonlSink::Stringify(doc));
