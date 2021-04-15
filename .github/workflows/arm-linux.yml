@@ -1,6 +1,16 @@
 name: ARM-Linux
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
 
 jobs:
   arm-linux-build:
