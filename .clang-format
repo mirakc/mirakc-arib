@@ -8,3 +8,4 @@ AlignOperands: false
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
+ColumnLimit: 99
