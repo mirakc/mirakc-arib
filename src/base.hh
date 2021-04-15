@@ -197,7 +197,8 @@ class Clock final {
   void UpdatePcr(int64_t pcr) {
     MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
     if (pcr < last_pcr_) {
-      MIRAKC_ARIB_DEBUG("PCR wrap-around: {:011X} -> {:011X}", last_pcr_, pcr);
+      MIRAKC_ARIB_DEBUG("PCR#{:04X}: wrap-around {} -> {}",
+                        baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
       pcr_wrap_around_ = true;
     }
     last_pcr_ = pcr;
@@ -227,8 +228,6 @@ class Clock final {
   int64_t last_pcr_ = 0;
   bool ready_ = false;
   bool pcr_wrap_around_ = false;
-
-  MIRAKC_ARIB_NON_COPYABLE(Clock);
 };
 
 }  // namespace

@@ -32,30 +32,32 @@ class PesPrinter final : public PacketSink,
 
   bool HandlePacket(const ts::TSPacket& packet) override {
     auto pid = packet.getPID();
+    auto it = clock_map_.find(pid);
     if (packet.hasPCR() && packet.getPCR() != ts::INVALID_PCR) {
-      auto pcr = static_cast<int64_t>(packet.getPCR());
-      MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
-      Print(pcr, fmt::format("PCR#{:04X}", pid));
-      last_pcr_ = pcr;
+      if (it != clock_map_.end()) {
+        auto pcr = static_cast<int64_t>(packet.getPCR());
+        Print(pid, pcr, fmt::format("PCR#{:04X}", pid));
+        it->second.UpdatePcr(pcr);
+      }
     }
     if (packet.hasPTS() && packet.getPTS() != ts::INVALID_PTS) {
       auto pcr = static_cast<int64_t>(packet.getPTS()) * kMaxPcrExt;
       MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
-      const auto it = stream_type_map_.find(pid);
-      if (it != stream_type_map_.end()) {
-        Print(pcr, fmt::format("{}#{:04X} PTS", it->second, pid));
+      const auto it = stream_map_.find(pid);
+      if (it != stream_map_.end()) {
+        Print(it->second.pcr_pid, pcr, fmt::format("{}#{:04X} PTS", it->second.type, pid));
       } else {
-        Print(pcr, fmt::format("PES#{:04X} PTS", pid));
+        Print(ts::PID_NULL, pcr, fmt::format("PES#{:04X} PTS", pid));
       }
     }
     if (packet.hasDTS() && packet.getDTS() != ts::INVALID_DTS) {
       auto pcr = static_cast<int64_t>(packet.getDTS()) * kMaxPcrExt;
       MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
-      const auto it = stream_type_map_.find(pid);
-      if (it != stream_type_map_.end()) {
-        Print(pcr, fmt::format("{}#{:04X} DTS", it->second, pid));
+      const auto it = stream_map_.find(pid);
+      if (it != stream_map_.end()) {
+        Print(it->second.pcr_pid, pcr, fmt::format("{}#{:04X} DTS", it->second.type, pid));
       } else {
-        Print(pcr, fmt::format("PES#{:04X} DTS", pid));
+        Print(ts::PID_NULL, pcr, fmt::format("PES#{:04X} DTS", pid));
       }
     }
     demux_.feedPacket(packet);
@@ -67,10 +69,10 @@ class PesPrinter final : public PacketSink,
     fmt::print("                       |              |{}\n", msg);
   }
 
-  void Print(int64_t pcr, const std::string& msg) {
-    if (synced_) {
-      auto delta_ms = (pcr - last_sync_pcr_) / kPcrTicksPerMs;
-      auto time = last_sync_time_ + delta_ms;
+  void Print(ts::PID pcr_pid, int64_t pcr, const std::string& msg) {
+    const auto it = clock_map_.find(pcr_pid);
+    if (it != clock_map_.end() && it->second.IsReady()) {
+      auto time = it->second.PcrToTime(pcr);
       fmt::print("{}|{}|{}\n", time, FormatPcr(pcr), msg);
     } else {
       fmt::print("                       |{}|{}\n", FormatPcr(pcr), msg);
@@ -160,35 +162,31 @@ class PesPrinter final : public PacketSink,
     Print(fmt::format("PMT: SID#{:04X} PCR#{:04X} V#{}",
                       pmt.service_id, pmt.pcr_pid, pmt.version));
     if (pmt.pcr_pid != ts::PID_NULL) {
-      pcr_pids_.insert(pmt.pcr_pid);
+      Clock clock;
+      clock.SetPid(pmt.pcr_pid);
+      clock_map_[pmt.pcr_pid] = clock;
     }
 
     for (const auto& [pid, stream] : pmt.streams) {
       if (stream.isAudio()) {
-        stream_type_map_[pid] = "Audio";
-        Print(fmt::format(
-            "  PES#{:04X} => Audio#{:02X}", pid, stream.stream_type));
+        stream_map_[pid] = {"Audio", pmt.pcr_pid};
+        Print(fmt::format("  PES#{:04X} => Audio#{:02X}", pid, stream.stream_type));
       } else if (stream.isVideo()) {
-        stream_type_map_[pid] = "Video";
-        Print(fmt::format(
-            "  PES#{:04X} => Video#{:02X}", pid, stream.stream_type));
+        stream_map_[pid] = {"Video", pmt.pcr_pid};
+        Print(fmt::format("  PES#{:04X} => Video#{:02X}", pid, stream.stream_type));
       } else if (stream.isSubtitles()) {
-        stream_type_map_[pid] = "Subtitle";
-        Print(fmt::format(
-            "  PES#{:04X} => Subtitle#{:02X}", pid, stream.stream_type));
+        stream_map_[pid] = {"Subtitle", pmt.pcr_pid};
+        Print(fmt::format("  PES#{:04X} => Subtitle#{:02X}", pid, stream.stream_type));
       } else if (IsAribSubtitle(stream)) {
-        stream_type_map_[pid] = "ARIB-Subtitle";
-        Print(fmt::format(
-            "  PES#{:04X} => ARIB-Subtitle#{:02X}", pid, stream.stream_type));
+        stream_map_[pid] = {"ARIB-Subtitle", pmt.pcr_pid};
+        Print(fmt::format("  PES#{:04X} => ARIB-Subtitle#{:02X}", pid, stream.stream_type));
       } else if (IsAribSuperimposedText(stream)) {
-        stream_type_map_[pid] = "ARIB-SuperimposedText";
-        Print(fmt::format(
-            "  PES#{:04X} => ARIB-SuperimposedText#{:02X}",
-            pid, stream.stream_type));
+        stream_map_[pid] = {"ARIB-SuperimposedText", pmt.pcr_pid};
+        Print(fmt::format("  PES#{:04X} => ARIB-SuperimposedText#{:02X}",
+                          pid, stream.stream_type));
       } else {
-        stream_type_map_[pid] = "Other";
-        Print(fmt::format(
-            "  PES#{:04X} => Other#{:02X}", pid, stream.stream_type));
+        stream_map_[pid] = {"Other", pmt.pcr_pid};
+        Print(fmt::format("  PES#{:04X} => Other#{:02X}", pid, stream.stream_type));
       }
     }
   }
@@ -226,9 +224,9 @@ class PesPrinter final : public PacketSink,
 
     Print(tdt.utc_time, "TDT");  // JST in ARIB
 
-    synced_ = true;
-    last_sync_pcr_ = last_pcr_;
-    last_sync_time_ = tdt.utc_time;
+    for (auto& [pid, clock] : clock_map_) {
+      clock.UpdateTime(tdt.utc_time);
+    }
   }
 
   void HandleTot(const ts::BinaryTable& table) {
@@ -241,9 +239,9 @@ class PesPrinter final : public PacketSink,
 
     Print(tot.utc_time, "TOT");  // JST in ARIB
 
-    synced_ = true;
-    last_sync_pcr_ = last_pcr_;
-    last_sync_time_ = tot.utc_time;
+    for (auto& [pid, clock] : clock_map_) {
+      clock.UpdateTime(tot.utc_time);
+    }
   }
 
   void ResetStates() {
@@ -257,16 +255,18 @@ class PesPrinter final : public PacketSink,
     done_ = false;
   }
 
+  struct StreamInfo {
+    std::string type;
+    ts::PID pcr_pid;
+  };
+
   ts::DuckContext context_;
   ts::SectionDemux demux_;
-  int64_t last_pcr_ = 0;
-  bool synced_ = false;
-  int64_t last_sync_pcr_ = 0;
-  ts::Time last_sync_time_;  // JST
   std::set<uint16_t> sids_;
   std::vector<ts::PID> pmt_pids_;
   std::set<ts::PID> pcr_pids_;
-  std::map<ts::PID, std::string> stream_type_map_;
+  std::map<ts::PID, Clock> clock_map_;
+  std::map<ts::PID, StreamInfo> stream_map_;
   bool done_ = false;
 };
 
