@@ -223,9 +223,15 @@ class ServiceRecorder final : public PacketSink,
     }
 
     const auto& event = GetEvent(eit);
-    auto end_time = GetEventEndTime(event);
-    MIRAKC_ARIB_SERVICE_RECORDER_DEBUG(
-        "Event#{:04X}: {} .. {}", event.event_id, event.start_time, end_time);
+    if (IsUnspecifiedEventEndTime(event)) {
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN("Event#{:04}: No end time specified", event.event_id);
+      MIRAKC_ARIB_SERVICE_RECORDER_DEBUG(
+          "Event#{:04X}: {} .. <unspecified>", event.event_id, event.start_time);
+    } else {
+      auto end_time = GetEventEndTime(event);
+      MIRAKC_ARIB_SERVICE_RECORDER_DEBUG(
+          "Event#{:04X}: {} .. {}", event.event_id, event.start_time, end_time);
+    }
 
     // See SendEventMessage() for the reason why we remove eit->events[1..] here.
     for (size_t i = 1; i < num_events; ++i) {
@@ -271,12 +277,17 @@ class ServiceRecorder final : public PacketSink,
 
       UpdateEventBoundary(now, sink_->pos());
 
-      auto end_time = GetEventEndTime(GetEvent(eit_));
-      if (now < end_time) {
+      if (IsUnspecifiedEventEndTime(GetEvent(eit_))) {
         SendEventStartMessage(eit_);
         event_started_ = true;
       } else {
-        event_started_ = false;
+        auto end_time = GetEventEndTime(GetEvent(eit_));
+        if (now < end_time) {
+          SendEventStartMessage(eit_);
+          event_started_ = true;
+        } else {
+          event_started_ = false;
+        }
       }
       return true;
     }
@@ -318,11 +329,15 @@ class ServiceRecorder final : public PacketSink,
         SendEventEndMessage(eit);
         SendEventStartMessage(new_eit);
       } else {
-        auto end_time = GetEventEndTime(GetEvent(eit));
-        if (now >= end_time) {
-          UpdateEventBoundary(end_time, sink_->pos());
-          SendEventEndMessage(eit);
-          event_started_ = false;  // wait for new event
+        if (IsUnspecifiedEventEndTime(GetEvent(eit))) {
+          // Continue recording as the current program until the event changes.
+        } else {
+          auto end_time = GetEventEndTime(GetEvent(eit));
+          if (now >= end_time) {
+            UpdateEventBoundary(end_time, sink_->pos());
+            SendEventEndMessage(eit);
+            event_started_ = false;  // wait for new event
+          }
         }
       }
     } else {
@@ -494,6 +509,10 @@ class ServiceRecorder final : public PacketSink,
   const ts::EIT::Event& GetEvent(const std::shared_ptr<ts::EIT>& eit) const {
     MIRAKC_ARIB_ASSERT(eit->events.size() > 0);
     return eit->events[0];
+  }
+
+  bool IsUnspecifiedEventEndTime(const ts::EIT::Event& event) const {
+    return event.duration <= 0;
   }
 
   ts::Time GetEventEndTime(const ts::EIT::Event& event) const {
