@@ -480,7 +480,10 @@ class ServiceRecorder final : public PacketSink,
     eit->serialize(context_, table);
     auto section = table.sectionAt(0);
     EitSection eit_section(*section);
+    // At least, one event must be contained.
+    MIRAKC_ARIB_ASSERT(eit_section.events_size >= EitSection::EIT_EVENT_FIXED_SIZE);
     auto events = eit_section.MakeEventsJsonValue(allocator);
+
 
     MIRAKC_ARIB_ASSERT(events.Size() == 1);
     auto event = events[0].GetObject();
