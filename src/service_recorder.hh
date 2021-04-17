@@ -111,8 +111,16 @@ class ServiceRecorder final : public PacketSink,
     }
   }
 
-  void OnEndOfChunk(uint64_t) override {
-    end_of_chunk_ = true;
+  void OnEndOfChunk(uint64_t pos) override {
+    auto now = clock_.Now();
+    if (pos == sink_->ring_size()) {
+      pos = 0;
+    }
+    // The `event-update` message must be sent before the `chunk` message.
+    // The application may purge expired programs in the message handler for
+    // the `chunk` message.  So, the program data must be updated before that.
+    SendEventUpdateMessage(eit_, now, pos);
+    SendChunkMessage(now, pos);
   }
 
  private:
@@ -271,11 +279,12 @@ class ServiceRecorder final : public PacketSink,
       MIRAKC_ARIB_SERVICE_RECORDER_INFO("Ready for recording");
 
       auto now = clock_.Now();
+      auto pos = sink_->pos();
 
-      SendChunkMessage(now, sink_->sync_pos());
-      end_of_chunk_ = false;
-
-      UpdateEventBoundary(now, sink_->pos());
+      MIRAKC_ARIB_ASSERT(pos < sink_->ring_size());
+      MIRAKC_ARIB_ASSERT(pos % option_.chunk_size == 0);
+      SendChunkMessage(now, pos);
+      UpdateEventBoundary(now, pos);
 
       if (IsUnspecifiedEventEndTime(GetEvent(eit_))) {
         SendEventStartMessage(eit_);
@@ -297,14 +306,6 @@ class ServiceRecorder final : public PacketSink,
 
   bool OnRecording(const ts::TSPacket& packet) {
     auto now = clock_.Now();
-    if (end_of_chunk_) {
-      // The `event-update` message must be sent before the `chunk` message.
-      // The application may purge expired programs in the message handler for
-      // the `chunk` message.  So, the program data must be updated before that.
-      SendEventUpdateMessage(eit_, now, sink_->sync_pos());
-      SendChunkMessage(now, sink_->sync_pos());
-      end_of_chunk_ = false;
-    }
 
     // Copy the safe pointers on the stack in order to hold EIT objects.
     auto eit = eit_;
@@ -533,7 +534,6 @@ class ServiceRecorder final : public PacketSink,
   std::shared_ptr<ts::EIT> new_eit_;
   ts::PID pmt_pid_ = ts::PID_NULL;
   State state_ = State::kPreparing;
-  bool end_of_chunk_ = false;
   bool event_started_ = false;
 
   MIRAKC_ARIB_NON_COPYABLE(ServiceRecorder);

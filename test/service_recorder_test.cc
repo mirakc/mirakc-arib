@@ -183,7 +183,7 @@ TEST(ServiceRecorderTest, EventProgress) {
         <event event_id="5" start_time="2021-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0FFE" />
+      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0FFD" />
       <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
     </tsduck>
   )");
@@ -257,6 +257,37 @@ TEST(ServiceRecorderTest, EventProgress) {
           EXPECT_EQ(
               R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":16384)"
+              R"(}}})",
+              MockJsonlSink::Stringify(doc));
+          return true;
+        });
+    EXPECT_CALL(*json_sink, HandleDocument)
+        .WillOnce([](const rapidjson::Document& doc) {
+          EXPECT_EQ(
+              R"({"type":"event-update","data":{)"
+                R"("originalNetworkId":1,)"
+                R"("transportStreamId":2,)"
+                R"("serviceId":3,)"
+                R"("event":{)"
+                  R"("eventId":4,)"
+                  R"("startTime":1609426800000,)"
+                  R"("duration":1000,)"
+                  R"("scrambled":true,)"
+                  R"("descriptors":[])"
+                R"(},)"
+                R"("record":{)"
+                  R"("timestamp":1609426800000,)"
+                  R"("pos":0)"
+                R"(})"
+              R"(}})",
+              MockJsonlSink::Stringify(doc));
+          return true;
+        });
+    EXPECT_CALL(*json_sink, HandleDocument)
+        .WillOnce([](const rapidjson::Document& doc) {
+          EXPECT_EQ(
+              R"({"type":"chunk","data":{"chunk":{)"
+                R"("timestamp":1609426800000,"pos":0)"
               R"(}}})",
               MockJsonlSink::Stringify(doc));
           return true;

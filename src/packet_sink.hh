@@ -36,8 +36,8 @@ class PacketRingSink : public PacketSink {
  public:
   PacketRingSink() = default;
   ~PacketRingSink() override = default;
+  virtual uint64_t ring_size() const = 0;
   virtual uint64_t pos() const = 0;
-  virtual uint64_t sync_pos() const = 0;
   virtual bool SetPosition(uint64_t pos) = 0;
   virtual void SetObserver(PacketRingObserver* observer) = 0;
 

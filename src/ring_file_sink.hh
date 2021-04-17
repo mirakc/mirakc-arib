@@ -63,16 +63,12 @@ class RingFileSink final : public PacketRingSink {
     return true;
   }
 
-  uint64_t ring_size() const {
+  uint64_t ring_size() const override {
     return ring_size_;
   }
 
   uint64_t pos() const override {
     return ring_pos_;
-  }
-
-  uint64_t sync_pos() const override {
-    return (ring_pos_ / chunk_size_) * chunk_size_;
   }
 
   bool SetPosition(uint64_t pos) override {
@@ -133,10 +129,12 @@ class RingFileSink final : public PacketRingSink {
 
     buf_pos_ = 0;
 
-    chunk_pos_ += nwritten;
+    chunk_pos_ += kBufferSize;
     MIRAKC_ARIB_ASSERT(chunk_pos_ <= chunk_size_);
 
-    if (chunk_pos_ != 0 && chunk_pos_ == chunk_size_) {
+    if (chunk_pos_ == chunk_size_) {
+      MIRAKC_ARIB_ASSERT(ring_pos_ != 0);
+      MIRAKC_ARIB_ASSERT(ring_pos_ % chunk_size_ == 0);
       MIRAKC_ARIB_DEBUG("{}: Reached the chunk boundary {}, sync", file_->path(), ring_pos_);
       if (!file_->Sync()) {
         return false;

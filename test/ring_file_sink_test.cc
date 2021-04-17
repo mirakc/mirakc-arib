@@ -241,7 +241,7 @@ TEST(RingFileSinkTest, ReachRingSize) {
         .WillOnce(testing::Return(true));
     EXPECT_CALL(observer, OnEndOfChunk)
         .WillOnce([](uint64_t pos) {
-          EXPECT_EQ(kChunkSize * 2, pos);
+          EXPECT_EQ(kRingSize, pos);
         });
     EXPECT_CALL(*ring, Trunc)
         .WillOnce([](int64_t size) {
@@ -510,7 +510,7 @@ TEST(RingFileSinkTest, FailSeekInFlush) {
   EXPECT_FALSE(src.FeedPackets());
 }
 
-TEST(RingFileSinkTest, StartPos) {
+TEST(RingFileSinkTest, SetPosition) {
   auto file = std::make_unique<MockFile>();
   auto ring = std::make_unique<MockFile>();
   MockPacketRingObserver observer;

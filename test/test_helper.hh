@@ -70,18 +70,25 @@ class MockRingSink final : public PacketRingSink {
         pos_ = ((pos_ + chunk_size_) / chunk_size_) * chunk_size_;
         observer_->OnEndOfChunk(pos_);
         return true;
+      case 0x0FFD:
+        while (pos_ < ring_size_) {
+          pos_ = ((pos_ + chunk_size_) / chunk_size_) * chunk_size_;
+          observer_->OnEndOfChunk(pos_);
+        }
+        pos_ = 0;
+        return true;
       default:
         pos_ += ts::PKT_SIZE;
         return true;
     }
   }
 
-  uint64_t pos() const override {
-    return pos_;
+  uint64_t ring_size() const override {
+    return ring_size_;
   }
 
-  uint64_t sync_pos() const override {
-    return (pos_ / chunk_size_) * chunk_size_;
+  uint64_t pos() const override {
+    return pos_;
   }
 
   bool SetPosition(uint64_t pos) override {
