@@ -241,14 +241,6 @@ class ServiceRecorder final : public PacketSink,
           "Event#{:04X}: {} .. {}", event.event_id, event.start_time, end_time);
     }
 
-    // See SendEventMessage() for the reason why we remove eit->events[1..] here.
-    for (size_t i = 1; i < num_events; ++i) {
-      // ts::EIT::Event List is NOT a list.
-      // It's a subclass of std::map.
-      eit->events.erase(i);
-    }
-    MIRAKC_ARIB_ASSERT(eit->events.size() == 1);
-
     // For keeping the locality of side effects, we don't update eit_ here.  It will be updated
     // in the implementation of the state machine.
     new_eit_ = std::move(eit);
@@ -437,57 +429,7 @@ class ServiceRecorder final : public PacketSink,
     rapidjson::Document doc(rapidjson::kObjectType);
     auto& allocator = doc.GetAllocator();
 
-    // TODO
-    // ----
-    // We create a binary EIT sections in order to reuse the same JSON serialization methods used
-    // in EitCollector.  However, the current strategy is inefficient.
-    //
-    // NOTE
-    // ----
-    // ts::EIT::serializeContent() sorts events in order of start time.  This  works well in most
-    // cases, but might break the original order of the events.  For example, midnight in Feb 13th,
-    // 2021, a big earthquake suddenly occurred.  NHK canceled original programs and broadcast an
-    // emergency program like below:
-    //
-    //   EIT p/f Actual, TID 78 (0x4E), PID 18 (0x0012)
-    //   Version: 9, sections: 2, total size: 202 bytes
-    //   - Section 0:
-    //     Service Id: 1024 (0x0400)
-    //     TS Id: 32736 (0x7FE0)
-    //     Original Network Id: 32736 (0x7FE0)
-    //     Segment last section: 1 (0x01)
-    //     Last Table Id: 78 (0x4E), EIT p/f Actual
-    //     - Event Id: 34584 (0x8718)
-    //       Start JST: 2021/02/13 23:30:00
-    //       Duration: 00:00:00
-    //       Running status: undefined
-    //       CA mode: free
-    //   - Section 1:
-    //     Service Id: 1024 (0x0400)
-    //     TS Id: 32736 (0x7FE0)
-    //     Original Network Id: 32736 (0x7FE0)
-    //     Segment last section: 1 (0x01)
-    //     Last Table Id: 78 (0x4E), EIT p/f Actual
-    //     - Event Id: 65522 (0xFFF2)
-    //       Start JST: 1970/01/01 00:00:00
-    //       Duration: 00:00:00
-    //       Running status: undefined
-    //       CA mode: free
-    //
-    // For a workaround, we've modified the EIT in HandleEit() to contain only the first section
-    // that we need to serialize here.
-    MIRAKC_ARIB_ASSERT(eit->events.size() == 1);
-    ts::BinaryTable table;
-    eit->serialize(context_, table);
-    auto section = table.sectionAt(0);
-    EitSection eit_section(*section);
-    // At least, one event must be contained.
-    MIRAKC_ARIB_ASSERT(eit_section.events_size >= EitSection::EIT_EVENT_FIXED_SIZE);
-    auto events = eit_section.MakeEventsJsonValue(allocator);
-
-
-    MIRAKC_ARIB_ASSERT(events.Size() == 1);
-    auto event = events[0].GetObject();
+    auto event = MakeJsonValue(GetEvent(eit), allocator);
 
     rapidjson::Value record(rapidjson::kObjectType);
     {

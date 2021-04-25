@@ -143,250 +143,396 @@ struct EitSection {
   inline bool IsBasic() const {
     return (tid & 0x0F) < 8;
   }
+};
 
-  rapidjson::Document MakeJsonValue() const {
-    rapidjson::Document eit_json(rapidjson::kObjectType);
-    auto& allocator = eit_json.GetAllocator();
+inline LibISDB::ARIBStringDecoder::DecodeFlag GetAribStringDecodeFlag() {
+  auto flags = LibISDB::ARIBStringDecoder::DecodeFlag::UseCharSize;
+  if (g_KeepUnicodeSymbols) {
+    flags |= LibISDB::ARIBStringDecoder::DecodeFlag::UnicodeSymbol;
+  }
+  return flags;
+}
 
-    auto events = MakeEventsJsonValue(allocator);
+inline LibISDB::String DecodeAribString(const LibISDB::ARIBString& str) {
+  LibISDB::ARIBStringDecoder decoder;
+  LibISDB::String utf8;
+  decoder.Decode(str, &utf8, GetAribStringDecodeFlag());
+  return std::move(utf8);
+}
 
-    eit_json.AddMember("originalNetworkId", nid, allocator);
-    eit_json.AddMember("transportStreamId", tsid, allocator);
-    eit_json.AddMember("serviceId", sid, allocator);
-    eit_json.AddMember("tableId", tid, allocator);
-    eit_json.AddMember("sectionNumber", section_number, allocator);
-    eit_json.AddMember("lastSectionNumber", last_section_number, allocator);
-    eit_json.AddMember("segmentLastSectionNumber", segment_last_section_number, allocator);
-    eit_json.AddMember("versionNumber", version, allocator);
-    eit_json.AddMember("events", events, allocator);
+rapidjson::Value MakeJsonValue(
+    const LibISDB::ShortEventDescriptor* desc,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value json(rapidjson::kObjectType);
+  json.AddMember("$type", "ShortEvent", allocator);
+  LibISDB::ARIBString event_name;
+  if (desc->GetEventName(&event_name)) {
+    json.AddMember("eventName", DecodeAribString(event_name), allocator);
+  }
+  LibISDB::ARIBString text;
+  if (desc->GetEventDescription(&text)) {
+    json.AddMember("text", DecodeAribString(text), allocator);
+  }
+  return json;
+}
 
-    return eit_json;
+rapidjson::Value MakeJsonValue(
+    const LibISDB::ComponentDescriptor* desc,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value json(rapidjson::kObjectType);
+  json.AddMember("$type", "Component", allocator);
+  json.AddMember("streamContent", desc->GetStreamContent(), allocator);
+  json.AddMember("componentType", desc->GetComponentType(), allocator);
+  json.AddMember("componentTag", desc->GetComponentTag(), allocator);
+  json.AddMember("languageCode", desc->GetLanguageCode(), allocator);
+  LibISDB::ARIBString text;
+  if (desc->GetText(&text)) {
+    json.AddMember("text", DecodeAribString(text), allocator);
+  }
+  return json;
+}
+
+rapidjson::Value MakeJsonValue(
+    const LibISDB::ContentDescriptor* desc,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value nibbles(rapidjson::kArrayType);
+  for (int i = 0; i < desc->GetNibbleCount(); ++i) {
+    LibISDB::ContentDescriptor::NibbleInfo info;
+    desc->GetNibble(i, &info);
+    rapidjson::Value nibble(rapidjson::kArrayType);
+    nibble.PushBack(info.ContentNibbleLevel1, allocator);
+    nibble.PushBack(info.ContentNibbleLevel2, allocator);
+    nibble.PushBack(info.UserNibble1, allocator);
+    nibble.PushBack(info.UserNibble2, allocator);
+    nibbles.PushBack(nibble, allocator);
+  }
+  rapidjson::Value json(rapidjson::kObjectType);
+  json.AddMember("$type", "Content", allocator);
+  json.AddMember("nibbles", nibbles, allocator);
+  return json;
+}
+
+rapidjson::Value MakeJsonValue(
+    const LibISDB::AudioComponentDescriptor* desc,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value json(rapidjson::kObjectType);
+  json.AddMember("$type", "AudioComponent", allocator);
+  json.AddMember("streamContent", desc->GetStreamContent(), allocator);
+  json.AddMember("componentType", desc->GetComponentType(), allocator);
+  json.AddMember("componentTag", desc->GetComponentTag(), allocator);
+  json.AddMember("simulcastGroupTag", desc->GetSimulcastGroupTag(), allocator);
+  json.AddMember("esMultiLingualFlag", desc->GetESMultiLingualFlag(), allocator);
+  json.AddMember("mainComponentFlag", desc->GetMainComponentFlag(), allocator);
+  json.AddMember("qualityIndicator", desc->GetQualityIndicator(), allocator);
+  json.AddMember("samplingRate", desc->GetSamplingRate(), allocator);
+  json.AddMember("languageCode", desc->GetLanguageCode(), allocator);
+  if (desc->GetESMultiLingualFlag()) {
+    json.AddMember("languageCode2", desc->GetLanguageCode2(), allocator);
+  }
+  LibISDB::ARIBString text;
+  if (desc->GetText(&text)) {
+    json.AddMember("text", DecodeAribString(text), allocator);
+  }
+  return json;
+}
+
+rapidjson::Value MakeJsonValue(
+    const LibISDB::String& desc, const LibISDB::String& item,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value json(rapidjson::kArrayType);
+  json.PushBack(rapidjson::Value().SetString(desc, allocator), allocator);
+  json.PushBack(rapidjson::Value().SetString(item, allocator), allocator);
+  return json;
+}
+
+rapidjson::Value MakeJsonValue(
+    const LibISDB::ARIBString& desc, const LibISDB::ARIBString& item,
+    rapidjson::Document::AllocatorType& allocator) {
+  return MakeJsonValue(DecodeAribString(desc), DecodeAribString(item), allocator);
+}
+
+rapidjson::Value MakeJsonValue(
+    const ts::ByteBlock& desc, const ts::ByteBlock& item,
+    rapidjson::Document::AllocatorType& allocator) {
+  return MakeJsonValue(
+      LibISDB::ARIBString(desc.data(), desc.size()),
+      LibISDB::ARIBString(item.data(), item.size()),
+      allocator);
+}
+
+inline bool HasExtendedEventItems(const ts::DescriptorList& descs) {
+  return descs.search(ts::DID_EXTENDED_EVENT) != descs.count();
+}
+
+rapidjson::Value MakeExtendedEventJsonValue(
+    const ts::DescriptorList& descs,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value items(rapidjson::kArrayType);
+
+  ts::ByteBlock eed_desc;
+  ts::ByteBlock eed_item;
+
+  for (size_t i = 0; i < descs.size(); ++i) {
+    auto& dp = descs[i];
+    if (!dp->isValid()) {
+      continue;
+    }
+    if (dp->tag() != ts::DID_EXTENDED_EVENT) {
+      continue;
+    }
+
+    // Extract metadata from `dp` directly without using
+    // ts::ExtendedEventdescriptor.  Because we need to decode a string
+    // after concatenating subsequent fragments of the string.
+
+    if (dp->payloadSize() < 5) {
+      continue;
+    }
+
+    const uint8_t* data = dp->payload();
+    size_t remaining = data[4];
+    data += 5;
+    while (remaining >= 2) {
+      size_t desc_len = std::min<size_t>(data[0], remaining - 1);
+      data += 1;
+      remaining -= 1;
+      if (desc_len > 0) {
+        if (!eed_desc.empty()) {
+          auto json = MakeJsonValue(eed_desc, eed_item, allocator);
+          items.PushBack(json, allocator);
+          eed_desc.clear();
+          eed_item.clear();
+        }
+        eed_desc.append(data, desc_len);
+        data += desc_len;
+        remaining -= desc_len;
+      }
+      if (remaining <= 0) {
+        break;
+      }
+      size_t item_len = std::min<size_t>(data[0], remaining - 1);
+      data += 1;
+      remaining -= 1;
+      if (item_len > 0) {
+        eed_item.append(data, item_len);
+        data += item_len;
+        remaining -= item_len;
+      }
+    }
   }
 
-  template <typename Allocator>
-  rapidjson::Value MakeEventsJsonValue(Allocator& allocator) const {
-    const auto* data = events_data;
-    auto remain = events_size;
+  if (!eed_desc.empty()) {
+    auto json = MakeJsonValue(eed_desc, eed_item, allocator);
+    items.PushBack(json, allocator);
+  }
 
-    rapidjson::Value events(rapidjson::kArrayType);
+  rapidjson::Value json(rapidjson::kObjectType);
+  json.AddMember("$type", "ExtendedEvent", allocator);
+  json.AddMember("items", items, allocator);
+  return json;
+}
 
-    while (remain >= EitSection::EIT_EVENT_FIXED_SIZE) {
-      const auto eid = ts::GetUInt16(data);
+rapidjson::Value MakeExtendedEventJsonValue(
+    const LibISDB::DescriptorBlock& desc_block,
+    rapidjson::Document::AllocatorType& allocator) {
+  LibISDB::ARIBStringDecoder decoder;
+  auto flags = GetAribStringDecodeFlag();
+  LibISDB::EventInfo::ExtendedTextInfoList ext_list;
+  if (!LibISDB::GetEventExtendedTextList(
+          &desc_block, decoder, flags, &ext_list)) {
+    return rapidjson::Value();
+  }
 
-      ts::Time start_time;
-      ts::DecodeMJD(data + 2, 5, start_time);
-      start_time -= kJstTzOffset;  // JST -> UTC
-      const auto start_time_unix = start_time - ts::Time::UnixEpoch;
+  rapidjson::Value items(rapidjson::kArrayType);
+  for (const auto& ext : ext_list) {
+    auto json = MakeJsonValue(ext.Description, ext.Text, allocator);
+    items.PushBack(json, allocator);
+  }
 
-      const auto hour = ts::DecodeBCD(data[7]);
-      const auto min = ts::DecodeBCD(data[8]);
-      const auto sec = ts::DecodeBCD(data[9]);
-      const ts::MilliSecond duration =
-          hour * ts::MilliSecPerHour + min * ts::MilliSecPerMin +
-          sec * ts::MilliSecPerSec;
+  rapidjson::Value json(rapidjson::kObjectType);
+  json.AddMember("$type", "ExtendedEvent", allocator);
+  json.AddMember("items", items, allocator);
+  return json;
+}
 
-      const uint8_t running_status = (data[10] >> 5) & 0x07;
-
-      const bool ca_controlled = (data[10] >> 4) & 0x01;
-
-      size_t info_length = ts::GetUInt16(data + 10) & 0x0FFF;
-      data += EitSection::EIT_EVENT_FIXED_SIZE;
-      remain -= EitSection::EIT_EVENT_FIXED_SIZE;
-
-      LibISDB::DescriptorBlock desc_block;
-      desc_block.ParseBlock(data, info_length);
-
-      rapidjson::Value descriptors(rapidjson::kArrayType);
-
-      for (int i = 0; i < desc_block.GetDescriptorCount(); ++i) {
-        const auto* dp = desc_block.GetDescriptorByIndex(i);
-        if (!dp->IsValid()) {
-          continue;
-        }
-        switch (dp->GetTag()) {
-          case LibISDB::ShortEventDescriptor::TAG: {
-            const auto* desc =
-                static_cast<const LibISDB::ShortEventDescriptor*>(dp);
-            auto json = MakeJsonValue(desc, allocator);
-            descriptors.PushBack(json, allocator);
-            break;
-          }
-          case LibISDB::ComponentDescriptor::TAG: {
-            const auto* desc =
-                static_cast<const LibISDB::ComponentDescriptor*>(dp);
-            auto json = MakeJsonValue(desc, allocator);
-            descriptors.PushBack(json, allocator);
-            break;
-          }
-          case LibISDB::ContentDescriptor::TAG: {
-            const auto* desc =
-                static_cast<const LibISDB::ContentDescriptor*>(dp);
-            auto json = MakeJsonValue(desc, allocator);
-            descriptors.PushBack(json, allocator);
-            break;
-          }
-          case LibISDB::AudioComponentDescriptor::TAG: {
-            const auto* desc =
-                static_cast<const LibISDB::AudioComponentDescriptor*>(dp);
-            auto json = MakeJsonValue(desc, allocator);
-            descriptors.PushBack(json, allocator);
-            break;
-          }
-          default:
-            break;
-        }
-      }
-
-      {
-        auto json = MakeExtendedEventJsonValue(desc_block, allocator);
-        if (!json.IsNull()) {
+rapidjson::Value MakeJsonValue(
+    const ts::DescriptorList& descs,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value descriptors(rapidjson::kArrayType);
+  for (size_t i = 0; i < descs.size(); ++i) {
+    const auto& dp = descs[i];
+    if (!dp->isValid()) {
+      continue;
+    }
+    switch (dp->tag()) {
+      case LibISDB::ShortEventDescriptor::TAG: {
+        LibISDB::ShortEventDescriptor desc;
+        if (desc.Parse(dp->content(), dp->size())) {
+          auto json = MakeJsonValue(&desc, allocator);
           descriptors.PushBack(json, allocator);
         }
+        break;
       }
+      case LibISDB::ComponentDescriptor::TAG: {
+        LibISDB::ComponentDescriptor desc;
+        if (desc.Parse(dp->content(), dp->size())) {
+          auto json = MakeJsonValue(&desc, allocator);
+          descriptors.PushBack(json, allocator);
+        }
+        break;
+      }
+      case LibISDB::ContentDescriptor::TAG: {
+        LibISDB::ContentDescriptor desc;
+        if (desc.Parse(dp->content(), dp->size())) {
+          auto json = MakeJsonValue(&desc, allocator);
+          descriptors.PushBack(json, allocator);
+        }
+        break;
+      }
+      case LibISDB::AudioComponentDescriptor::TAG: {
+        LibISDB::AudioComponentDescriptor desc;
+        if (desc.Parse(dp->content(), dp->size())) {
+          auto json = MakeJsonValue(&desc, allocator);
+          descriptors.PushBack(json, allocator);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  return descriptors;
+}
 
-      rapidjson::Value event(rapidjson::kObjectType);
-      event.AddMember("eventId", eid, allocator);
-      event.AddMember("startTime", start_time_unix, allocator);
-      event.AddMember("duration", duration, allocator);
-      event.AddMember("scrambled", ca_controlled, allocator);
-      event.AddMember("descriptors", descriptors, allocator);
+rapidjson::Value MakeJsonValue(
+    const ts::EIT::Event& event,
+    rapidjson::Document::AllocatorType& allocator) {
+  const auto eid = event.event_id;
+  auto start_time = event.start_time - kJstTzOffset;  // JST -> UTC
+  const auto start_time_unix = start_time - ts::Time::UnixEpoch;
+  const ts::MilliSecond duration = event.duration * ts::MilliSecPerSec;
+  const bool ca_controlled = event.CA_controlled;
+  auto descriptors = MakeJsonValue(event.descs, allocator);
+  rapidjson::Value value(rapidjson::kObjectType);
+  value.AddMember("eventId", eid, allocator);
+  value.AddMember("startTime", start_time_unix, allocator);
+  value.AddMember("duration", duration, allocator);
+  value.AddMember("scrambled", ca_controlled, allocator);
+  value.AddMember("descriptors", descriptors, allocator);
+  return value;
+}
 
-      events.PushBack(event, allocator);
+template <typename Allocator>
+rapidjson::Value MakeEventsJsonValue(const EitSection& eit, Allocator& allocator) {
+  const auto* data = eit.events_data;
+  auto remain = eit.events_size;
 
-      data += info_length;
-      remain -= info_length;
+  rapidjson::Value events(rapidjson::kArrayType);
+
+  while (remain >= EitSection::EIT_EVENT_FIXED_SIZE) {
+    const auto eid = ts::GetUInt16(data);
+
+    ts::Time start_time;
+    ts::DecodeMJD(data + 2, 5, start_time);
+    start_time -= kJstTzOffset;  // JST -> UTC
+    const auto start_time_unix = start_time - ts::Time::UnixEpoch;
+
+    const auto hour = ts::DecodeBCD(data[7]);
+    const auto min = ts::DecodeBCD(data[8]);
+    const auto sec = ts::DecodeBCD(data[9]);
+    const ts::MilliSecond duration =
+        hour * ts::MilliSecPerHour + min * ts::MilliSecPerMin +
+        sec * ts::MilliSecPerSec;
+
+    const uint8_t running_status = (data[10] >> 5) & 0x07;
+
+    const bool ca_controlled = (data[10] >> 4) & 0x01;
+
+    size_t info_length = ts::GetUInt16(data + 10) & 0x0FFF;
+    data += EitSection::EIT_EVENT_FIXED_SIZE;
+    remain -= EitSection::EIT_EVENT_FIXED_SIZE;
+
+    LibISDB::DescriptorBlock desc_block;
+    desc_block.ParseBlock(data, info_length);
+
+    rapidjson::Value descriptors(rapidjson::kArrayType);
+
+    for (int i = 0; i < desc_block.GetDescriptorCount(); ++i) {
+      const auto* dp = desc_block.GetDescriptorByIndex(i);
+      if (!dp->IsValid()) {
+        continue;
+      }
+      switch (dp->GetTag()) {
+        case LibISDB::ShortEventDescriptor::TAG: {
+          const auto* desc = static_cast<const LibISDB::ShortEventDescriptor*>(dp);
+          auto json = MakeJsonValue(desc, allocator);
+          descriptors.PushBack(json, allocator);
+          break;
+        }
+        case LibISDB::ComponentDescriptor::TAG: {
+          const auto* desc = static_cast<const LibISDB::ComponentDescriptor*>(dp);
+          auto json = MakeJsonValue(desc, allocator);
+          descriptors.PushBack(json, allocator);
+          break;
+        }
+        case LibISDB::ContentDescriptor::TAG: {
+          const auto* desc = static_cast<const LibISDB::ContentDescriptor*>(dp);
+          auto json = MakeJsonValue(desc, allocator);
+          descriptors.PushBack(json, allocator);
+          break;
+        }
+        case LibISDB::AudioComponentDescriptor::TAG: {
+          const auto* desc = static_cast<const LibISDB::AudioComponentDescriptor*>(dp);
+          auto json = MakeJsonValue(desc, allocator);
+          descriptors.PushBack(json, allocator);
+          break;
+        }
+        default:
+          break;
+      }
     }
 
-    return events;
+    {
+      auto json = MakeExtendedEventJsonValue(desc_block, allocator);
+      if (!json.IsNull()) {
+        descriptors.PushBack(json, allocator);
+      }
+    }
+
+    rapidjson::Value event(rapidjson::kObjectType);
+    event.AddMember("eventId", eid, allocator);
+    event.AddMember("startTime", start_time_unix, allocator);
+    event.AddMember("duration", duration, allocator);
+    event.AddMember("scrambled", ca_controlled, allocator);
+    event.AddMember("descriptors", descriptors, allocator);
+
+    events.PushBack(event, allocator);
+
+    data += info_length;
+    remain -= info_length;
   }
 
-  rapidjson::Value MakeJsonValue(
-      const LibISDB::ShortEventDescriptor* desc,
-      rapidjson::Document::AllocatorType& allocator) const {
-    rapidjson::Value json(rapidjson::kObjectType);
-    json.AddMember("$type", "ShortEvent", allocator);
-    LibISDB::ARIBString event_name;
-    if (desc->GetEventName(&event_name)) {
-      json.AddMember("eventName", DecodeAribString(event_name), allocator);
-    }
-    LibISDB::ARIBString text;
-    if (desc->GetEventDescription(&text)) {
-      json.AddMember("text", DecodeAribString(text), allocator);
-    }
-    return json;
-  }
+  return events;
+}
 
-  rapidjson::Value MakeJsonValue(
-      const LibISDB::ComponentDescriptor* desc,
-      rapidjson::Document::AllocatorType& allocator) const {
-    rapidjson::Value json(rapidjson::kObjectType);
-    json.AddMember("$type", "Component", allocator);
-    json.AddMember("streamContent", desc->GetStreamContent(), allocator);
-    json.AddMember("componentType", desc->GetComponentType(), allocator);
-    json.AddMember("componentTag", desc->GetComponentTag(), allocator);
-    json.AddMember("languageCode", desc->GetLanguageCode(), allocator);
-    LibISDB::ARIBString text;
-    if (desc->GetText(&text)) {
-      json.AddMember("text", DecodeAribString(text), allocator);
-    }
-    return json;
-  }
+rapidjson::Document MakeJsonValue(const EitSection& eit) {
+  rapidjson::Document eit_json(rapidjson::kObjectType);
+  auto& allocator = eit_json.GetAllocator();
 
-  rapidjson::Value MakeJsonValue(
-      const LibISDB::ContentDescriptor* desc,
-      rapidjson::Document::AllocatorType& allocator) const {
-    rapidjson::Value nibbles(rapidjson::kArrayType);
-    for (int i = 0; i < desc->GetNibbleCount(); ++i) {
-      LibISDB::ContentDescriptor::NibbleInfo info;
-      desc->GetNibble(i, &info);
-      rapidjson::Value nibble(rapidjson::kArrayType);
-      nibble.PushBack(info.ContentNibbleLevel1, allocator);
-      nibble.PushBack(info.ContentNibbleLevel2, allocator);
-      nibble.PushBack(info.UserNibble1, allocator);
-      nibble.PushBack(info.UserNibble2, allocator);
-      nibbles.PushBack(nibble, allocator);
-    }
-    rapidjson::Value json(rapidjson::kObjectType);
-    json.AddMember("$type", "Content", allocator);
-    json.AddMember("nibbles", nibbles, allocator);
-    return json;
-  }
+  auto events = MakeEventsJsonValue(eit, allocator);
 
-  rapidjson::Value MakeJsonValue(
-      const LibISDB::AudioComponentDescriptor* desc,
-      rapidjson::Document::AllocatorType& allocator) const {
-    rapidjson::Value json(rapidjson::kObjectType);
-    json.AddMember("$type", "AudioComponent", allocator);
-    json.AddMember("streamContent", desc->GetStreamContent(), allocator);
-    json.AddMember("componentType", desc->GetComponentType(), allocator);
-    json.AddMember("componentTag", desc->GetComponentTag(), allocator);
-    json.AddMember("simulcastGroupTag", desc->GetSimulcastGroupTag(), allocator);
-    json.AddMember(
-        "esMultiLingualFlag", desc->GetESMultiLingualFlag(), allocator);
-    json.AddMember(
-        "mainComponentFlag", desc->GetMainComponentFlag(), allocator);
-    json.AddMember("qualityIndicator", desc->GetQualityIndicator(), allocator);
-    json.AddMember("samplingRate", desc->GetSamplingRate(), allocator);
-    json.AddMember("languageCode", desc->GetLanguageCode(), allocator);
-    if (desc->GetESMultiLingualFlag()) {
-      json.AddMember("languageCode2", desc->GetLanguageCode2(), allocator);
-    }
-    LibISDB::ARIBString text;
-    if (desc->GetText(&text)) {
-      json.AddMember("text", DecodeAribString(text), allocator);
-    }
-    return json;
-  }
+  eit_json.AddMember("originalNetworkId", eit.nid, allocator);
+  eit_json.AddMember("transportStreamId", eit.tsid, allocator);
+  eit_json.AddMember("serviceId", eit.sid, allocator);
+  eit_json.AddMember("tableId", eit.tid, allocator);
+  eit_json.AddMember("sectionNumber", eit.section_number, allocator);
+  eit_json.AddMember("lastSectionNumber", eit.last_section_number, allocator);
+  eit_json.AddMember("segmentLastSectionNumber", eit.segment_last_section_number, allocator);
+  eit_json.AddMember("versionNumber", eit.version, allocator);
+  eit_json.AddMember("events", events, allocator);
 
-  rapidjson::Value MakeJsonValue(
-      const LibISDB::String& desc, const LibISDB::String& item,
-      rapidjson::Document::AllocatorType& allocator) const {
-    rapidjson::Value json(rapidjson::kArrayType);
-    json.PushBack(rapidjson::Value().SetString(desc, allocator), allocator);
-    json.PushBack(rapidjson::Value().SetString(item, allocator), allocator);
-    return json;
-  }
-
-  rapidjson::Value MakeExtendedEventJsonValue(
-      const LibISDB::DescriptorBlock& desc_block,
-      rapidjson::Document::AllocatorType& allocator) const {
-    LibISDB::ARIBStringDecoder decoder;
-    auto flags = GetAribStringDecodeFlag();
-    LibISDB::EventInfo::ExtendedTextInfoList ext_list;
-    if (!LibISDB::GetEventExtendedTextList(
-            &desc_block, decoder, flags, &ext_list)) {
-      return rapidjson::Value();
-    }
-
-    rapidjson::Value items(rapidjson::kArrayType);
-    for (const auto& ext : ext_list) {
-      auto json = MakeJsonValue(ext.Description, ext.Text, allocator);
-      items.PushBack(json, allocator);
-    }
-
-    rapidjson::Value json(rapidjson::kObjectType);
-    json.AddMember("$type", "ExtendedEvent", allocator);
-    json.AddMember("items", items, allocator);
-    return json;
-  }
-
-  inline LibISDB::String DecodeAribString(
-      const LibISDB::ARIBString& str) const {
-    LibISDB::ARIBStringDecoder decoder;
-    LibISDB::String utf8;
-    decoder.Decode(str, &utf8, GetAribStringDecodeFlag());
-    return std::move(utf8);
-  }
-
-  inline LibISDB::ARIBStringDecoder::DecodeFlag GetAribStringDecodeFlag()
-      const {
-    auto flags = LibISDB::ARIBStringDecoder::DecodeFlag::UseCharSize;
-    if (g_KeepUnicodeSymbols) {
-      flags |= LibISDB::ARIBStringDecoder::DecodeFlag::UnicodeSymbol;
-    }
-    return flags;
-  }
-};
+  return eit_json;
+}
 
 }  // namespace
 

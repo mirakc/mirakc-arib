@@ -572,7 +572,7 @@ class EitCollector final : public PacketSink,
   }
 
   void WriteEitSection(const EitSection& eit) {
-    FeedDocument(eit.MakeJsonValue());
+    FeedDocument(MakeJsonValue(eit));
   }
 
   void UpdateProgress(const EitSection& eit) {
