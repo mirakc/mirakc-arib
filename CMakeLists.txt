@@ -721,6 +721,8 @@ target_link_libraries(mirakc-arib
 
 target_compile_definitions(mirakc-arib
   PRIVATE
+    _TIME_BITS=64
+    _FILE_OFFSET_BITS=64
     SPDLOG_DISABLE_DEFAULT_LOGGER
     MIRAKC_ARIB_VERSION="${MIRAKC_ARIB_VERSION}"
     MIRAKC_ARIB_DOCOPT_VERSION="${MIRAKC_ARIB_DOCOPT_VERSION}"
@@ -777,6 +779,8 @@ if(MIRAKC_ARIB_TEST)
 
   target_compile_definitions(mirakc-arib-test
     PRIVATE
+      _TIME_BITS=64
+      _FILE_OFFSET_BITS=64
       SPDLOG_DISABLE_DEFAULT_LOGGER
   )
 
