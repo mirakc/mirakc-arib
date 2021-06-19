@@ -16,7 +16,7 @@ TEST(LogoCollectorTest, NoPacket) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_TRUE(src.FeedPackets());
 }
 
 // TODO: Add more tests here.

@@ -365,21 +365,34 @@ Description:
 
     $ recdvb 27 - - 2>/dev/null | mirakc-arib collect-logos | head -1 | jq .
     {{
-      "nid": 32736,
-      "ddid": 1024,
-      "logo": {{
-        "type": 0,
-        "id": 0,
-        "version": 0,
-        "data": "base64-encoded-png"
-      }}
+      "type": 0,
+      "id": 0,
+      "version": 1,
+      "data": "data:image/png;base64,..."
+      "nid": 32736
+    }}
+
+    $ recdvb BS15_0 - - 2>/dev/null | mirakc-arib collect-logos | head -1 | jq .
+    {{
+      "type": 0,
+      "id": 132,
+      "version": 0,
+      "data": "data:image/png;base64,..."
+      "nid": 4,
+      "services": [
+        {{
+          "nid": 4,
+          "tsid": 18258,
+          "sid": 234
+        }}
+      ]
     }}
 
   Currently, `collect-logos` never stops even after all logos have been
   collected.
 
-  Transmission frequency of CDT section and the number of logos are different
-  for each broadcaster:
+  Transmission frequency of CDT sections and log data modules, and the number of
+  logos are different for each broadcaster:
 
     CHANNEL  ENOUGH TIME TO COLLECT ALL LOGOS  #LOGOS
     -------  --------------------------------  ------
@@ -393,7 +406,7 @@ Description:
     NHK      10 minutes                         6
 
   You can collect logos from a TS files recorded using `filter-service` or
-  `filter-program` if it contains CDT sections.
+  `filter-program` if it contains CDT sections and/or logo data modules.
 )";
 
 static const std::string kFilterService = "filter-service";
