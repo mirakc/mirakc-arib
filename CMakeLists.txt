@@ -462,6 +462,20 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     string(APPEND MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA
       " -Wno-poison-system-directories")
   endif()
+
+  check_cxx_compiler_flag(-Wsuggest-destructor-override HAVE_SUGGEST_DESTRUCTOR_OVERRIDE_WARNING)
+  if(HAVE_SUGGEST_DESTRUCTOR_OVERRIDE_WARNING)
+    # Disable -Wsuggest-destructor-override
+    string(APPEND MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA
+      " -Wno-suggest-destructor-override")
+  endif()
+
+  check_cxx_compiler_flag(-Wdtor-name HAVE_DTOR_NAME_WARNING)
+  if(HAVE_DTOR_NAME_WARNING)
+    # Disable -Wdtor-name
+    string(APPEND MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA
+      " -Wno-dtor-name")
+  endif()
 endif()
 
 check_cxx_compiler_flag(-Wpoison-system-directories HAVE_DOCUMENTATION_UNKNOWN_COMMAND_WARNING)
