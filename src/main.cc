@@ -255,7 +255,7 @@ Description:
   `collect-eits` collects EIT sections from a TS stream.  Results will be output
   to STDOUT in the following JSONL format:
 
-    $ recdvb 27 10 - 2>/dev/null | mirakc-arib collect-eits | head -1 | jq .
+    $ recdvb 27 10 - 2>/dev/null | mirakc-arib collect-eits | head -1 | jq
     {{
       "originalNetworkId": 32736,
       "transportStreamId": 32736,
@@ -335,7 +335,7 @@ Description:
   `collect-logos` collects logos from a TS stream.  Results will be output
   to STDOUT in the following JSONL format:
 
-    $ recdvb 27 - - 2>/dev/null | mirakc-arib collect-logos | head -1 | jq .
+    $ recdvb 27 - - 2>/dev/null | mirakc-arib collect-logos | head -1 | jq
     {{
       "type": 0,
       "id": 0,
@@ -344,7 +344,7 @@ Description:
       "nid": 32736
     }}
 
-    $ recdvb BS15_0 - - 2>/dev/null | mirakc-arib collect-logos | head -1 | jq .
+    $ recdvb BS15_0 - - 2>/dev/null | mirakc-arib collect-logos | head -1 | jq
     {{
       "type": 0,
       "id": 132,
@@ -702,7 +702,7 @@ Description:
   will be output to STDOUT in the following JSONL format:
 
     $ recdvb 27 10 - 2>/dev/null | \
-        mirakc-arib track-airtime --sid=102 | head -1 | jq .
+        mirakc-arib track-airtime --sid=102 | head -1 | jq
     {{
       "nid": 32736,
       "tsid": 32736,
