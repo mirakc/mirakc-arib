@@ -699,6 +699,7 @@ add_executable(mirakc-arib
   src/pcr_synchronizer.hh
   src/pes_printer.hh
   src/program_filter.hh
+  src/program_metadata_filter.hh
   src/ring_file_sink.hh
   src/service_filter.hh
   src/service_recorder.hh

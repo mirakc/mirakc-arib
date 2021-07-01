@@ -55,6 +55,10 @@ assert 134 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pc
 assert 134 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=1 --clock-time=1 --video-tags='-1'"
 assert 134 "$MIRAKC_ARIB filter-program --sid=1 --eid=1 --clock-pid=1 --clock-pcr=1 --clock-time=1 --video-tags=256"
 
+assert 0 "$MIRAKC_ARIB filter-program-metadata"
+assert 0 "$MIRAKC_ARIB filter-program-metadata --sid=1"
+assert 0 "$MIRAKC_ARIB filter-program-metadata --sid=0xFFFF"
+
 assert 0 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=1"
 assert 0 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=1 --start-pos=0"
 assert 0 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=2 --start-pos=8192"

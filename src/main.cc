@@ -24,6 +24,7 @@
 #include "packet_source.hh"
 #include "pcr_synchronizer.hh"
 #include "program_filter.hh"
+#include "program_metadata_filter.hh"
 #include "ring_file_sink.hh"
 #include "service_filter.hh"
 #include "service_recorder.hh"
@@ -49,8 +50,8 @@ Tools to process ARIB TS streams.
 Usage:
   mirakc-arib (-h | --help)
     [(scan-services | sync-clocks | collect-eits | collect-logos |
-      filter-service | filter-program | record-service | track-airtime |
-      seek-start | print-pes)]
+      filter-service | filter-program | filter-program-metadata |
+      record-service | track-airtime | seek-start | print-pes)]
   mirakc-arib --version
   mirakc-arib scan-services [--sids=<sid>...] [--xsids=<sid>...] [<file>]
   mirakc-arib sync-clocks [--sids=<sid>...] [--xsids=<sid>...] [<file>]
@@ -63,6 +64,7 @@ Usage:
     --clock-pid=<pid> --clock-pcr=<pcr> --clock-time=<unix-time-ms>
     [--audio-tags=<tag>...] [--video-tags=<tag>...]
     [--start-margin=<ms>] [--end-margin=<ms>] [--pre-streaming] [<file>]
+  mirakc-arib filter-program-metadata [--sid=<sid>] [<file>]
   mirakc-arib record-service --sid=<sid> --file=<file>
     --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [<file>]
   mirakc-arib track-airtime --sid=<sid> --eid=<eid> [<file>]
@@ -301,36 +303,6 @@ Description:
         ...
       ]
     }}
-    {{
-      "originalNetworkId": 32736,
-      "transportStreamId": 32736,
-      "serviceId": 1024,
-      "tableId": 89,
-      "sectionNumber": 224,
-      "lastSectionNumber": 248,
-      "segmentLastSectionNumber": 224,
-      "versionNumber": 9,
-      "events": [
-        {{
-          "eventId": 15336,
-          "startTime": 1571367600000,
-          "duration": 1200000,
-          "scrambled": false,
-          "descriptors": [
-            {{
-              "$type": "ExtendedEvent",
-              "items": [
-                [
-                  "出演者",
-                  "【キャスター】三條雅幸"
-                ]
-              ]
-            }}
-          ]
-        }},
-        ...
-      ]
-    }}
 
 Environment Variables:
   MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS
@@ -532,6 +504,45 @@ Description:
   `filter-program` resynchronize the clock automatically.  In this case, actual
   start and end times may be delayed about 5 seconds due to the clock
   synchronization.
+)";
+
+static const std::string kFilterProgramMetadata = "filter-program-metadata";
+
+static const std::string kFilterProgramMetadataHelp = R"(
+Program filter
+
+Usage:
+  mirakc-arib filter-program-metadata [--sid=<sid>] [<file>]
+
+Options:
+  -h --help
+    Print help.
+
+  --sid=<sid>
+    Service ID.
+
+Arguments:
+  <file>
+    Path to a TS file.
+
+Description:
+  `filter-program-metadata` outputs JSON stream which contains metadata of
+  programs in a service.
+
+    $ recdvb 27 10 - 2>/dev/null | \
+        mirakc-arib filter-program-metadata | head -1 | jq
+    {{
+      "nid": 32736,
+      "tsid": 32736,
+      "sid": 1024,
+      "events": [...],
+    }}
+
+  where the format of each element in `events` is the same as `collect-eits`.
+
+  `events[0]` is correspond to a program broadcast currently.
+
+  `filter-program-metadata` never stops until it reaches EOF.
 )";
 
 static const std::string kRecordService = "record-service";
@@ -936,6 +947,8 @@ void Init(const Args& args) {
     InitLogger(kFilterService);
   } else if (args.at(kFilterProgram).asBool()) {
     InitLogger(kFilterProgram);
+  } else if (args.at(kFilterProgramMetadata).asBool()) {
+    InitLogger(kFilterProgramMetadata);
   } else if (args.at(kRecordService).asBool()) {
     InitLogger(kRecordService);
   } else if (args.at(kTrackAirtime).asBool()) {
@@ -1089,6 +1102,15 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
       opt->start_margin, opt->end_margin, opt->pre_streaming);
 }
 
+void LoadOption(const Args& args, ProgramMetadataFilterOption* opt) {
+  static const std::string kSid = "--sid";
+
+  if (args.at(kSid)) {
+    opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
+    MIRAKC_ARIB_INFO("Options: sid={:04X}", opt->sid);
+  }
+}
+
 void LoadOption(const Args& args, ServiceRecorderOption* opt) {
   static const std::string kSid = "--sid";
   static const std::string kFile = "--file";
@@ -1214,6 +1236,13 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     service_filter->Connect(std::move(program_filter));
     return service_filter;
   }
+  if (args.at(kFilterProgramMetadata).asBool()) {
+    ProgramMetadataFilterOption option;
+    LoadOption(args, &option);
+    auto filter = std::make_unique<ProgramMetadataFilter>(option);
+    filter->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
+    return filter;
+  }
   if (args.at(kRecordService).asBool()) {
     ServiceRecorderOption recorder_option;
     LoadOption(args, &recorder_option);
@@ -1262,6 +1291,8 @@ void ShowHelp(const Args& args) {
     fmt::print(kFilterServiceHelp);
   } else if (args.at(kFilterProgram).asBool()) {
     fmt::print(kFilterProgramHelp);
+  } else if (args.at(kFilterProgramMetadata).asBool()) {
+    fmt::print(kFilterProgramMetadataHelp);
   } else if (args.at(kRecordService).asBool()) {
     fmt::print(kRecordServiceHelp);
   } else if (args.at(kTrackAirtime).asBool()) {
