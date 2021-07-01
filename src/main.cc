@@ -509,7 +509,7 @@ Description:
 static const std::string kFilterProgramMetadata = "filter-program-metadata";
 
 static const std::string kFilterProgramMetadataHelp = R"(
-Program filter
+Program metadata filter
 
 Usage:
   mirakc-arib filter-program-metadata [--sid=<sid>] [<file>]
@@ -535,7 +535,7 @@ Description:
       "nid": 32736,
       "tsid": 32736,
       "sid": 1024,
-      "events": [...],
+      "events": [...]
     }}
 
   where the format of each element in `events` is the same as `collect-eits`.
