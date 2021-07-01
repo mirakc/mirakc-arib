@@ -8,7 +8,7 @@
 #include "base.hh"
 #include "jsonl_source.hh"
 #include "logging.hh"
-#include "packet_source.hh"
+#include "packet_sink.hh"
 
 namespace {
 
