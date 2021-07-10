@@ -2,8 +2,7 @@ name: Weekly
 
 on:
   schedule:
-    #- cron: '19 19 * * 4'  # 19:19 (UTC), Thursday
-    - cron: '* * * * *'  # for testing
+    - cron: '19 19 * * 4'  # 19:19 (UTC), Thursday
 
 jobs:
   release:
@@ -30,4 +29,4 @@ jobs:
             hub push --tags
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_FOR_AUTOMERGE }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
