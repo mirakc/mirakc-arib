@@ -1,0 +1,34 @@
+name: Daily
+
+on:
+  schedule:
+    #- cron: '5 5 * * *'  # 05:05 (UTC)
+    - cron: '* * * * *'  # for testing
+
+env:
+  UPDATE_DEPS_BRANCH: 'update-deps'
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: git config
+        run: |
+          # https://github.com/actions/checkout#push-a-commit-using-the-built-in-token
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+      - name: Make a pull-request to update dependencies
+        run: |
+          sudo apt-get install -y moreutils  # sponge
+          ./scripts/update-deps
+          if git diff --quiet -- CMakeLists.txt
+          then
+            echo "Not changed"
+          else
+            git branch -D $UPDATE_DEPS_BRANCH
+            git checkout -b $UPDATE_DEPS_BRANCH
+            git add CMakeLists.txt
+            git commit -m 'build(deps): update dependencies'
+            git push
+          fi
