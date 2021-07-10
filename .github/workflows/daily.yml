@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
+          persist-credentials: false
       - name: git config
         run: |
           # https://github.com/actions/checkout#push-a-commit-using-the-built-in-token
@@ -27,7 +30,7 @@ jobs:
           then
             echo "Not changed"
           else
-            git branch -D $UPDATE_DEPS_BRANCH
+            # TODO: remove UPDATE_DEPS_BRANCH if it exists
             git checkout -b $UPDATE_DEPS_BRANCH
             git add CMakeLists.txt
             git commit -m "$UPDATE_DEPS_TITLE"
@@ -35,4 +38,4 @@ jobs:
             hub pull-request -m "$UPDATE_DEPS_TITLE"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_FOR_AUTOMERGE }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
