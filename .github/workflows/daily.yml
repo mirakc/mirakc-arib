@@ -7,6 +7,7 @@ on:
 
 env:
   UPDATE_DEPS_BRANCH: 'update-deps'
+  UPDATE_DEPS_TITLE: 'build(deps): update dependencies'
 
 jobs:
   update-deps:
@@ -29,8 +30,9 @@ jobs:
             git branch -D $UPDATE_DEPS_BRANCH
             git checkout -b $UPDATE_DEPS_BRANCH
             git add CMakeLists.txt
-            git commit -m 'build(deps): update dependencies'
+            git commit -m "$UPDATE_DEPS_TITLE"
             hub push
+            hub pull-request -m "$UPDATE_DEPS_TITLE"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_FOR_AUTOMERGE }}
