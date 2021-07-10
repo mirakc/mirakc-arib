@@ -4,8 +4,8 @@ PROGNAME="$(basename $0)"
 BASEDIR="$(cd $(dirname $0); pwd)"
 PROJDIR="$(cd $BASEDIR/..; pwd)"
 
-MARKER='###version'
 CURRENT=$(git describe --abbrev=0)
+COMMIT=yes
 
 help() {
     cat <<EOF >&2
@@ -35,6 +35,10 @@ do
     '-h' | '--help')
       help
       ;;
+    '--no-commit')
+      COMMIT=no
+      shift
+      ;;
     'major' | 'minor' | 'patch')
       break
       ;;
@@ -49,13 +53,21 @@ VERSION=$(npx semver $CURRENT -i $1)
 echo "Bumping the version to $VERSION..."
 # Don't use the -i option of `sed`.
 # The incompatibility between macOS and GNU will cause troubles.
-sed -e "s/.*$MARKER/  \"$VERSION\"  $MARKER/" $PROJDIR/CMakeLists.txt | \
-  sponge $PROJDIR/CMakeLists.txt
-ninja -C $PROJDIR/build
-git add $PROJDIR/CMakeLists.txt
-git commit -m "misc: bump version to $VERSION"
+sed -r -e "s|^set\(MIRAKC_ARIB_VERSION .*|set\(MIRAKC_ARIB_VERSION \"$VERSION\"|" \
+  $PROJDIR/CMakeLists.txt | sponge $PROJDIR/CMakeLists.txt
+
+# Make sure that cmake can generate project files successfully.
+BUILD_DIR=$(mktemp -d)
+trap "rm -rf $BUILD_DIR" EXIT
+cmake -S . -B $BUILD_DIR -D CMAKE_BUILD_TYPE=Release
 
 # TODO: Genereate CHANGELOG.md
 
-echo "Making an annotated tag for $VERSION..."
-git tag -a "$VERSION" -m "release: $VERSION"
+if [ "$COMMIT" = yes ]
+then
+  git add $PROJDIR/CMakeLists.txt
+  git commit -m "misc: bump version to $VERSION"
+
+  echo "Making an annotated tag for $VERSION..."
+  git tag -a "$VERSION" -m "release: $VERSION"
+fi

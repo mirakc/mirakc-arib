@@ -1,0 +1,25 @@
+#!/bin/sh
+
+PROGNAME="$(basename $0)"
+BASEDIR="$(cd $(dirname $0); pwd)"
+PROJDIR="$(cd $BASEDIR/..; pwd)"
+
+BASE_URL='https://api.github.com/repos'
+
+FMT_VERSION="$(curl -s $BASE_URL/fmtlib/fmt/releases/latest | jq -r '.tag_name')"
+SPDLOG_VERSION="$(curl -s $BASE_URL/gabime/spdlog/releases/latest | jq -r '.tag_name')"
+
+cat <<EOF
+Latest Tags:
+  fmtlib/fmt:
+    $FMT_VERSION
+  gabime/spdlog:
+    $SPDLOG_VERSION
+EOF
+
+# Don't use the -i option of `sed`.
+# The incompatibility between macOS and GNU will cause troubles.
+sed -r \
+  -e "s|^set\(MIRAKC_ARIB_FMT_VERSION .*|set\(MIRAKC_ARIB_FMT_VERSION \"$FMT_VERSION\"|" \
+  -e "s|^set\(MIRAKC_ARIB_SPDLOG_VERSION .*|set\(MIRAKC_ARIB_SPDLOG_VERSION \"$SPDLOG_VERSION\"|" \
+  $PROJDIR/CMakeLists.txt | sponge $PROJDIR/CMakeLists.txt
