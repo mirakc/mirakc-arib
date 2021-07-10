@@ -25,7 +25,7 @@ set(MIRAKC_ARIB_VERSION "0.15.1"
   CACHE STRING "mirakc-arib version." FORCE)
 set(MIRAKC_ARIB_DOCOPT_VERSION "2df2b1cd28a870c810da2e0fcffbb97c9f89708e"
   CACHE STRING "docopt.cpp version to use." FORCE)
-set(MIRAKC_ARIB_FMT_VERSION "7.1.3"
+set(MIRAKC_ARIB_FMT_VERSION "8.0.1"
   CACHE STRING "fmt version to use." FORCE)
 set(MIRAKC_ARIB_SPDLOG_VERSION "v1.8.5"
   CACHE STRING "spdlog version to use." FORCE)
