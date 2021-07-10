@@ -21,6 +21,7 @@ jobs:
     steps:
       - uses: actions/github-script@v4
         with:
+          # Use PAT in order to invoke other workflows.
           github-token: ${{ secrets.MY_GITHUB_TOKEN }}
           script: |
             const pr = await github.pulls.get({

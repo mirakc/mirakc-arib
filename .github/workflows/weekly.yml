@@ -11,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          # Use PAT in order to invoke other workflows.
           token: ${{ secrets.MY_GITHUB_TOKEN }}
           # Fetch all history for all tags and branches
           fetch-depth: 0

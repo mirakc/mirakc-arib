@@ -14,9 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          # Use PAT in order to invoke other workflows.
           token: ${{ secrets.MY_GITHUB_TOKEN }}
-          # https://github.community/t/push-from-action-even-with-pat-does-not-trigger-action/17622
-          persist-credentials: false
       - name: git config
         run: |
           # https://github.com/actions/checkout#push-a-commit-using-the-built-in-token
@@ -34,7 +33,8 @@ jobs:
             git checkout -b $BRANCH
             git add CMakeLists.txt
             git commit -m "$UPDATE_DEPS_TITLE"
-            hub pull-request -p -m "$UPDATE_DEPS_TITLE" -l dependencies
+            git push -u origin $BRANCH
+            gh pr create -t "$UPDATE_DEPS_TITLE" -b '' -l dependencies
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
