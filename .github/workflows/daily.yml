@@ -6,7 +6,6 @@ on:
     - cron: '* * * * *'  # for testing
 
 env:
-  UPDATE_DEPS_BRANCH: 'update-deps'
   UPDATE_DEPS_TITLE: 'build(deps): update dependencies'
 
 jobs:
@@ -16,6 +15,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           token: ${{ secrets.MY_GITHUB_TOKEN }}
+          # https://github.community/t/push-from-action-even-with-pat-does-not-trigger-action/17622
           persist-credentials: false
       - name: git config
         run: |
@@ -30,12 +30,11 @@ jobs:
           then
             echo "Not changed"
           else
-            # TODO: remove UPDATE_DEPS_BRANCH if it exists
-            git checkout -b $UPDATE_DEPS_BRANCH
+            BRANCH="update-deps-$(date '+%Y%m%d')"
+            git checkout -b $BRANCH
             git add CMakeLists.txt
             git commit -m "$UPDATE_DEPS_TITLE"
-            hub push
-            hub pull-request -m "$UPDATE_DEPS_TITLE"
+            hub pull-request -p -m "$UPDATE_DEPS_TITLE" -l dependencies
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}

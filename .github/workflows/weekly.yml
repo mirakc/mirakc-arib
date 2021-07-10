@@ -2,7 +2,8 @@ name: Weekly
 
 on:
   schedule:
-    - cron: '19 19 * * 4'  # 19:19 (UTC), Thursday
+    #- cron: '19 19 * * 4'  # 19:19 (UTC), Thursday
+    - cron: '* * * * *'  # for testing
 
 jobs:
   release:
@@ -10,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
           # Fetch all history for all tags and branches
           fetch-depth: 0
       - name: git config
@@ -25,8 +27,6 @@ jobs:
           else
             sudo apt-get install -y moreutils  # sponge
             ./scripts/release patch
-            hub push
-            hub push --tags
+            git push
+            git push --tags
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
