@@ -2,8 +2,7 @@ name: Daily
 
 on:
   schedule:
-    #- cron: '5 5 * * *'  # 05:05 (UTC)
-    - cron: '* * * * *'  # for testing
+    - cron: '5 5 * * *'  # 05:05 (UTC)
 
 env:
   UPDATE_DEPS_TITLE: 'build(deps): update dependencies'
