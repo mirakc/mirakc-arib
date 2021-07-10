@@ -2,9 +2,7 @@
 
 > mirakc-tools for Japanese TV broadcast contents
 
-[![linux-status](https://github.com/mirakc/mirakc-arib/workflows/Linux/badge.svg)](https://github.com/mirakc/mirakc-arib/actions?workflow=Linux)
-[![macos-status](https://github.com/mirakc/mirakc-arib/workflows/macOS/badge.svg)](https://github.com/mirakc/mirakc-arib/actions?workflow=macOS)
-[![arm-linux-status](https://github.com/mirakc/mirakc-arib/workflows/ARM-Linux/badge.svg)](https://github.com/mirakc/mirakc-arib/actions?workflow=ARM-Linux)
+[![CI](https://github.com/mirakc/mirakc-arib/actions/workflows/ci.yml/badge.svg)](https://github.com/mirakc/mirakc-arib/actions/workflows/ci.yml)
 [![coverage](https://codecov.io/gh/mirakc/mirakc-arib/branch/main/graph/badge.svg?token=iYQqKQLd7A)](https://codecov.io/gh/mirakc/mirakc-arib)
 
 ## How to build
