@@ -30,5 +30,7 @@ jobs:
             git checkout -b $UPDATE_DEPS_BRANCH
             git add CMakeLists.txt
             git commit -m 'build(deps): update dependencies'
-            git push
+            hub push
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_FOR_AUTOMERGE }}
