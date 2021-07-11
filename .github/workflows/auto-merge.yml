@@ -9,7 +9,7 @@ on:
       - completed
 
 env:
-  ALLOWED_USER: 'github-actions[bot]'
+  ALLOWED_LABEL: 'dependencies'
   ALLOWED_TITLE_PREFIX: 'build(deps):'
 
 jobs:
@@ -29,8 +29,8 @@ jobs:
 
             const pr = await github.pulls.get({ owner, repo, pull_number });
 
-            if (pr.data.user.login !== process.env.ALLOWED_USER) {
-              console.log(`Not Merged: User must be "${process.env.ALLOWED_USER}"`);
+            if (!pr.data.labels.some((label) => label.name === process.env.ALLOWED_LABEL)) {
+              console.log(`Not Merged: Labels must contains "${process.env.ALLOWED_LABEL}"`);
               return;
             }
 
@@ -60,8 +60,8 @@ jobs:
 
             const pr = await github.pulls.get({ owner, repo, pull_number });
 
-            if (pr.data.user.login !== process.env.ALLOWED_USER) {
-              console.log(`Not Closed: User must be "${process.env.ALLOWED_USER}"`);
+            if (!pr.data.labels.some((label) => label.name === process.env.ALLOWED_LABEL)) {
+              console.log(`Not Merged: Labels must contains "${process.env.ALLOWED_LABEL}"`);
               return;
             }
 
