@@ -56,7 +56,6 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const pull_number = context.payload.workflow_run.pull_requests[0].number;
-            const ref = `refs/heads/${context.payload.workflow_run.pull_requests[0].headRefName}`;
 
             const pr = await github.pulls.get({ owner, repo, pull_number });
 
@@ -73,6 +72,6 @@ jobs:
             await github.pulls.update({ owner, repo, pull_number, state: 'closed' });
             console.log(`Closed #${pull_number} successfully`);
 
-            // The branch won't be deleted automatically.
+            const ref = `heads/${pr.data.head.ref}`;
             await github.git.deleteRef({ owner, repo, ref });
-            console.log(`Deleted ${ref} automatically`);
+            console.log(`Deleted ${pr.data.head.ref} automatically`);
