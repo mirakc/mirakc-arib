@@ -22,7 +22,7 @@ jobs:
       - uses: actions/github-script@v4
         with:
           # Use PAT in order to invoke other workflows.
-          github-token: ${{ secrets.MY_GITHUB_TOKEN }}
+          github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
             const pull_number = context.payload.workflow_run.pull_requests[0].number;
@@ -52,7 +52,7 @@ jobs:
       - uses: actions/github-script@v4
         with:
           # Use PAT in order to invoke other workflows.
-          github-token: ${{ secrets.MY_GITHUB_TOKEN }}
+          github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
             const pull_number = context.payload.workflow_run.pull_requests[0].number;
