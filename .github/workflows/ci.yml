@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Cache for external projects
         uses: actions/cache@v2
         with:
@@ -44,6 +46,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Cache for external projects
         uses: actions/cache@v2
         with:
@@ -96,6 +100,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Cache for external projects
         uses: actions/cache@v2
         with:
@@ -138,6 +144,8 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Cache for external projects
         uses: actions/cache@v2
         with:
