@@ -362,6 +362,8 @@ ExternalProject_Add(vendor-spdlog
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
     -D CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -D CMAKE_CXX_VISIBILITY_PRESET=hidden
+    -D CMAKE_VISIBILITY_INLINES_HIDDEN=ON
     -D SPDLOG_BUILD_EXAMPLE=OFF
     -D SPDLOG_BUILD_BENCH=OFF
     -D SPDLOG_BUILD_TESTS=${MIRAKC_ARIB_VENDOR_TEST}
@@ -772,6 +774,12 @@ add_executable(mirakc-arib
   src/service_scanner.hh
   src/start_seeker.hh
   src/tsduck_helper.hh
+)
+
+set_target_properties(mirakc-arib
+  PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
 )
 
 target_link_libraries(mirakc-arib
