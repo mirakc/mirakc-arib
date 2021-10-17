@@ -7,6 +7,7 @@
 [submodule "vendor/spdlog"]
 	path = vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
+	ignore = dirty
 [submodule "vendor/rapidjson"]
 	path = vendor/rapidjson
 	url = https://github.com/Tencent/rapidjson.git
@@ -19,9 +20,11 @@
 [submodule "vendor/tsduck-arib"]
 	path = vendor/tsduck-arib
 	url = https://github.com/mirakc/tsduck-arib.git
+	ignore = dirty
 [submodule "vendor/libisdb"]
 	path = vendor/libisdb
 	url = https://github.com/DBCTRADO/LibISDB.git
+	ignore = dirty
 [submodule "vendor/googletest"]
 	path = vendor/googletest
 	url = https://github.com/google/googletest.git
