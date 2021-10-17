@@ -17,9 +17,5 @@ Latest Tags:
     $SPDLOG_VERSION
 EOF
 
-# Don't use the -i option of `sed`.
-# The incompatibility between macOS and GNU will cause troubles.
-sed -r \
-  -e "s|^set\(MIRAKC_ARIB_FMT_VERSION .*|set\(MIRAKC_ARIB_FMT_VERSION \"$FMT_VERSION\"|" \
-  -e "s|^set\(MIRAKC_ARIB_SPDLOG_VERSION .*|set\(MIRAKC_ARIB_SPDLOG_VERSION \"$SPDLOG_VERSION\"|" \
-  $PROJDIR/CMakeLists.txt | sponge $PROJDIR/CMakeLists.txt
+git -C "${PROJDIR}/vendor/fmt" checkout -q "${FMT_VERSION}"
+git -C "${PROJDIR}/vendor/spdlog" checkout -q "${SPDLOG_VERSION}"

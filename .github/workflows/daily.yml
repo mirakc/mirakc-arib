@@ -22,15 +22,14 @@ jobs:
           git config user.email github-actions@github.com
       - name: Make a pull-request to update dependencies
         run: |
-          sudo apt-get install -y moreutils  # sponge
           ./scripts/update-deps
-          if git diff --quiet -- CMakeLists.txt
+          if git diff --quiet -- vendor
           then
             echo "Not changed"
           else
             BRANCH="update-deps-$(date '+%Y%m%d')"
             git checkout -b $BRANCH
-            git add CMakeLists.txt
+            git add vendor
             git commit -m "$UPDATE_DEPS_TITLE"
             git push -u origin $BRANCH
             gh pr create -t "$UPDATE_DEPS_TITLE" -b '' -l dependencies

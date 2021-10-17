@@ -7,6 +7,12 @@
 
 ## How to build
 
+Get the repository including the Git submodule:
+
+```console
+$ git clone --recursive https://github.com/mirakc/mirakc-arib.git
+```
+
 Make sure that tools listed below has already been installed:
 
 * autoconf

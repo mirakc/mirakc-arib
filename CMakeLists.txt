@@ -23,25 +23,121 @@ set(MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS
 #
 set(MIRAKC_ARIB_VERSION "0.16.3"
   CACHE STRING "mirakc-arib version." FORCE)
-set(MIRAKC_ARIB_DOCOPT_VERSION "2df2b1cd28a870c810da2e0fcffbb97c9f89708e"
+#
+# Get the version of the Git submodule
+#
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/docopt"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_DOCOPT_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/fmt"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_FMT_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/spdlog"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_SPDLOG_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/rapidjson"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_RAPIDJSON_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/cppcodec"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_CPPCODEC_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/aribb24"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_ARIBB24_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/tsduck-arib"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_TSDUCK_ARIB_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/libisdb"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_LIBISDB_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/googletest"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_GOOGLETEST_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND
+    git rev-parse HEAD
+  WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/google-benchmark"
+  OUTPUT_VARIABLE
+    MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+#
+# Set the version of the Git submodule
+#
+set(MIRAKC_ARIB_DOCOPT_VERSION "${MIRAKC_ARIB_DOCOPT_VERSION}"
   CACHE STRING "docopt.cpp version to use." FORCE)
-set(MIRAKC_ARIB_FMT_VERSION "8.0.1"
+set(MIRAKC_ARIB_FMT_VERSION "${MIRAKC_ARIB_FMT_VERSION}"
   CACHE STRING "fmt version to use." FORCE)
-set(MIRAKC_ARIB_SPDLOG_VERSION "v1.9.2"
+set(MIRAKC_ARIB_SPDLOG_VERSION "${MIRAKC_ARIB_SPDLOG_VERSION}"
   CACHE STRING "spdlog version to use." FORCE)
-set(MIRAKC_ARIB_RAPIDJSON_VERSION "cd5ee4dfe9814fa88b7ba66c1f9d8176d154c62f"
+set(MIRAKC_ARIB_RAPIDJSON_VERSION "${MIRAKC_ARIB_RAPIDJSON_VERSION}"
   CACHE STRING "RapidJSON version to use." FORCE)
-set(MIRAKC_ARIB_CPPCODEC_VERSION "bd6ddf95129e769b50ef63e0f558fa21364f3f65"
+set(MIRAKC_ARIB_CPPCODEC_VERSION "${MIRAKC_ARIB_CPPCODEC_VERSION}"
   CACHE STRING "cppcodec version to use." FORCE)
-set(MIRAKC_ARIB_ARIBB24_VERSION "654026e064ec127beff43bf3ecdcebd54119be15"
+set(MIRAKC_ARIB_ARIBB24_VERSION "${MIRAKC_ARIB_ARIBB24_VERSION}"
   CACHE STRING "aribb24 version to use." FORCE)
-set(MIRAKC_ARIB_TSDUCK_ARIB_VERSION "c400025b7d31e26c0c15471e81adf2ad50632281"
+set(MIRAKC_ARIB_TSDUCK_ARIB_VERSION "${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}"
   CACHE STRING "tsduck-arib version to use." FORCE)
-set(MIRAKC_ARIB_LIBISDB_VERSION "ae14668bfc601d1b94851e666c82fe409afd8f31"
+set(MIRAKC_ARIB_LIBISDB_VERSION "${MIRAKC_ARIB_LIBISDB_VERSION}"
   CACHE STRING "LibISDB version to use." FORCE)
-set(MIRAKC_ARIB_GOOGLETEST_VERSION "release-1.10.0"
+set(MIRAKC_ARIB_GOOGLETEST_VERSION "${MIRAKC_ARIB_GOOGLETEST_VERSION}"
   CACHE STRING "googletest version to use." FORCE)
-set(MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION "v1.5.2"
+set(MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION "${MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION}"
   CACHE STRING "Google Benchmark version to use." FORCE)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -183,10 +279,8 @@ add_custom_target(vendor
 ExternalProject_Add(vendor-docopt
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
-  GIT_REPOSITORY
-    https://github.com/mirakc/docopt.cpp.git
-  GIT_TAG
-    ${MIRAKC_ARIB_DOCOPT_VERSION}
+  SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/docopt"
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -221,12 +315,8 @@ endif()
 ExternalProject_Add(vendor-fmt
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
-  GIT_REPOSITORY
-    https://github.com/fmtlib/fmt.git
-  GIT_TAG
-    ${MIRAKC_ARIB_FMT_VERSION}
-  GIT_SHALLOW
-    YES
+  SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/fmt"
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -264,14 +354,10 @@ ExternalProject_Add(vendor-spdlog
     vendor-fmt
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
-  GIT_REPOSITORY
-    https://github.com/gabime/spdlog.git
-  GIT_TAG
-    ${MIRAKC_ARIB_SPDLOG_VERSION}
-  GIT_SHALLOW
-    YES
+  SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/spdlog"
   PATCH_COMMAND
-    git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/spdlog.patch
+    patch -p0 < ${CMAKE_SOURCE_DIR}/patches/spdlog.patch
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -309,10 +395,8 @@ endif()
 ExternalProject_Add(vendor-rapidjson
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
-  GIT_REPOSITORY
-    https://github.com/Tencent/rapidjson.git
-  GIT_TAG
-    ${MIRAKC_ARIB_RAPIDJSON_VERSION}
+  SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/rapidjson"
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -350,14 +434,13 @@ endif()
 ExternalProject_Add(vendor-cppcodec
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
-  GIT_REPOSITORY
-    https://github.com/tplgy/cppcodec.git
-  GIT_TAG
-    ${MIRAKC_ARIB_CPPCODEC_VERSION}
+  SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/cppcodec"
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
     -D CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -D BUILD_TESTING=${MIRAKC_ARIB_VENDOR_TEST}
   EXCLUDE_FROM_ALL
     YES
 )
@@ -385,10 +468,8 @@ endif()
 ExternalProject_Add(vendor-aribb24
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
-  GIT_REPOSITORY
-    https://github.com/mirakc/aribb24.git
-  GIT_TAG
-    ${MIRAKC_ARIB_ARIBB24_VERSION}
+  SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/aribb24"
   CONFIGURE_COMMAND
     ./bootstrap
   COMMAND
@@ -492,10 +573,8 @@ ExternalProject_Add(vendor-tsduck-arib
     vendor-aribb24
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
-  GIT_REPOSITORY
-    https://github.com/mirakc/tsduck-arib.git
-  GIT_TAG
-    ${MIRAKC_ARIB_TSDUCK_ARIB_VERSION}
+  SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/tsduck-arib"
   CONFIGURE_COMMAND
     ""
   BUILD_COMMAND
@@ -543,12 +622,10 @@ endif()
 ExternalProject_Add(vendor-libisdb
   PREFIX
     ${MIRAKC_ARIB_VENDOR_DIR}
-  GIT_REPOSITORY
-    https://github.com/DBCTRADO/LibISDB.git
-  GIT_TAG
-    ${MIRAKC_ARIB_LIBISDB_VERSION}
+  SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/libisdb"
   PATCH_COMMAND
-    git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/LibISDB.patch
+    patch -p0 < ${CMAKE_SOURCE_DIR}/patches/LibISDB.patch
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -573,7 +650,8 @@ if(libisdb_LIB)
     IMPORTED_LOCATION
       ${libisdb_LIB}
     INTERFACE_INCLUDE_DIRECTORIES
-      ${MIRAKC_ARIB_VENDOR_DIR}/src/vendor-libisdb
+      # Upstream project does not install hpp file
+      ${CMAKE_CURRENT_SOURCE_DIR}/vendor/libisdb
     INTERFACE_LINK_LIBRARIES
       "${CMAKE_THREAD_LIBS_INIT}"
   )
@@ -588,12 +666,8 @@ if(MIRAKC_ARIB_TEST)
   ExternalProject_Add(vendor-googletest
     PREFIX
       ${MIRAKC_ARIB_VENDOR_DIR}
-    GIT_REPOSITORY
-      https://github.com/google/googletest.git
-    GIT_TAG
-      ${MIRAKC_ARIB_GOOGLETEST_VERSION}
-    GIT_SHALLOW
-      YES
+    SOURCE_DIR
+      "${CMAKE_CURRENT_SOURCE_DIR}/vendor/googletest"
     CMAKE_ARGS
       -D CMAKE_BUILD_TYPE=Release
       -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -630,12 +704,8 @@ if(MIRAKC_ARIB_TEST)
   ExternalProject_Add(vendor-google-benchmark
     PREFIX
       ${MIRAKC_ARIB_VENDOR_DIR}
-    GIT_REPOSITORY
-      https://github.com/google/benchmark.git
-    GIT_TAG
-      ${MIRAKC_ARIB_GOOGLE_BENCHMARK_VERSION}
-    GIT_SHALLOW
-      YES
+    SOURCE_DIR
+      "${CMAKE_CURRENT_SOURCE_DIR}/vendor/google-benchmark"
     CMAKE_ARGS
       -D CMAKE_BUILD_TYPE=Release
       -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
