@@ -13,6 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          submodules: recursive
           # Use PAT in order to invoke other workflows.
           token: ${{ secrets.BOT_GITHUB_TOKEN }}
       - name: git config
