@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# -d option is needed for working on //vendor/google-benchmark.
+if git show-ref --tags -d | grep $(git rev-parse HEAD) >/dev/null 2>&1
+then
+  git describe --tags
+else
+  git rev-parse HEAD
+fi

@@ -28,7 +28,7 @@ set(MIRAKC_ARIB_VERSION "0.16.3"
 #
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/docopt"
   OUTPUT_VARIABLE
@@ -37,7 +37,7 @@ execute_process(
 )
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/fmt"
   OUTPUT_VARIABLE
@@ -46,7 +46,7 @@ execute_process(
 )
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/spdlog"
   OUTPUT_VARIABLE
@@ -55,7 +55,7 @@ execute_process(
 )
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/rapidjson"
   OUTPUT_VARIABLE
@@ -64,7 +64,7 @@ execute_process(
 )
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/cppcodec"
   OUTPUT_VARIABLE
@@ -73,7 +73,7 @@ execute_process(
 )
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/aribb24"
   OUTPUT_VARIABLE
@@ -82,7 +82,7 @@ execute_process(
 )
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/tsduck-arib"
   OUTPUT_VARIABLE
@@ -91,7 +91,7 @@ execute_process(
 )
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/libisdb"
   OUTPUT_VARIABLE
@@ -100,7 +100,7 @@ execute_process(
 )
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/googletest"
   OUTPUT_VARIABLE
@@ -109,7 +109,7 @@ execute_process(
 )
 execute_process(
   COMMAND
-    git rev-parse HEAD
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tag-or-hash
   WORKING_DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/google-benchmark"
   OUTPUT_VARIABLE
