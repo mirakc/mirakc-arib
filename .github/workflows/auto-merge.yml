@@ -55,12 +55,23 @@ jobs:
           github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
+
+            if (!context.payload.workflow_run.pull_requests) {
+              console.log(`Not Closed: The payload must contain the pull_requests property`);
+              return;
+            }
+
+            if (!context.payload.workflow_run.pull_requests[0]) {
+              console.log(`Not Closed: The pull_requests property must not an empty array`);
+              return;
+            }
+
             const pull_number = context.payload.workflow_run.pull_requests[0].number;
 
             const pr = await github.pulls.get({ owner, repo, pull_number });
 
             if (!pr.data.labels.some((label) => label.name === process.env.ALLOWED_LABEL)) {
-              console.log(`Not Merged: Labels must contains "${process.env.ALLOWED_LABEL}"`);
+              console.log(`Not Closed: Labels must contains "${process.env.ALLOWED_LABEL}"`);
               return;
             }
 
