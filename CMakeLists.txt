@@ -357,7 +357,7 @@ ExternalProject_Add(vendor-spdlog
   SOURCE_DIR
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/spdlog"
   PATCH_COMMAND
-    patch -p0 < ${CMAKE_SOURCE_DIR}/patches/spdlog.patch
+    git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/spdlog.patch
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
@@ -625,7 +625,7 @@ ExternalProject_Add(vendor-libisdb
   SOURCE_DIR
     "${CMAKE_CURRENT_SOURCE_DIR}/vendor/libisdb"
   PATCH_COMMAND
-    patch -p0 < ${CMAKE_SOURCE_DIR}/patches/LibISDB.patch
+    git checkout -f && patch -p0 < ${CMAKE_SOURCE_DIR}/patches/LibISDB.patch
   CMAKE_ARGS
     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -D CMAKE_INSTALL_PREFIX=${MIRAKC_ARIB_VENDOR_DIR}
