@@ -27,7 +27,7 @@ jobs:
             const { owner, repo } = context.repo;
             const pull_number = context.payload.workflow_run.pull_requests[0].number;
 
-            const pr = await github.pulls.get({ owner, repo, pull_number });
+            const pr = await github.rest.pulls.get({ owner, repo, pull_number });
 
             if (!pr.data.labels.some((label) => label.name === process.env.ALLOWED_LABEL)) {
               console.log(`Not Merged: Labels must contains "${process.env.ALLOWED_LABEL}"`);
@@ -40,7 +40,7 @@ jobs:
             }
 
             // The branch will be deleted automatically.
-            await github.pulls.merge({ owner, repo, pull_number });
+            await github.rest.pulls.merge({ owner, repo, pull_number });
             console.log(`Merged #${pull_number} successfully`);
 
   auto-close:
@@ -68,7 +68,7 @@ jobs:
 
             const pull_number = context.payload.workflow_run.pull_requests[0].number;
 
-            const pr = await github.pulls.get({ owner, repo, pull_number });
+            const pr = await github.rest.pulls.get({ owner, repo, pull_number });
 
             if (!pr.data.labels.some((label) => label.name === process.env.ALLOWED_LABEL)) {
               console.log(`Not Closed: Labels must contains "${process.env.ALLOWED_LABEL}"`);
@@ -80,9 +80,9 @@ jobs:
               return;
             }
 
-            await github.pulls.update({ owner, repo, pull_number, state: 'closed' });
+            await github.rest.pulls.update({ owner, repo, pull_number, state: 'closed' });
             console.log(`Closed #${pull_number} successfully`);
 
             const ref = `heads/${pr.data.head.ref}`;
-            await github.git.deleteRef({ owner, repo, ref });
+            await github.rest.git.deleteRef({ owner, repo, ref });
             console.log(`Deleted ${pr.data.head.ref} automatically`);
