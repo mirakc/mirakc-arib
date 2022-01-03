@@ -44,6 +44,7 @@ jobs:
           ninja -C build cli-tests
   macos-build:
     runs-on: macos-latest
+    continue-on-error: true # macOS is unsupported officially
     steps:
       - uses: actions/checkout@v2
         with:
