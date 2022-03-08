@@ -109,6 +109,9 @@ class ServiceRecorder final : public PacketSink,
       case State::kDone:
         return false;
     }
+
+    MIRAKC_ARIB_NEVER_REACH("state_ was broken");
+    return false;
   }
 
   void OnEndOfChunk(uint64_t pos) override {

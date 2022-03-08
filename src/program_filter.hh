@@ -100,7 +100,9 @@ class ProgramFilter final : public PacketSink,
       case kStreaming:
         return DoStreaming(packet);
     }
-    // never reach here
+
+    MIRAKC_ARIB_NEVER_REACH("state_ was broken");
+    return false;
   }
 
  private:
