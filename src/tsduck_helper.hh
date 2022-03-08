@@ -534,6 +534,21 @@ rapidjson::Document MakeJsonValue(const EitSection& eit) {
   return eit_json;
 }
 
+bool IsAudioVideoService(uint8_t service_type) {
+  switch (service_type) {
+    case 0x01:
+    case 0x02:
+    case 0xA1:
+    case 0xA2:
+    case 0xA5:
+    case 0xA6:
+    case 0xAD:
+      return true;
+    default:
+      return false;
+  }
+}
+
 }  // namespace
 
 // Including <fmt/ostream.h> doesn't work as we expected...

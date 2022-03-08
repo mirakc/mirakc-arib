@@ -183,9 +183,7 @@ class PcrSynchronizer final : public PacketSink,
         continue;
       }
       auto service_type = it->second.serviceType(context_);
-      if (service_type != 0x01 && service_type != 0x02 &&
-          service_type != 0xA1 && service_type != 0xA2 &&
-          service_type != 0xA5 && service_type != 0xA6) {
+      if (!IsAudioVideoService(service_type)) {
         continue;
       }
       ++pmt_count_;
