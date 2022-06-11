@@ -756,6 +756,7 @@ add_executable(mirakc-arib
   src/airtime_tracker.hh
   src/base.hh
   src/eit_collector.hh
+  src/eitpf_collector.hh
   src/file.hh
   src/jsonl_sink.hh
   src/jsonl_source.hh
@@ -834,6 +835,7 @@ if(MIRAKC_ARIB_TEST)
     test/airtime_tracker_test.cc
     test/base_test.cc
     test/eit_collector_test.cc
+    test/eitpf_collector_test.cc
     test/logo_collector_test.cc
     test/packet_source_test.cc
     test/pcr_synchronizer_test.cc

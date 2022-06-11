@@ -16,6 +16,7 @@
 #include "airtime_tracker.hh"
 #include "base.hh"
 #include "eit_collector.hh"
+#include "eitpf_collector.hh"
 #include "file.hh"
 #include "jsonl_sink.hh"
 #include "logging.hh"
@@ -49,7 +50,7 @@ Tools to process ARIB TS streams.
 
 Usage:
   mirakc-arib (-h | --help)
-    [(scan-services | sync-clocks | collect-eits | collect-logos |
+    [(scan-services | sync-clocks | collect-eits | collect-eitpf | collect-logos |
       filter-service | filter-program | filter-program-metadata |
       record-service | track-airtime | seek-start | print-pes)]
   mirakc-arib --version
@@ -58,6 +59,8 @@ Usage:
   mirakc-arib collect-eits [--sids=<sid>...] [--xsids=<sid>...]
                            [--time-limit=<ms>] [--streaming]
                            [--use-unicode-symbol] [<file>]
+  mirakc-arib collect-eitpf [--sids=<sid>...]
+                            [--streaming] [(--present | --following)] [<file>]
   mirakc-arib collect-logos [<file>]
   mirakc-arib filter-service --sid=<sid> [<file>]
   mirakc-arib filter-program --sid=<sid> --eid=<eid>
@@ -211,7 +214,7 @@ Description:
 static const std::string kCollectEits = "collect-eits";
 
 static const std::string kCollectEitsHelp = R"(
-Collect EIT sections
+Collect EIT[schedule] sections
 
 Usage:
   mirakc-arib collect-eits [--sids=<sid>...] [--xsids=<sid>...]
@@ -252,8 +255,8 @@ Arguments:
     Path to a TS file.
 
 Description:
-  `collect-eits` collects EIT sections from a TS stream.  Results will be output
-  to STDOUT in the following JSONL format:
+  `collect-eits` collects EIT[schedule] sections from a TS stream.  Results will
+  be output to STDOUT in the following JSONL format:
 
     $ recdvb 27 10 - 2>/dev/null | mirakc-arib collect-eits | head -1 | jq
     {{
@@ -303,6 +306,55 @@ Description:
         ...
       ]
     }}
+
+Environment Variables:
+  MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS
+    Set `1` if you like to keep Unicode symbols like enclosed ideographic
+    supplement characters.
+
+    This option is added just for backword-compatibility.  It's not recommended
+    to use this option in normal use cases.  Because some functions of
+    EPGStation like the de-duplication of recorded programs won't work properly
+    if this option is specified.
+)";
+
+static const std::string kCollectEitpf = "collect-eitpf";
+
+static const std::string kCollectEitpfHelp = R"(
+Collect EIT[p/f] sections
+
+Usage:
+  mirakc-arib collect-eitpf [--sids=<sid>...]
+                            [--streaming] [(--present | --following)] [<file>]
+
+Options:
+  -h --help
+    Print help.
+
+  --sids=<sid>
+    Service ID which must be included.
+
+    Optional in the streaming mode.
+
+  --streaming
+    Streaming mode.
+
+    In the streaming mode, the program never stops until killed.  Output an EIT
+    section when its version changes from the previous one.
+
+  --present
+    Collect ony EIT[p] sections.
+
+  --following
+    Collect only EIT[f] sections.
+
+Arguments:
+  <file>
+    Path to a TS file.
+
+Description:
+  `collect-eitpf` collects EIT[p/f] sections from a TS stream.  Results will be
+  output to STDOUT in the same JSONL format as `collect-eits`.
 
 Environment Variables:
   MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS
@@ -941,6 +993,8 @@ void Init(const Args& args) {
     InitLogger(kSyncClocks);
   } else if (args.at(kCollectEits).asBool()) {
     InitLogger(kCollectEits);
+  } else if (args.at(kCollectEitpf).asBool()) {
+    InitLogger(kCollectEitpf);
   } else if (args.at(kCollectLogos).asBool()) {
     InitLogger(kCollectLogos);
   } else if (args.at(kFilterService).asBool()) {
@@ -1053,6 +1107,20 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
   }
   MIRAKC_ARIB_INFO("Options: time-limit={}, streaming={} use-unicode-symbol={}",
                    opt->time_limit, opt->streaming, use_unicode_symbol);
+}
+
+void LoadOption(const Args& args, EitpfCollectorOption* opt) {
+  static const std::string kStreaming = "--streaming";
+  static const std::string kPresent = "--present";
+  static const std::string kFollowing = "--following";
+
+  LoadSidSet(args, "--sids", &opt->sids);
+
+  opt->streaming = args.at(kStreaming).asBool();
+  opt->following = !args.at(kPresent).asBool();
+  opt->present = !args.at(kFollowing).asBool();
+  MIRAKC_ARIB_INFO("Options: streaming={} preset={} following={}",
+                   opt->streaming, opt->present, opt->following);
 }
 
 void LoadOption(const Args& args, ServiceFilterOption* opt) {
@@ -1213,6 +1281,13 @@ std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
     collector->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
     return collector;
   }
+  if (args.at(kCollectEitpf).asBool()) {
+    EitpfCollectorOption option;
+    LoadOption(args, &option);
+    auto collector = std::make_unique<EitpfCollector>(option);
+    collector->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
+    return collector;
+  }
   if (args.at(kCollectLogos).asBool()) {
     auto collector = std::make_unique<LogoCollector>();
     collector->Connect(std::move(std::make_unique<StdoutJsonlSink>()));
@@ -1285,6 +1360,8 @@ void ShowHelp(const Args& args) {
     fmt::print(kSyncClocksHelp);
   } else if (args.at(kCollectEits).asBool()) {
     fmt::print(kCollectEitsHelp);
+  } else if (args.at(kCollectEitpf).asBool()) {
+    fmt::print(kCollectEitpfHelp);
   } else if (args.at(kCollectLogos).asBool()) {
     fmt::print(kCollectLogosHelp);
   } else if (args.at(kFilterService).asBool()) {

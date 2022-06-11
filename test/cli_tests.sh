@@ -9,12 +9,13 @@ export MIRAKC_ARIB_LOG=none
 assert() {
   expected=$1
   cmd="$2"
-  sh -c "$cmd </dev/null >/dev/null"
+  error=$(sh -c "$cmd </dev/null >/dev/null" 2>&1)
   actual=$?
   if [ $expected -eq $actual ]; then
     echo "PASS: $cmd"
   else
     echo "FAIL: $cmd: expectd($expected) actual($actual)"
+    echo "$error"
     exit 1
   fi
 }
@@ -41,6 +42,12 @@ assert 1 "$MIRAKC_ARIB sync-clocks --sids=1 --sids=0xFFFF --xsids=1 --xsids=0xFF
 assert 1 "$MIRAKC_ARIB collect-eits"
 assert 1 "$MIRAKC_ARIB collect-eits --sids=1 --sids=0xFFFF --xsids=1 --xsids=0xFFFF --time-limit=0x7FFFFFFFFFFFFFFF --streaming"
 assert 134 "$MIRAKC_ARIB collect-eits --time-limit=0xFFFFFFFFFFFFFFFF"
+
+assert 0 "$MIRAKC_ARIB collect-eitpf"
+assert 0 "$MIRAKC_ARIB collect-eitpf --sids=1 --sids=0xFFFF --streaming"
+assert 0 "$MIRAKC_ARIB collect-eitpf --sids=1 --sids=0xFFFF --streaming --present"
+assert 0 "$MIRAKC_ARIB collect-eitpf --sids=1 --sids=0xFFFF --streaming --following"
+assert 255 "$MIRAKC_ARIB collect-eitpf --present --following"
 
 assert 0 "$MIRAKC_ARIB filter-service --sid=1"
 assert 0 "$MIRAKC_ARIB filter-service --sid=0xFFFF"

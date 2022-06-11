@@ -59,6 +59,10 @@ class SidSet {
     return set_.find(sid) != set_.end();
   }
 
+  inline size_t size() const {
+    return set_.size();
+  }
+
  private:
   explicit SidSet(SidSet&& set) = delete;
 
