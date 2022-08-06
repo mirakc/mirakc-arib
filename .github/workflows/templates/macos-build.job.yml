@@ -25,9 +25,10 @@ jobs:
       - name: Build
         run: |
           ninja -C build
-      - name: Show help
+      - name: Show help and version
         run: |
           build/bin/mirakc-arib -h
+          build/bin/mirakc-arib --version
       - name: Run tests
         run: |
           ninja -C build test
