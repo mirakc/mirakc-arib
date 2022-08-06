@@ -367,7 +367,7 @@ ExternalProject_Add(vendor-spdlog
     -D SPDLOG_BUILD_EXAMPLE=OFF
     -D SPDLOG_BUILD_BENCH=OFF
     -D SPDLOG_BUILD_TESTS=${MIRAKC_ARIB_VENDOR_TEST}
-    -D SPDLOG_FMT_EXTERNAL=ON
+    -D SPDLOG_FMT_EXTERNAL_HO=ON
   EXCLUDE_FROM_ALL
     YES
 )
@@ -786,8 +786,8 @@ set_target_properties(mirakc-arib
 target_link_libraries(mirakc-arib
   PRIVATE
     docopt_s
-    fmt::fmt
-    spdlog::spdlog
+    fmt::fmt-header-only
+    spdlog::spdlog_header_only
     rapidjson::header-only
     cppcodec::header-only
     tsduck-arib::static-lib
@@ -882,8 +882,8 @@ if(MIRAKC_ARIB_TEST)
     PRIVATE
       GTest::gmock
       GTest::gtest
-      fmt::fmt
-      spdlog::spdlog
+      fmt::fmt-header-only
+      spdlog::spdlog_header_only
       rapidjson::header-only
       cppcodec::header-only
       tsduck-arib::static-lib
@@ -909,8 +909,8 @@ if(MIRAKC_ARIB_TEST)
   target_link_libraries(mirakc-arib-benchmark
     PRIVATE
       benchmark::benchmark
-      fmt::fmt
-      spdlog::spdlog
+      fmt::fmt-header-only
+      spdlog::spdlog_header_only
       rapidjson::header-only
       cppcodec::header-only
       tsduck-arib::static-lib
