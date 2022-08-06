@@ -3,11 +3,11 @@ jobs:
     runs-on: macos-latest
     continue-on-error: true  # macOS is unsupported officially
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Cache for external projects
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: build/vendor
           key: ${{ runner.os }}-macos-build-${{ hashFiles('CMakeLists.txt') }}

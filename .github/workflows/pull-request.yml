@@ -12,11 +12,11 @@ jobs:
   linux-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Cache for external projects
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: build/vendor
           key: ${{ runner.os }}-linux-build-${{ hashFiles('CMakeLists.txt') }}
@@ -46,11 +46,11 @@ jobs:
     runs-on: macos-latest
     continue-on-error: true # macOS is unsupported officially
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Cache for external projects
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: build/vendor
           key: ${{ runner.os }}-macos-build-${{ hashFiles('CMakeLists.txt') }}
@@ -100,11 +100,11 @@ jobs:
             docker-arch: arm64v8
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Cache for external projects
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: build/vendor
           key: ${{ runner.os }}-arm-build-${{ matrix.arch }}-${{ hashFiles('CMakeLists.txt') }}
@@ -130,7 +130,7 @@ jobs:
           readelf -h build/bin/mirakc-arib | grep Machine | grep '${{ matrix.elf-machine }}'
           readelf -h build/bin/mirakc-arib | grep Flags | grep '${{ matrix.elf-flags }}'
       - name: Setup QEMU user-mode emulation
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       - name: Show help
         run: |
           docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib -h
@@ -144,18 +144,18 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Cache for external projects
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: build/vendor
           key: ${{ runner.os }}-coverage-${{ hashFiles('CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-coverage-
       - name: Cache for grcov
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
@@ -187,6 +187,6 @@ jobs:
         run: >-
           grcov build --branch --llvm --ignore-not-existing -s . -p .. --ignore 'test/*' -t lcov -o lcov.info
       - name: Update to codecov.io
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: lcov.info
