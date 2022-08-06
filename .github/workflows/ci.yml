@@ -42,39 +42,7 @@ jobs:
         run: |
           ninja -C build test
           ninja -C build cli-tests
-  macos-build:
-    runs-on: macos-latest
-    continue-on-error: true # macOS is unsupported officially
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Cache for external projects
-        uses: actions/cache@v3
-        with:
-          path: build/vendor
-          key: ${{ runner.os }}-macos-build-${{ hashFiles('CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-macos-build-
-      - name: Install deps
-        run: |
-          brew install autoconf automake gnu-sed grep dos2unix libtool make ninja pkg-config
-      - name: Generate project files
-        run: |
-          cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON
-      - name: Build vendor libraries
-        run: |
-          ninja -C build vendor
-      - name: Build
-        run: |
-          ninja -C build
-      - name: Show help
-        run: |
-          build/bin/mirakc-arib -h
-      - name: Run tests
-        run: |
-          ninja -C build test
-          ninja -C build cli-tests
+  #macos-build:
   arm-linux-build:
     strategy:
       matrix:

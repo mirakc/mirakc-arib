@@ -21,7 +21,6 @@ $HEADER
 $($DOCKER run --rm -v $BASEDIR/templates:/workdir mikefarah/yq:3 yq m \
     ci.workflow.yml \
     linux-build.job.yml \
-    macos-build.job.yml \
     arm-linux-build.job.yml \
     coverage.job.yml
 )
@@ -32,7 +31,6 @@ $HEADER
 $($DOCKER run --rm -v $BASEDIR/templates:/workdir mikefarah/yq:3 yq m \
     pull-request.workflow.yml \
     linux-build.job.yml \
-    macos-build.job.yml \
     arm-linux-build.job.yml \
     coverage.job.yml
 )

@@ -9,7 +9,7 @@ on:
 
 jobs:
   linux-build:
-  macos-build:
+  #macos-build:
   arm-linux-build:
   coverage:
     needs:
