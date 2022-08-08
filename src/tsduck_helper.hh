@@ -237,6 +237,65 @@ rapidjson::Value MakeJsonValue(
 }
 
 rapidjson::Value MakeJsonValue(
+    const LibISDB::SeriesDescriptor* desc,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value json(rapidjson::kObjectType);
+  json.AddMember("$type", "Series", allocator);
+  json.AddMember("seriesId", desc->GetSeriesID(), allocator);
+  json.AddMember("repeatLabel", desc->GetRepeatLabel(), allocator);
+  json.AddMember("programPattern", desc->GetProgramPattern(), allocator);
+  LibISDB::DateTime expire_date;
+  if (desc->GetExpireDate(&expire_date)) {
+    json.AddMember(
+        "expireDate",
+        static_cast<uint64_t>(expire_date.GetLinearMilliseconds()), allocator);
+  }
+  json.AddMember("episodeNumber", desc->GetEpisodeNumber(), allocator);
+  json.AddMember("lastEpisodeNumber", desc->GetLastEpisodeNumber(), allocator);
+  LibISDB::ARIBString series_name;
+  if (desc->GetSeriesName(&series_name)) {
+    json.AddMember("seriesName", DecodeAribString(series_name), allocator);
+  }
+  return json;
+}
+
+rapidjson::Value MakeJsonValue(
+    uint8_t group_type,
+    const LibISDB::EventGroupDescriptor::EventInfo& info,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value json(rapidjson::kObjectType);
+  switch (group_type) {
+    case LibISDB::EventGroupDescriptor::GROUP_TYPE_RELAY_TO_OTHER_NETWORK:
+    case LibISDB::EventGroupDescriptor::GROUP_TYPE_MOVEMENT_FROM_OTHER_NETWORK:
+      json.AddMember("originalNetworkId", info.NetworkID, allocator);
+      json.AddMember("transportStreamId", info.TransportStreamID, allocator);
+      break;
+    default:
+      break;
+  }
+  json.AddMember("serviceId", info.ServiceID, allocator);
+  json.AddMember("eventId", info.EventID, allocator);
+  return json;
+}
+
+rapidjson::Value MakeJsonValue(
+    const LibISDB::EventGroupDescriptor* desc,
+    rapidjson::Document::AllocatorType& allocator) {
+  rapidjson::Value json(rapidjson::kObjectType);
+  json.AddMember("$type", "EventGroup", allocator);
+  json.AddMember("groupType", desc->GetGroupType(), allocator);
+  rapidjson::Value events(rapidjson::kArrayType);
+  for (int i = 0; i < desc->GetEventCount(); ++i) {
+    LibISDB::EventGroupDescriptor::EventInfo info;
+    (void)desc->GetEventInfo(i, &info);
+    auto event = MakeJsonValue(desc->GetGroupType(), info, allocator);
+    events.PushBack(event, allocator);
+  }
+  json.AddMember("events", events, allocator);
+  return json;
+}
+
+rapidjson::Value MakeJsonValue(
     const LibISDB::String& desc, const LibISDB::String& item,
     rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value json(rapidjson::kArrayType);
@@ -397,6 +456,22 @@ rapidjson::Value MakeJsonValue(
         }
         break;
       }
+      case LibISDB::SeriesDescriptor::TAG: {
+        LibISDB::SeriesDescriptor desc;
+        if (desc.Parse(dp->content(), dp->size())) {
+          auto json = MakeJsonValue(&desc, allocator);
+          descriptors.PushBack(json, allocator);
+        }
+        break;
+      }
+      case LibISDB::EventGroupDescriptor::TAG: {
+        LibISDB::EventGroupDescriptor desc;
+        if (desc.Parse(dp->content(), dp->size())) {
+          auto json = MakeJsonValue(&desc, allocator);
+          descriptors.PushBack(json, allocator);
+        }
+        break;
+      }
       default:
         break;
     }
@@ -483,6 +558,18 @@ rapidjson::Value MakeEventsJsonValue(const EitSection& eit, Allocator& allocator
         }
         case LibISDB::AudioComponentDescriptor::TAG: {
           const auto* desc = static_cast<const LibISDB::AudioComponentDescriptor*>(dp);
+          auto json = MakeJsonValue(desc, allocator);
+          descriptors.PushBack(json, allocator);
+          break;
+        }
+        case LibISDB::SeriesDescriptor::TAG: {
+          const auto* desc = static_cast<const LibISDB::SeriesDescriptor*>(dp);
+          auto json = MakeJsonValue(desc, allocator);
+          descriptors.PushBack(json, allocator);
+          break;
+        }
+        case LibISDB::EventGroupDescriptor::TAG: {
+          const auto* desc = static_cast<const LibISDB::EventGroupDescriptor*>(dp);
           auto json = MakeJsonValue(desc, allocator);
           descriptors.PushBack(json, allocator);
           break;
