@@ -31,6 +31,7 @@
 #include "service_recorder.hh"
 #include "service_scanner.hh"
 #include "start_seeker.hh"
+#include "tsduck_helper.hh"
 #include "pes_printer.hh"
 
 namespace {
@@ -66,7 +67,8 @@ Usage:
   mirakc-arib filter-program --sid=<sid> --eid=<eid>
     --clock-pid=<pid> --clock-pcr=<pcr> --clock-time=<unix-time-ms>
     [--audio-tags=<tag>...] [--video-tags=<tag>...]
-    [--start-margin=<ms>] [--end-margin=<ms>] [--pre-streaming] [<file>]
+    [--start-margin=<ms>] [--end-margin=<ms>] [--wait-until=<unix-time-ms>]
+    [--pre-streaming] [<file>]
   mirakc-arib filter-program-metadata [--sid=<sid>] [<file>]
   mirakc-arib record-service --sid=<sid> --file=<file>
     --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [<file>]
@@ -490,7 +492,8 @@ Usage:
   mirakc-arib filter-program --sid=<sid> --eid=<eid>
     --clock-pid=<pid> --clock-pcr=<pcr> --clock-time=<unix-time-ms>
     [--audio-tags=<tag>...] [--video-tags=<tag>...]
-    [--start-margin=<ms>] [--end-margin=<ms>] [--pre-streaming] [<file>]
+    [--start-margin=<ms>] [--end-margin=<ms>] [--wait-until=<unix-time-ms>]
+    [--pre-streaming] [<file>]
 
 Options:
   -h --help
@@ -500,7 +503,7 @@ Options:
     Service ID.
 
   --eid=<eid>
-    Event ID of a TV program.
+    Event ID of the TV program to record.
 
   --clock-pid=<pid>
     PID of PCR for the service.
@@ -530,6 +533,9 @@ Options:
 
   --end-margin=<ms>  [default: 0]
     Offset (ms) from the end time of the event toward the future.
+
+  --wait-until=<unix-time-ms>
+    Wait for the TV prgram to start until the specified time.
 
   --pre-streaming
     Output PAT packets before start.
@@ -1024,10 +1030,6 @@ std::unique_ptr<PacketSource> MakePacketSource(const Args& args) {
   return std::make_unique<FileSource>(std::move(file));
 }
 
-ts::Time ConvertUnixTimeToJstTime(ts::MilliSecond unix_time_ms) {
-  return ts::Time::UnixEpoch + unix_time_ms + kJstTzOffset;
-}
-
 void LoadSidSet(const Args& args, const std::string& name, SidSet* sids) {
   if (args.at(name)) {
     auto list = args.at(name).asStringList();
@@ -1144,6 +1146,7 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
   static const std::string kVideoTags = "--video-tags";
   static const std::string kStartMargin = "--start-margin";
   static const std::string kEndMargin = "--end-margin";
+  static const std::string kWaitUntil = "--wait-until";
   static const std::string kPreStreaming = "--pre-streaming";
 
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
@@ -1162,12 +1165,27 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
     opt->end_margin =
         static_cast<ts::MilliSecond>(args.at(kEndMargin).asInt64());
   }
+  if (args.at(kWaitUntil)) {
+    opt->wait_until = ConvertUnixTimeToJstTime(
+        static_cast<ts::MilliSecond>(args.at(kWaitUntil).asInt64()));
+  }
   opt->pre_streaming = args.at(kPreStreaming).asBool();
-  MIRAKC_ARIB_INFO(
-      "ProgramFilterOptions: sid={:04X} eid={:04X} clock=({:04X}, {:011X}, {})"
-      " margin=({}, {}) pre-streaming={}",
-      opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time,
-      opt->start_margin, opt->end_margin, opt->pre_streaming);
+  if (opt->wait_until.has_value()) {
+    MIRAKC_ARIB_INFO(
+        "ProgramFilterOptions: sid={:04X} eid={:04X}"
+        " clock=({:04X}, {:011X}, {}) margin=({}, {}) wait-until=\"{}\""
+        " pre-streaming={}",
+        opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time,
+        opt->start_margin, opt->end_margin, opt->wait_until.value(),
+        opt->pre_streaming);
+  } else {
+    MIRAKC_ARIB_INFO(
+        "ProgramFilterOptions: sid={:04X} eid={:04X}"
+        " clock=({:04X}, {:011X}, {}) margin=({}, {}) wait-until=none"
+        " pre-streaming={}",
+        opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time,
+        opt->start_margin, opt->end_margin, opt->pre_streaming);
+  }
 }
 
 void LoadOption(const Args& args, ProgramMetadataFilterOption* opt) {

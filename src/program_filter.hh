@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 
@@ -33,8 +34,9 @@ struct ProgramFilterOption final {
   ts::Time clock_time;  // JST
   std::unordered_set<uint8_t> audio_tags;
   std::unordered_set<uint8_t> video_tags;
-  ts::MilliSecond start_margin = 0;  // ms
-  ts::MilliSecond end_margin = 0;  // ms
+  ts::MilliSecond start_margin = 0;
+  ts::MilliSecond end_margin = 0;
+  std::optional<ts::Time> wait_until = std::nullopt;  // JST
   bool pre_streaming = false;  // disabled
 };
 
@@ -50,9 +52,16 @@ class ProgramFilter final : public PacketSink,
     clock_pcr_ready_ = true;
     clock_time_ready_ = true;
     MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
-        "Initial clock: PCR#{:04X}, {:011X} ({})", clock_pid_, clock_pcr_, clock_time_);
-    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Video tags: {}", fmt::join(option_.video_tags, ", "));
-    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Audio tags: {}", fmt::join(option_.audio_tags, ", "));
+        "Initial clock: PCR#{:04X}, {:011X} ({})",
+        clock_pid_, clock_pcr_, clock_time_);
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
+        "Video tags: {}", fmt::join(option_.video_tags, ", "));
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
+        "Audio tags: {}", fmt::join(option_.audio_tags, ", "));
+    if (option_.wait_until.has_value()) {
+      MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
+          "Wait until: {}", option_.wait_until.value());
+    }
 
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
@@ -473,9 +482,10 @@ class ProgramFilter final : public PacketSink,
       return;
     }
 
-    MIRAKC_ARIB_PROGRAM_FILTER_ERROR("Event#{:04X} might have been canceled", option_.eid);
-    stop_ = true;
-    return;
+    if (!option_.wait_until.has_value()) {
+      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("Event#{:04X} might have been canceled", option_.eid);
+      stop_ = true;
+    }
   }
 
   void HandleTdt(const ts::BinaryTable& table) {
@@ -484,6 +494,10 @@ class ProgramFilter final : public PacketSink,
     if (!tdt.isValid()) {
       MIRAKC_ARIB_PROGRAM_FILTER_WARN("Broken TDT, skip");
       return;
+    }
+
+    if (state_ == kWaitReady) {
+      CheckTimeLimit(tdt.utc_time);
     }
 
     if (clock_time_ready_) {
@@ -499,6 +513,10 @@ class ProgramFilter final : public PacketSink,
     if (!tot.isValid()) {
       MIRAKC_ARIB_PROGRAM_FILTER_WARN("Broken TOT, skip");
       return;
+    }
+
+    if (state_ == kWaitReady) {
+      CheckTimeLimit(tot.utc_time);
     }
 
     if (clock_time_ready_) {
@@ -577,6 +595,16 @@ class ProgramFilter final : public PacketSink,
     }
     MIRAKC_ARIB_ASSERT(pcr >= 0);
     return pcr % kPcrUpperBound;
+  }
+
+  void CheckTimeLimit(const ts::Time& jst_time) {
+    if (option_.wait_until.has_value()) {
+      if (jst_time > option_.wait_until.value()) {
+        MIRAKC_ARIB_PROGRAM_FILTER_ERROR(
+            "Timed out, Event#{:04X} might have been canceled", option_.eid);
+        stop_ = true;
+      }
+    }
   }
 
   const ProgramFilterOption option_;

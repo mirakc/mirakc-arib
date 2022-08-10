@@ -26,6 +26,10 @@ constexpr int64_t kPcrUpperBound = kMaxPcr + 1;
 constexpr int64_t kPcrTicksPerSec = 27 * 1000 * 1000;  // 27MHz
 constexpr int64_t kPcrTicksPerMs = kPcrTicksPerSec / ts::MilliSecPerSec;
 
+inline ts::Time ConvertUnixTimeToJstTime(ts::MilliSecond unix_time_ms) {
+  return ts::Time::UnixEpoch + unix_time_ms + kJstTzOffset;
+}
+
 inline bool CheckComponentTagByRange(
     const ts::PMT::Stream& stream, uint8_t min, uint8_t max) {
   uint8_t tag;
