@@ -6,6 +6,7 @@ PROJDIR="$(cd $BASEDIR/..; pwd)"
 
 CURRENT=$(git describe --abbrev=0)
 COMMIT=yes
+BUILD_DIR=
 
 help() {
     cat <<EOF >&2
@@ -29,6 +30,23 @@ EOF
     exit 0
 }
 
+log() {
+  echo "$1" >&2
+}
+
+error() {
+  log "ERROR: $1"
+  exit 1
+}
+
+cleanup() {
+  if [ -n "$BUILD_DIR" ]
+  then
+    rm -rf $BUILD_DIR
+  fi
+  find $PROJDIR -name '*.sed.backup' | xargs rm -f
+}
+
 while [ $# -gt 0 ]
 do
   case "$1" in
@@ -48,17 +66,20 @@ do
   esac
 done
 
+trap cleanup EXIT
+
 VERSION=$(npx semver $CURRENT -i $1)
 
-echo "Bumping the version to $VERSION..."
-# Don't use the -i option of `sed`.
-# The incompatibility between macOS and GNU will cause troubles.
-sed -r -e "s|^set\(MIRAKC_ARIB_VERSION .*|set\(MIRAKC_ARIB_VERSION \"$VERSION\"|" \
-  $PROJDIR/CMakeLists.txt | sponge $PROJDIR/CMakeLists.txt
+log "Pulling changes from origin..."
+git pull
+
+log "Bumping the version to $VERSION..."
+sed -i'.sed.backup' -r \
+  -e "s|^set\(MIRAKC_ARIB_VERSION .*|set\(MIRAKC_ARIB_VERSION \"$VERSION\"|" \
+  $PROJDIR/CMakeLists.txt
 
 # Make sure that cmake can generate project files successfully.
 BUILD_DIR=$(mktemp -d)
-trap "rm -rf $BUILD_DIR" EXIT
 cmake -S . -B $BUILD_DIR -D CMAKE_BUILD_TYPE=Release
 
 # TODO: Genereate CHANGELOG.md
@@ -68,6 +89,15 @@ then
   git add $PROJDIR/CMakeLists.txt
   git commit -m "misc: bump version to $VERSION"
 
-  echo "Making an annotated tag for $VERSION..."
+  log "Making an annotated tag for $VERSION..."
   git tag -a "$VERSION" -m "release: $VERSION"
 fi
+
+cat <<EOF >&2
+Done.
+
+Run the following commands after confirmation:
+
+  git push -u origin main
+  git push origin $VERSION
+EOF
