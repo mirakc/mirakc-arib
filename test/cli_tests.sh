@@ -42,6 +42,7 @@ assert 1 "$MIRAKC_ARIB sync-clocks --sids=1 --sids=0xFFFF --xsids=1 --xsids=0xFF
 assert 1 "$MIRAKC_ARIB collect-eits"
 assert 1 "$MIRAKC_ARIB collect-eits --sids=1 --sids=0xFFFF --xsids=1 --xsids=0xFFFF --time-limit=0x7FFFFFFFFFFFFFFF --streaming"
 assert 134 "$MIRAKC_ARIB collect-eits --time-limit=0xFFFFFFFFFFFFFFFF"
+assert 255 "$MIRAKC_ARIB collect-eits --only-actual --only-others"
 
 assert 0 "$MIRAKC_ARIB collect-eitpf"
 assert 0 "$MIRAKC_ARIB collect-eitpf --sids=1 --sids=0xFFFF --streaming"

@@ -25,6 +25,8 @@ struct EitCollectorOption final {
   SidSet xsids;
   ts::MilliSecond time_limit = 30 * ts::MilliSecPerSec;  // 30s
   bool streaming = false;
+  bool collect_actual = true;  // for backward-compatibility
+  bool collect_others = true;  // for backward-compatibility
 };
 
 class TableProgress {
@@ -429,6 +431,7 @@ class EitCollector final : public PacketSink,
   explicit EitCollector(const EitCollectorOption& option)
       : option_(option),
         demux_(context_) {
+    MIRAKC_ARIB_ASSERT(option_.collect_actual || option_.collect_others);
     if (spdlog::default_logger()->should_log(spdlog::level::trace)) {
       EnableShowProgress();
     }
@@ -477,10 +480,16 @@ class EitCollector final : public PacketSink,
     }
 
     const auto tid = section.tableId();
-    if (tid < ts::TID_EIT_MIN || tid > ts::TID_EIT_MAX) {
-      return;
-    }
-    if (tid == ts::TID_EIT_PF_ACT || tid == ts::TID_EIT_PF_OTH) {
+
+    if (tid >= ts::TID_EIT_S_ACT_MIN && tid <= ts::TID_EIT_S_ACT_MAX) {
+      if (!option_.collect_actual) {
+        return;
+      }
+    } else if (tid >= ts::TID_EIT_S_OTH_MIN && tid <= ts::TID_EIT_S_OTH_MAX) {
+      if (!option_.collect_others) {
+        return;
+      }
+    } else {
       return;
     }
 

@@ -59,6 +59,7 @@ Usage:
   mirakc-arib sync-clocks [--sids=<sid>...] [--xsids=<sid>...] [<file>]
   mirakc-arib collect-eits [--sids=<sid>...] [--xsids=<sid>...]
                            [--time-limit=<ms>] [--streaming]
+                           [--only-actual | --only-others]
                            [--use-unicode-symbol] [<file>]
   mirakc-arib collect-eitpf [--sids=<sid>...]
                             [--streaming] [(--present | --following)] [<file>]
@@ -221,6 +222,7 @@ Collect EIT[schedule] sections
 Usage:
   mirakc-arib collect-eits [--sids=<sid>...] [--xsids=<sid>...]
                            [--time-limit=<ms>] [--streaming]
+                           [--only-actual | --only-others]
                            [--use-unicode-symbol] [<file>]
 
 Options:
@@ -246,6 +248,12 @@ Options:
     In the streaming mode, the program never stops until killed.  The progress
     status will be updated in order to drop EIT sections which have already been
     collected.
+
+  --only-actual
+    Collect only EIT sections with TIDs between 0x50 and 0x5F.
+
+  --only-others
+    Collect only EIT sections with TIDs between 0x60 and 0x6F.
 
 Obsoleted Options:
   --use-unicode-symbol
@@ -1094,6 +1102,8 @@ void LoadComponentTags(const Args& args, const std::string& name,
 void LoadOption(const Args& args, EitCollectorOption* opt) {
   static const std::string kTimeLimit = "--time-limit";
   static const std::string kStreaming = "--streaming";
+  static const std::string kOnlyActual = "--only-actual";
+  static const std::string kOnlyOthers = "--only-others";
   static const std::string kUseUnicodeSymbol = "--use-unicode-symbol";
 
   LoadSidSet(args, "--sids", &opt->sids);
@@ -1103,12 +1113,16 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
         static_cast<ts::MilliSecond>(args.at(kTimeLimit).asInt64());
   }
   opt->streaming = args.at(kStreaming).asBool();
+  opt->collect_actual = !args.at(kOnlyOthers).asBool();
+  opt->collect_others = !args.at(kOnlyActual).asBool();
   auto use_unicode_symbol = args.at(kUseUnicodeSymbol).asBool();
   if (use_unicode_symbol) {
     g_KeepUnicodeSymbols = true;
   }
-  MIRAKC_ARIB_INFO("Options: time-limit={}, streaming={} use-unicode-symbol={}",
-                   opt->time_limit, opt->streaming, use_unicode_symbol);
+  MIRAKC_ARIB_INFO("Options: time-limit={}, streaming={} collect-actual={} "
+                   "collect-others={} use-unicode-symbol={}",
+                   opt->time_limit, opt->streaming, opt->collect_actual,
+                   opt->collect_others, use_unicode_symbol);
 }
 
 void LoadOption(const Args& args, EitpfCollectorOption* opt) {
