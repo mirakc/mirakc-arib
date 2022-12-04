@@ -148,11 +148,13 @@ jobs:
         run: |
           ninja -C build test
           ninja -C build cli-tests
+      - name: Install cargo-binstall
+        run: |
+          BINSTALL_URL=https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz
+          curl -fsSL $BINSTALL_URL | tar -xz -C ~/.cargo/bin --no-same-owner
       - name: Install grcov
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: grcov
+        run: |
+          cargo binstall --no-confirm grcov
       - name: Generate coverage data
         run: >-
           grcov build --branch --llvm --ignore-not-existing -s . -p .. --ignore 'test/*' -t lcov -o lcov.info
