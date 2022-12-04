@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <string>
@@ -8,6 +9,7 @@
 #include <tsduck/tsduck.h>
 
 #include "base.hh"
+#include "exit_code.hh"
 #include "logging.hh"
 #include "packet_sink.hh"
 #include "packet_source.hh"
@@ -78,7 +80,7 @@ class ProgramFilter final : public PacketSink,
 
   bool Start() override {
     if (!sink_) {
-      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink connected");
       return false;
     }
 
@@ -88,16 +90,26 @@ class ProgramFilter final : public PacketSink,
 
   bool End() override {
     if (!sink_) {
-      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink connected");
       return false;
     }
 
     return sink_->End();
   }
 
+  int GetExitCode() const override {
+    if (!sink_) {
+      return EXIT_FAILURE;
+    }
+    if (retry_) {
+      return EXIT_RETRY;
+    }
+    return sink_->GetExitCode();
+  }
+
   bool HandlePacket(const ts::TSPacket& packet) override {
     if (!sink_) {
-      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink connected");
       return false;
     }
 
@@ -122,7 +134,9 @@ class ProgramFilter final : public PacketSink,
 
   bool WaitReady(const ts::TSPacket& packet) {
     if (stop_) {
-      MIRAKC_ARIB_PROGRAM_FILTER_WARN("Canceled");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("Stopped before the program starts");
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("The program was canceled or rescheduled");
+      retry_ = true;
       return false;
     }
 
@@ -629,6 +643,7 @@ class ProgramFilter final : public PacketSink,
   bool clock_pcr_ready_ = false;
   bool clock_time_ready_ = false;
   bool stop_ = false;
+  bool retry_ = false;
 
   MIRAKC_ARIB_NON_COPYABLE(ProgramFilter);
 };

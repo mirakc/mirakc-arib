@@ -100,6 +100,7 @@ TEST(PcrSynchronizerTest, Successful) {
   src.Connect(std::move(sync));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, Reset) {
@@ -204,6 +205,7 @@ TEST(PcrSynchronizerTest, Reset) {
   src.Connect(std::move(sync));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, NoPcr) {
@@ -324,6 +326,7 @@ TEST(PcrSynchronizerTest, InclusionList) {
   src.Connect(std::move(sync));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(3, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, ExclusionList) {
@@ -395,6 +398,7 @@ TEST(PcrSynchronizerTest, ExclusionList) {
   src.Connect(std::move(sync));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, AbnormalPcrPackets) {
@@ -486,6 +490,7 @@ TEST(PcrSynchronizerTest, AbnormalPcrPackets) {
   src.Connect(std::move(sync));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, PmtSidUnmatched) {

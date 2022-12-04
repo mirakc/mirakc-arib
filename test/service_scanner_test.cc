@@ -89,6 +89,7 @@ TEST(ServiceScannerTest, Complete) {
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceScannerTest, NoPat) {
@@ -266,6 +267,7 @@ TEST(ServiceScannerTest, NonStandardNit) {
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceScannerTest, ServiceTypes) {
@@ -340,6 +342,7 @@ TEST(ServiceScannerTest, ServiceTypes) {
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceScannerTest, InclusionList) {
@@ -402,6 +405,7 @@ TEST(ServiceScannerTest, InclusionList) {
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceScannerTest, ExclusionList) {
@@ -464,4 +468,5 @@ TEST(ServiceScannerTest, ExclusionList) {
   src.Connect(std::move(scanner));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cerrno>
+#include <cstdlib>
 #include <cstring>
 
 #include <tsduck/tsduck.h>
@@ -16,6 +17,7 @@ class PacketSink {
   virtual ~PacketSink() = default;
   virtual bool Start() { return true; }
   virtual bool End() { return true; }
+  virtual int GetExitCode() const { return EXIT_SUCCESS; }
   virtual bool HandlePacket(const ts::TSPacket& packet) = 0;
 
  private:

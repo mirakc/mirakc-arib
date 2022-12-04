@@ -24,6 +24,7 @@ TEST(EitpfCollectorTest, NoPacket) {
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, PresentFollowing) {
@@ -103,6 +104,7 @@ TEST(EitpfCollectorTest, PresentFollowing) {
   src.Connect(std::move(collector));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_FALSE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, Present) {
@@ -165,6 +167,7 @@ TEST(EitpfCollectorTest, Present) {
   src.Connect(std::move(collector));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_FALSE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, Following) {
@@ -227,6 +230,7 @@ TEST(EitpfCollectorTest, Following) {
   src.Connect(std::move(collector));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_FALSE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, PresentFollowingStreaming) {
@@ -351,6 +355,7 @@ TEST(EitpfCollectorTest, PresentFollowingStreaming) {
   src.Connect(std::move(collector));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, PresentStreaming) {
@@ -440,6 +445,7 @@ TEST(EitpfCollectorTest, PresentStreaming) {
   src.Connect(std::move(collector));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, FollowingStreaming) {
@@ -529,6 +535,7 @@ TEST(EitpfCollectorTest, FollowingStreaming) {
   src.Connect(std::move(collector));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, Sids) {
@@ -609,4 +616,5 @@ TEST(EitpfCollectorTest, Sids) {
   src.Connect(std::move(collector));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

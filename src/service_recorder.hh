@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <memory>
 
 #include <rapidjson/document.h>
@@ -60,7 +61,7 @@ class ServiceRecorder final : public PacketSink,
 
   bool Start() override {
     if (!sink_) {
-      MIRAKC_ARIB_SERVICE_RECORDER_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_SERVICE_RECORDER_ERROR("No sink connected");
       return false;
     }
     if (!sink_->Start()) {
@@ -77,7 +78,7 @@ class ServiceRecorder final : public PacketSink,
 
   bool End() override {
     if (!sink_) {
-      MIRAKC_ARIB_SERVICE_RECORDER_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_SERVICE_RECORDER_ERROR("No sink connected");
       return false;
     }
     bool success = sink_->End();
@@ -85,9 +86,16 @@ class ServiceRecorder final : public PacketSink,
     return success;
   }
 
+  int GetExitCode() const override {
+    if (!sink_) {
+      return EXIT_FAILURE;
+    }
+    return sink_->GetExitCode();
+  }
+
   bool HandlePacket(const ts::TSPacket& packet) override {
     if (!sink_) {
-      MIRAKC_ARIB_SERVICE_RECORDER_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_SERVICE_RECORDER_ERROR("No sink connected");
       return false;
     }
 

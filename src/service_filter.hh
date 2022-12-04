@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <string>
@@ -57,7 +58,7 @@ class ServiceFilter final : public PacketSink,
 
   bool Start() override {
     if (!sink_) {
-      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink connected");
       return false;
     }
 
@@ -67,16 +68,23 @@ class ServiceFilter final : public PacketSink,
 
   bool End() override {
     if (!sink_) {
-      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink connected");
       return false;
     }
 
     return sink_->End();
   }
 
+  int GetExitCode() const override {
+    if (!sink_) {
+      return EXIT_FAILURE;
+    }
+    return sink_->GetExitCode();
+  }
+
   bool HandlePacket(const ts::TSPacket& packet) override {
     if (!sink_) {
-      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink connected");
       return false;
     }
 

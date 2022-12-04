@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 
 #include <fmt/format.h>
@@ -32,6 +33,7 @@ TEST(ProgramFilterTest, NoPacket) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, WaitReady) {
@@ -150,6 +152,7 @@ TEST(ProgramFilterTest, WaitReady) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, AlreadyStarted) {
@@ -273,6 +276,7 @@ TEST(ProgramFilterTest, AlreadyStarted) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, EndStreaming) {
@@ -420,6 +424,7 @@ TEST(ProgramFilterTest, EndStreaming) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, UpdatePcrRange) {
@@ -626,6 +631,7 @@ TEST(ProgramFilterTest, UpdatePcrRange) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, NoEventInEit) {
@@ -667,6 +673,7 @@ TEST(ProgramFilterTest, NoEventInEit) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_RETRY, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, NoFollowingEventInEit) {
@@ -710,6 +717,7 @@ TEST(ProgramFilterTest, NoFollowingEventInEit) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_RETRY, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, StartPcrUnderflow) {
@@ -803,6 +811,7 @@ TEST(ProgramFilterTest, StartPcrUnderflow) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, EndPcrOverflow) {
@@ -896,6 +905,7 @@ TEST(ProgramFilterTest, EndPcrOverflow) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, PreStreaming) {
@@ -971,6 +981,7 @@ TEST(ProgramFilterTest, PreStreaming) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, AbnormalPcrPackets) {
@@ -1099,6 +1110,7 @@ TEST(ProgramFilterTest, AbnormalPcrPackets) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, PmtSidUnmatched) {
@@ -1185,6 +1197,7 @@ TEST(ProgramFilterTest, PmtSidUnmatched) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, EitSidUnmatched) {
@@ -1273,6 +1286,7 @@ TEST(ProgramFilterTest, EitSidUnmatched) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, ResyncClockBeforeStreaming) {
@@ -1392,6 +1406,7 @@ TEST(ProgramFilterTest, ResyncClockBeforeStreaming) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, ResyncClockWhileStreaming) {
@@ -1545,6 +1560,7 @@ TEST(ProgramFilterTest, ResyncClockWhileStreaming) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, PesBlackList) {
@@ -1664,6 +1680,7 @@ TEST(ProgramFilterTest, PesBlackList) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, WaitUntilTimedout) {
@@ -1694,6 +1711,7 @@ TEST(ProgramFilterTest, WaitUntilTimedout) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_RETRY, src.GetExitCode());
 }
 
 TEST(ProgramFilterTest, ReachTimeLimitWhileStreaming) {
@@ -1850,4 +1868,5 @@ TEST(ProgramFilterTest, ReachTimeLimitWhileStreaming) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

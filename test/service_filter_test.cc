@@ -30,6 +30,7 @@ TEST(ServiceFilterTest, NoPacket) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, NullPacket) {
@@ -54,6 +55,7 @@ TEST(ServiceFilterTest, NullPacket) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, NoSidInPat) {
@@ -83,6 +85,7 @@ TEST(ServiceFilterTest, NoSidInPat) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, ServiceStream) {
@@ -210,6 +213,7 @@ TEST(ServiceFilterTest, ServiceStream) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
@@ -303,6 +307,7 @@ TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
@@ -384,6 +389,7 @@ TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, TimeLimitTot) {
@@ -435,6 +441,7 @@ TEST(ServiceFilterTest, TimeLimitTot) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, TimeLimitTdt) {
@@ -486,6 +493,7 @@ TEST(ServiceFilterTest, TimeLimitTdt) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, Subtitle) {
@@ -631,6 +639,7 @@ TEST(ServiceFilterTest, Subtitle) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, SuperimposedText) {
@@ -776,6 +785,7 @@ TEST(ServiceFilterTest, SuperimposedText) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, PmtSidUnmatched) {
@@ -827,4 +837,5 @@ TEST(ServiceFilterTest, PmtSidUnmatched) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

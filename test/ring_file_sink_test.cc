@@ -58,6 +58,7 @@ TEST(RingFileSinkTest, EmptyFile) {
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(RingFileSinkTest, OnePacket) {
@@ -87,6 +88,7 @@ TEST(RingFileSinkTest, OnePacket) {
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(RingFileSinkTest, ReachBufferSize) {
@@ -123,6 +125,7 @@ TEST(RingFileSinkTest, ReachBufferSize) {
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(RingFileSinkTest, ReachChunkSize) {
@@ -172,6 +175,7 @@ TEST(RingFileSinkTest, ReachChunkSize) {
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(RingFileSinkTest, ReachRingSize) {
@@ -263,6 +267,7 @@ TEST(RingFileSinkTest, ReachRingSize) {
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(RingFileSinkTest, FailWriteInFlush) {
@@ -538,4 +543,5 @@ TEST(RingFileSinkTest, SetPosition) {
   sink->SetPosition(kChunkSize);
   src.Connect(std::move(sink));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

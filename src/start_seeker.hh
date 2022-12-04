@@ -39,7 +39,7 @@ class StartSeeker final : public PacketSink,
 
   bool Start() override {
     if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_ERROR("No sink connected");
       return false;
     }
 
@@ -49,7 +49,7 @@ class StartSeeker final : public PacketSink,
 
   bool End() override {
     if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_ERROR("No sink connected");
       return false;
     }
 
@@ -60,7 +60,7 @@ class StartSeeker final : public PacketSink,
 
   bool HandlePacket(const ts::TSPacket& packet) override {
     if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink has not been connected");
+      MIRAKC_ARIB_ERROR("No sink connected");
       return false;
     }
 

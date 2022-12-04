@@ -17,6 +17,7 @@ TEST(LogoCollectorTest, NoPacket) {
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 // TODO: Add more tests here.

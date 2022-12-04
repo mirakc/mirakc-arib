@@ -51,6 +51,7 @@ TEST(ServiceRecorderTest, NoPacket) {
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceRecorderTest, EventStart) {
@@ -150,6 +151,7 @@ TEST(ServiceRecorderTest, EventStart) {
   src.Connect(std::move(recorder));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceRecorderTest, EventProgress) {
@@ -309,6 +311,7 @@ TEST(ServiceRecorderTest, EventProgress) {
   src.Connect(std::move(recorder));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceRecorderTest, EventEnd) {
@@ -462,6 +465,7 @@ TEST(ServiceRecorderTest, EventEnd) {
   src.Connect(std::move(recorder));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
@@ -614,6 +618,7 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
   src.Connect(std::move(recorder));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
@@ -722,6 +727,7 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
   src.Connect(std::move(recorder));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
@@ -878,4 +884,5 @@ TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
   src.Connect(std::move(recorder));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

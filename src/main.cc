@@ -552,6 +552,17 @@ Arguments:
   <file>
     Path to a TS file.
 
+Exit Codes:
+  0
+    Exit successfully.
+
+  1
+    Failed.
+
+  2
+    Stopped before the program starts.
+    The program was canceled or rescheduled.
+
 Description:
   `filter-program` outputs packets only while a specified TV program is being
   broadcasted.
@@ -1450,5 +1461,5 @@ int main(int argc, char* argv[]) {
   src->Connect(MakePacketSink(args));
   auto success = src->FeedPackets();
 
-  return success ? EXIT_SUCCESS : EXIT_FAILURE;
+  return success ? src->GetExitCode() : EXIT_FAILURE;
 }

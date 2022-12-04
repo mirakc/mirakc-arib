@@ -24,6 +24,10 @@ class PacketSource {
   }
 
   bool FeedPackets() {
+    if (!sink_) {
+      MIRAKC_ARIB_ERROR("No sink connected");
+      return false;
+    }
     MIRAKC_ARIB_INFO("Feed packets...");
     if (!sink_->Start()) {
       MIRAKC_ARIB_ERROR("Failed to start");
@@ -39,6 +43,13 @@ class PacketSource {
     MIRAKC_ARIB_INFO("Ended to feed packets {}",
                      success ? "successfully" : "unsuccessfully");
     return success;
+  }
+
+  int GetExitCode() const {
+    if (!sink_) {
+      return EXIT_FAILURE;
+    }
+    return sink_->GetExitCode();
   }
 
  private:

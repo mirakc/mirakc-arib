@@ -32,6 +32,7 @@ TEST(StartSeekerTest, NoPacket) {
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(StartSeekerTest, Eof) {
@@ -66,6 +67,7 @@ TEST(StartSeekerTest, Eof) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(StartSeekerTest, MaxDuration) {
@@ -155,6 +157,7 @@ TEST(StartSeekerTest, MaxDuration) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(StartSeekerTest, MaxPackets) {
@@ -246,6 +249,7 @@ TEST(StartSeekerTest, MaxPackets) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(StartSeekerTest, DetectTransition) {
@@ -334,6 +338,7 @@ TEST(StartSeekerTest, DetectTransition) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(StartSeekerTest, AbnormalPcrPackets) {
@@ -425,6 +430,7 @@ TEST(StartSeekerTest, AbnormalPcrPackets) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(StartSeekerTest, PmtSidUnmatched) {
@@ -528,4 +534,5 @@ TEST(StartSeekerTest, PmtSidUnmatched) {
   src.Connect(std::move(filter));
   EXPECT_TRUE(src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
