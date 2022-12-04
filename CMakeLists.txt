@@ -557,7 +557,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   endif()
 endif()
 
-check_cxx_compiler_flag(-Wpoison-system-directories HAVE_DOCUMENTATION_UNKNOWN_COMMAND_WARNING)
+if((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND (${CMAKE_BUILD_TYPE} STREQUAL Debug))
+  check_cxx_compiler_flag(-Wmaybe-uninitialized HAVE_MAYBE_UNINITIALIZED_WARNING)
+  if(HAVE_MAYBE_UNINITIALIZED_WARNING)
+    # Disable -Werror=maybe-uninitialized
+    # See https://github.com/tsduck/tsduck/blob/v3.32-2983/src/libtsduck/base/system/tsFileUtils.cpp#L78
+    string(APPEND MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA
+      " -Wno-maybe-uninitialized")
+  endif()
+endif()
+
+check_cxx_compiler_flag(-Wdocumentation-unknown-command HAVE_DOCUMENTATION_UNKNOWN_COMMAND_WARNING)
 if(HAVE_DOCUMENTATION_UNKNOWN_COMMAND_WARNING)
   # Disable -Wdocumentation-unknown-command
   string(APPEND MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA " -Wno-documentation-unknown-command")
