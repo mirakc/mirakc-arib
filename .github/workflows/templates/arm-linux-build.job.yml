@@ -3,34 +3,26 @@ jobs:
     strategy:
       matrix:
         arch:
-          - armel
+          # Disabled because there is no linux/arm/v5 image of ubuntu.
+          # - armel
           - armhf
           - arm64
         include:
-          - arch: armel
-            host-triple: arm-linux-gnueabi
-            elf-machine: 'ARM'
-            elf-flags: 'soft-float'
-            # Use an architecture-specific image instead of a multi-arch image
-            # with --platform=linux/arm/v5.
-            #
-            # Actually, `docker run --rm --platform=linux/arm/v5 debian <cmd...>`
-            # doesn't work properly.  You can see the following error message:
-            #
-            #   does not match the specified platform: wanted linux/arm/v5,
-            #   actual: linux/arm.
-            #
-            docker-arch: arm32v5
+          # - arch: armel
+          #   host-triple: arm-linux-gnueabi
+          #   elf-machine: 'ARM'
+          #   elf-flags: 'soft-float'
+          #   docker-platform: linux/arm/v5
           - arch: armhf
             host-triple: arm-linux-gnueabihf
             elf-machine: 'ARM'
             elf-flags: 'hard-float'
-            docker-arch: arm32v7
+            docker-platform: linux/arm/v7
           - arch: arm64
             host-triple: aarch64-linux-gnu
             elf-machine: 'AArch64'
             elf-flags: ''
-            docker-arch: arm64v8
+            docker-platform: linux/arm64/v8
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -44,16 +36,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-arm-build-${{ matrix.arch }}-
       - name: Install deps
-        # Use gcc-8 in order to avoid the following error on a arm64v8/debian:buster-slim Docker
-        # container:
-        #
-        #   /build/bin/mirakc-arib: /usr/lib/aarch64-linux-gnu/libstdc++.so.6:
-        #     version `GLIBCXX_3.4.26' not found (required by /build/bin/mirakc-arib)
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-8-${{ matrix.host-triple }} libtool make ninja-build pkg-config
-          sudo update-alternatives --install /usr/bin/${{ matrix.host-triple }}-gcc ${{ matrix.host-triple }}-gcc /usr/bin/${{ matrix.host-triple }}-gcc-8 80
-          sudo update-alternatives --install /usr/bin/${{ matrix.host-triple }}-g++ ${{ matrix.host-triple }}-g++ /usr/bin/${{ matrix.host-triple }}-g++-8 80
+          sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-${{ matrix.host-triple }} libtool make ninja-build pkg-config
       - name: Generate project files
         run: |
           cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON -D CMAKE_TOOLCHAIN_FILE=toolchain.cmake.d/debian-${{ matrix.arch }}.cmake .
@@ -71,9 +56,10 @@ jobs:
         uses: docker/setup-qemu-action@v2
       - name: Show help and version
         run: |
-          docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib -h
-          docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib --version
+          sudo apt-get install -y --no-install-recommends lsb-release
+          docker run --rm -v $(pwd)/build:/build --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib -h
+          docker run --rm -v $(pwd)/build:/build --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib --version
       - name: Run tests
         run: |
-          docker run --rm -v $(pwd)/build:/build ${{ matrix.docker-arch }}/debian:buster-slim /build/bin/mirakc-arib-test --gtest_shuffle
-          docker run --rm -v $(pwd)/build:/build -v $(pwd)/test:/test ${{ matrix.docker-arch }}/debian:buster-slim sh /test/cli_tests.sh /build/bin/mirakc-arib
+          docker run --rm -v $(pwd)/build:/build --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib-test --gtest_shuffle
+          docker run --rm -v $(pwd)/build:/build -v $(pwd)/test:/test --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) sh /test/cli_tests.sh /build/bin/mirakc-arib

@@ -18,7 +18,8 @@ EOF
 
 cat <<EOF >$PROJDIR/.github/workflows/ci.yml
 $HEADER
-$($DOCKER run --rm -v $BASEDIR/templates:/workdir mikefarah/yq:3 yq m \
+$($DOCKER run --rm -v $BASEDIR/templates:/workdir \
+    docker.io/mikefarah/yq ea '. as $item ireduce ({}; . *d $item)' \
     ci.workflow.yml \
     linux-build.job.yml \
     arm-linux-build.job.yml \
@@ -28,7 +29,8 @@ EOF
 
 cat <<EOF >$PROJDIR/.github/workflows/pull-request.yml
 $HEADER
-$($DOCKER run --rm -v $BASEDIR/templates:/workdir mikefarah/yq:3 yq m \
+$($DOCKER run --rm -v $BASEDIR/templates:/workdir \
+    docker.io/mikefarah/yq ea '. as $item ireduce ({}; . *d $item)' \
     pull-request.workflow.yml \
     linux-build.job.yml \
     arm-linux-build.job.yml \
