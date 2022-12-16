@@ -61,5 +61,5 @@ jobs:
           docker run --rm -v $(pwd)/build:/build --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib --version
       - name: Run tests
         run: |
-          docker run --rm -v $(pwd)/build:/build --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib-test --gtest_shuffle
-          docker run --rm -v $(pwd)/build:/build -v $(pwd)/test:/test --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) sh /test/cli_tests.sh /build/bin/mirakc-arib
+          docker run --rm -e CI=$CI -v $(pwd)/build:/build --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib-test --gtest_shuffle
+          docker run --rm -e CI=$CI -v $(pwd)/build:/build -v $(pwd)/test:/test --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) sh /test/cli_tests.sh /build/bin/mirakc-arib
