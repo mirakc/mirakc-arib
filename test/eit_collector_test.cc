@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 
 #include <gmock/gmock.h>
@@ -22,7 +23,7 @@ TEST(EitCollectorTest, NoPacket) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(EitCollectorTest, TimedOut) {
@@ -45,7 +46,7 @@ TEST(EitCollectorTest, TimedOut) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }
 
@@ -71,7 +72,7 @@ TEST(EitCollectorTest, Streaming) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }
 

@@ -559,7 +559,7 @@ Exit Codes:
   1
     Failed.
 
-  2
+  222
     Stopped before the program starts.
     The program was canceled or rescheduled.
 
@@ -1459,7 +1459,5 @@ int main(int argc, char* argv[]) {
 
   auto src = MakePacketSource(args);
   src->Connect(MakePacketSink(args));
-  auto success = src->FeedPackets();
-
-  return success ? src->GetExitCode() : EXIT_FAILURE;
+  return src->FeedPackets();
 }

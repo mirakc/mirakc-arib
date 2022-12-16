@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdlib>
 #include <limits>
 #include <memory>
 
@@ -38,12 +39,15 @@ class RingFileSink final : public PacketRingSink {
   static constexpr uint64_t kMaxRingSize =
       static_cast<uint64_t>(kMaxChunkSize) * static_cast<uint64_t>(kMaxNumChunks);
 
-  bool End() override {
-    if (broken_) {
-      return false;
+  void End() override {
+    // No need to flush the buffer at this point.
+  }
+
+  int GetExitCode() const override {
+    if (IsBroken()) {
+      return EXIT_FAILURE;
     }
-    // No need to flush the buffer.
-    return true;
+    return EXIT_SUCCESS;
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {
@@ -53,6 +57,7 @@ class RingFileSink final : public PacketRingSink {
       nwritten += FillBuffer(packet.b + nwritten, ts::PKT_SIZE - nwritten);
       if (NeedFlush()) {
         if (!Flush()) {
+          MIRAKC_ARIB_ERROR("Failed flushing, need reset");
           broken_ = true;
           return false;
         }
@@ -95,6 +100,10 @@ class RingFileSink final : public PacketRingSink {
   void SetObserver(PacketRingObserver* observer) override {
     MIRAKC_ARIB_ASSERT(observer != nullptr);
     observer_ = observer;
+  }
+
+  bool IsBroken() const override {
+    return broken_;
   }
 
  private:

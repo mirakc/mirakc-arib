@@ -48,7 +48,8 @@ class MockSink final : public PacketSink {
   ~MockSink() override {}
 
   MOCK_METHOD(bool, Start, (), (override));
-  MOCK_METHOD(bool, End, (), (override));
+  MOCK_METHOD(void, End, (), (override));
+  MOCK_METHOD(int, GetExitCode, (), (const override));
   MOCK_METHOD(bool, HandlePacket, (const ts::TSPacket&), (override));
 };
 
@@ -60,7 +61,7 @@ class MockRingSink final : public PacketRingSink {
   ~MockRingSink() override = default;
 
   MOCK_METHOD(bool, Start, (), (override));
-  MOCK_METHOD(bool, End, (), (override));
+  MOCK_METHOD(void, End, (), (override));
 
   bool HandlePacket(const ts::TSPacket& packet) override {
     switch (packet.getPID()) {

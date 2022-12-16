@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <memory>
 
 #include <fmt/format.h>
@@ -39,16 +40,22 @@ class ServiceScanner final : public PacketSink,
 
   ~ServiceScanner() override {}
 
-  bool End() override {
+  void End() override {
     if (!completed()) {
-      return false;
+      return;
     }
 
     // Convert into a JSON object
     rapidjson::Document doc(rapidjson::kArrayType);
     CollectServices(&doc);
     FeedDocument(doc);
-    return true;
+  }
+
+  int GetExitCode() const override {
+    if (!completed()) {
+      return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {

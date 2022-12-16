@@ -16,7 +16,7 @@ class PacketSink {
   PacketSink() = default;
   virtual ~PacketSink() = default;
   virtual bool Start() { return true; }
-  virtual bool End() { return true; }
+  virtual void End() {}
   virtual int GetExitCode() const { return EXIT_SUCCESS; }
   virtual bool HandlePacket(const ts::TSPacket& packet) = 0;
 
@@ -42,6 +42,7 @@ class PacketRingSink : public PacketSink {
   virtual uint64_t pos() const = 0;
   virtual bool SetPosition(uint64_t pos) = 0;
   virtual void SetObserver(PacketRingObserver* observer) = 0;
+  virtual bool IsBroken() const { return false; }
 
  private:
   MIRAKC_ARIB_NON_COPYABLE(PacketRingSink);
@@ -52,8 +53,8 @@ class StdoutSink final : public PacketSink {
   StdoutSink() = default;
   ~StdoutSink() override {}
 
-  bool End() override {
-    return Flush();
+  void End() override {
+    (void)Flush();
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {

@@ -449,7 +449,7 @@ class EitCollector final : public PacketSink,
     return true;
   }
 
-  bool End() override {
+  void End() override {
     auto elapse = ts::Time::CurrentUTC() - start_time_;
     auto min = elapse / ts::MilliSecPerMin;
     auto sec = (elapse - min * ts::MilliSecPerMin) / ts::MilliSecPerSec;
@@ -457,7 +457,6 @@ class EitCollector final : public PacketSink,
     MIRAKC_ARIB_INFO(
         "Collected {} services, {} sections, {}:{:02d}.{:03d} elapsed",
         progress_.CountServices(), progress_.CountSections(), min, sec, ms);
-    return IsCompleted();
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {

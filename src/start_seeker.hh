@@ -38,31 +38,23 @@ class StartSeeker final : public PacketSink,
   }
 
   bool Start() override {
-    if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink connected");
-      return false;
-    }
-
-    sink_->Start();
-    return true;
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
+    return sink_->Start();
   }
 
-  bool End() override {
-    if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink connected");
-      return false;
-    }
-
+  void End() override {
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
     (void)SendPackets();  // ignore the error
+    sink_->End();
+  }
 
-    return sink_->End();
+  int GetExitCode() const override {
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
+    return sink_->GetExitCode();
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {
-    if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink connected");
-      return false;
-    }
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
 
     demux_.feedPacket(packet);
 

@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 
 #include <gmock/gmock.h>
@@ -22,7 +23,7 @@ TEST(ServiceScannerTest, NoPacket) {
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
 }
 
 TEST(ServiceScannerTest, Complete) {
@@ -87,9 +88,8 @@ TEST(ServiceScannerTest, Complete) {
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceScannerTest, NoPat) {
@@ -129,7 +129,7 @@ TEST(ServiceScannerTest, NoPat) {
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }
 
@@ -170,7 +170,7 @@ TEST(ServiceScannerTest, NoNit) {
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }
 
@@ -199,7 +199,7 @@ TEST(ServiceScannerTest, NoSdt) {
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }
 
@@ -265,9 +265,8 @@ TEST(ServiceScannerTest, NonStandardNit) {
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceScannerTest, ServiceTypes) {
@@ -340,9 +339,8 @@ TEST(ServiceScannerTest, ServiceTypes) {
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceScannerTest, InclusionList) {
@@ -403,9 +401,8 @@ TEST(ServiceScannerTest, InclusionList) {
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceScannerTest, ExclusionList) {
@@ -466,7 +463,6 @@ TEST(ServiceScannerTest, ExclusionList) {
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 
 #include <gmock/gmock.h>
@@ -22,7 +23,7 @@ TEST(PcrSynchronizerTest, NoPacket) {
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
 }
 
 TEST(PcrSynchronizerTest, Successful) {
@@ -98,9 +99,8 @@ TEST(PcrSynchronizerTest, Successful) {
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, Reset) {
@@ -203,9 +203,8 @@ TEST(PcrSynchronizerTest, Reset) {
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, NoPcr) {
@@ -253,7 +252,7 @@ TEST(PcrSynchronizerTest, NoPcr) {
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }
 
@@ -324,9 +323,8 @@ TEST(PcrSynchronizerTest, InclusionList) {
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_EQ(3, src.GetNumberOfRemainingPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, ExclusionList) {
@@ -396,9 +394,8 @@ TEST(PcrSynchronizerTest, ExclusionList) {
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, AbnormalPcrPackets) {
@@ -488,9 +485,8 @@ TEST(PcrSynchronizerTest, AbnormalPcrPackets) {
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_EQ(2, src.GetNumberOfRemainingPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(PcrSynchronizerTest, PmtSidUnmatched) {
@@ -535,7 +531,7 @@ TEST(PcrSynchronizerTest, PmtSidUnmatched) {
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }
 
@@ -581,6 +577,6 @@ TEST(PcrSynchronizerTest, PmtPidUnmatched) {
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }

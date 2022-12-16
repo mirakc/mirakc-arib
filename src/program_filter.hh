@@ -79,28 +79,17 @@ class ProgramFilter final : public PacketSink,
   }
 
   bool Start() override {
-    if (!sink_) {
-      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink connected");
-      return false;
-    }
-
-    sink_->Start();
-    return true;
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
+    return sink_->Start();
   }
 
-  bool End() override {
-    if (!sink_) {
-      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink connected");
-      return false;
-    }
-
-    return sink_->End();
+  void End() override {
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
+    sink_->End();
   }
 
   int GetExitCode() const override {
-    if (!sink_) {
-      return EXIT_FAILURE;
-    }
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
     if (retry_) {
       return EXIT_RETRY;
     }
@@ -108,20 +97,14 @@ class ProgramFilter final : public PacketSink,
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {
-    if (!sink_) {
-      MIRAKC_ARIB_PROGRAM_FILTER_ERROR("No sink connected");
-      return false;
-    }
-
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
     demux_.feedPacket(packet);
-
     switch (state_) {
       case kWaitReady:
         return WaitReady(packet);
       case kStreaming:
         return DoStreaming(packet);
     }
-
     MIRAKC_ARIB_NEVER_REACH("state_ was broken");
     return false;
   }

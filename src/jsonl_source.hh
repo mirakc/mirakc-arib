@@ -16,9 +16,7 @@ class JsonlSource {
 
  protected:
   bool FeedDocument(const rapidjson::Document& doc) {
-    if (!sink_) {
-      return false;
-    }
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
     return sink_->HandleDocument(doc);
   }
 

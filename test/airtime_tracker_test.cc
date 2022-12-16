@@ -24,8 +24,7 @@ TEST(AirtimeTrackerTest, NoPacket) {
 
   tracker->Connect(std::move(sink));
   src.Connect(std::move(tracker));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(AirtimeTrackerTest, Present) {
@@ -59,9 +58,8 @@ TEST(AirtimeTrackerTest, Present) {
 
   tracker->Connect(std::move(sink));
   src.Connect(std::move(tracker));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(AirtimeTrackerTest, Following) {
@@ -95,9 +93,8 @@ TEST(AirtimeTrackerTest, Following) {
 
   tracker->Connect(std::move(sink));
   src.Connect(std::move(tracker));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(AirtimeTrackerTest, Changes) {
@@ -166,9 +163,8 @@ TEST(AirtimeTrackerTest, Changes) {
 
   tracker->Connect(std::move(sink));
   src.Connect(std::move(tracker));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(AirtimeTrackerTest, EitSidUnmatched) {
@@ -196,9 +192,8 @@ TEST(AirtimeTrackerTest, EitSidUnmatched) {
 
   tracker->Connect(std::move(sink));
   src.Connect(std::move(tracker));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(AirtimeTrackerTest, EventNotFound) {
@@ -226,7 +221,6 @@ TEST(AirtimeTrackerTest, EventNotFound) {
 
   tracker->Connect(std::move(sink));
   src.Connect(std::move(tracker));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

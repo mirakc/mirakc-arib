@@ -2,6 +2,9 @@
 
 set -u
 
+TMPFILE=$(mktemp)
+trap "rm $TMPFILE" EXIT
+
 MIRAKC_ARIB="$1"
 
 export MIRAKC_ARIB_LOG=none
@@ -39,8 +42,8 @@ assert 1 "$MIRAKC_ARIB scan-services --sids=1 --sids=0xFFFF --xsids=1 --xsids=0x
 assert 1 "$MIRAKC_ARIB sync-clocks"
 assert 1 "$MIRAKC_ARIB sync-clocks --sids=1 --sids=0xFFFF --xsids=1 --xsids=0xFFFF"
 
-assert 1 "$MIRAKC_ARIB collect-eits"
-assert 1 "$MIRAKC_ARIB collect-eits --sids=1 --sids=0xFFFF --xsids=1 --xsids=0xFFFF --time-limit=0x7FFFFFFFFFFFFFFF --streaming"
+assert 0 "$MIRAKC_ARIB collect-eits"
+assert 0 "$MIRAKC_ARIB collect-eits --sids=1 --sids=0xFFFF --xsids=1 --xsids=0xFFFF --time-limit=0x7FFFFFFFFFFFFFFF --streaming"
 assert 134 "$MIRAKC_ARIB collect-eits --time-limit=0xFFFFFFFFFFFFFFFF"
 assert 255 "$MIRAKC_ARIB collect-eits --only-actual --only-others"
 
@@ -68,17 +71,17 @@ assert 0 "$MIRAKC_ARIB filter-program-metadata"
 assert 0 "$MIRAKC_ARIB filter-program-metadata --sid=1"
 assert 0 "$MIRAKC_ARIB filter-program-metadata --sid=0xFFFF"
 
-assert 0 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=1"
-assert 0 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=1 --start-pos=0"
-assert 0 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=2 --start-pos=8192"
-assert 0 "$MIRAKC_ARIB record-service --sid=0xFFFF --file=file --chunk-size=0x7FFE0000 --num-chunks=0x7FFFFFFF --start-pos=0x3FFEFFFF00040000"
-assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=0 --num-chunks=1"
-assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=1 --num-chunks=1"
-assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=0xFFFE0000 --num-chunks=1"
-assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=0"
-assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=0x80000000"
-assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=1 --start-pos=1"
-assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=file --chunk-size=8192 --num-chunks=1 --start-pos=8192"
+assert 0 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=8192 --num-chunks=1"
+assert 0 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=8192 --num-chunks=1 --start-pos=0"
+assert 0 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=8192 --num-chunks=2 --start-pos=8192"
+assert 0 "$MIRAKC_ARIB record-service --sid=0xFFFF --file=$TMPFILE --chunk-size=0x7FFE0000 --num-chunks=0x7FFFFFFF --start-pos=0x3FFEFFFF00040000"
+assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=0 --num-chunks=1"
+assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=1 --num-chunks=1"
+assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=0xFFFE0000 --num-chunks=1"
+assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=8192 --num-chunks=0"
+assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=8192 --num-chunks=0x80000000"
+assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=8192 --num-chunks=1 --start-pos=1"
+assert 134 "$MIRAKC_ARIB record-service --sid=1 --file=$TMPFILE --chunk-size=8192 --num-chunks=1 --start-pos=8192"
 
 assert 0 "$MIRAKC_ARIB track-airtime --sid=1 --eid=1"
 assert 0 "$MIRAKC_ARIB track-airtime --sid=0xFFFF --eid=0xFFFF"

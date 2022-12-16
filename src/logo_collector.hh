@@ -189,10 +189,9 @@ class LogoCollector final : public PacketSink,
     return true;
   }
 
-  bool End() override {
+  void End() override {
     CloseEngine();
     source_bridge_ = nullptr;
-    return true;
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {

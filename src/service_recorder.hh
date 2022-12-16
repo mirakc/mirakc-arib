@@ -60,10 +60,7 @@ class ServiceRecorder final : public PacketSink,
   }
 
   bool Start() override {
-    if (!sink_) {
-      MIRAKC_ARIB_SERVICE_RECORDER_ERROR("No sink connected");
-      return false;
-    }
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
     if (!sink_->Start()) {
       return false;
     }
@@ -76,28 +73,19 @@ class ServiceRecorder final : public PacketSink,
     return true;
   }
 
-  bool End() override {
-    if (!sink_) {
-      MIRAKC_ARIB_SERVICE_RECORDER_ERROR("No sink connected");
-      return false;
-    }
-    bool success = sink_->End();
-    SendStopMessage(success);
-    return success;
+  void End() override {
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
+    SendStopMessage(sink_->IsBroken());
+    sink_->End();
   }
 
   int GetExitCode() const override {
-    if (!sink_) {
-      return EXIT_FAILURE;
-    }
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
     return sink_->GetExitCode();
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {
-    if (!sink_) {
-      MIRAKC_ARIB_SERVICE_RECORDER_ERROR("No sink connected");
-      return false;
-    }
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
 
     auto pid = packet.getPID();
     if (clock_.HasPid() && clock_.pid() == pid && packet.hasPCR()) {
@@ -370,14 +358,14 @@ class ServiceRecorder final : public PacketSink,
     FeedDocument(doc);
   }
 
-  void SendStopMessage(bool success) {
+  void SendStopMessage(bool reset) {
     MIRAKC_ARIB_SERVICE_RECORDER_INFO("Stopped recording SID#{:04X}", option_.sid);
 
     rapidjson::Document doc(rapidjson::kObjectType);
     auto& allocator = doc.GetAllocator();
 
     rapidjson::Value data(rapidjson::kObjectType);
-    data.AddMember("reset", !success, allocator);
+    data.AddMember("reset", reset, allocator);
 
     doc.AddMember("type", "stop", allocator);
     doc.AddMember("data", data, allocator);

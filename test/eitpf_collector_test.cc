@@ -23,8 +23,7 @@ TEST(EitpfCollectorTest, NoPacket) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(EitpfCollectorTest, PresentFollowing) {
@@ -102,9 +101,8 @@ TEST(EitpfCollectorTest, PresentFollowing) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_FALSE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, Present) {
@@ -165,9 +163,8 @@ TEST(EitpfCollectorTest, Present) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_FALSE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, Following) {
@@ -228,9 +225,8 @@ TEST(EitpfCollectorTest, Following) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_FALSE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, PresentFollowingStreaming) {
@@ -353,9 +349,8 @@ TEST(EitpfCollectorTest, PresentFollowingStreaming) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, PresentStreaming) {
@@ -443,9 +438,8 @@ TEST(EitpfCollectorTest, PresentStreaming) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, FollowingStreaming) {
@@ -533,9 +527,8 @@ TEST(EitpfCollectorTest, FollowingStreaming) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(EitpfCollectorTest, Sids) {
@@ -614,7 +607,6 @@ TEST(EitpfCollectorTest, Sids) {
 
   collector->Connect(std::move(sink));
   src.Connect(std::move(collector));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdlib>
 #include <limits>
 #include <memory>
 
@@ -34,9 +35,9 @@ class PcrSynchronizer final : public PacketSink,
 
   ~PcrSynchronizer() override {}
 
-  bool End() override {
+  void End() override {
     if (!done_) {
-      return false;
+      return;
     }
 
     auto time = time_ - ts::Time::UnixEpoch;  // UNIX time (ms)
@@ -61,7 +62,13 @@ class PcrSynchronizer final : public PacketSink,
       json.PushBack(v, allocator);
     }
     FeedDocument(json);
-    return true;
+  }
+
+  int GetExitCode() const override {
+    if (!done_) {
+      return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {

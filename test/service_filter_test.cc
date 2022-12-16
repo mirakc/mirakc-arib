@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 
 #include <fmt/format.h>
@@ -20,17 +21,17 @@ TEST(ServiceFilterTest, NoPacket) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false));  // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(ServiceFilterTest, NullPacket) {
@@ -40,22 +41,22 @@ TEST(ServiceFilterTest, NullPacket) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(src, GetNextPacket).WillOnce(
         [](ts::TSPacket* packet) {
           *packet = ts::NullPacket;
           return true;
         });
     EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false)); // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(ServiceFilterTest, NoSidInPat) {
@@ -75,17 +76,17 @@ TEST(ServiceFilterTest, NoSidInPat) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, ServiceStream) {
@@ -137,7 +138,7 @@ TEST(ServiceFilterTest, ServiceStream) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -206,14 +207,14 @@ TEST(ServiceFilterTest, ServiceStream) {
           EXPECT_EQ(1, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
@@ -259,7 +260,7 @@ TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -300,14 +301,14 @@ TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
           EXPECT_EQ(0x0304, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
@@ -344,7 +345,7 @@ TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -382,14 +383,14 @@ TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
           EXPECT_EQ(0x0304, packet.getPID());
           return true;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, TimeLimitTot) {
@@ -422,7 +423,7 @@ TEST(ServiceFilterTest, TimeLimitTot) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -434,14 +435,14 @@ TEST(ServiceFilterTest, TimeLimitTot) {
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, TimeLimitTdt) {
@@ -474,7 +475,7 @@ TEST(ServiceFilterTest, TimeLimitTdt) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -486,14 +487,14 @@ TEST(ServiceFilterTest, TimeLimitTdt) {
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, Subtitle) {
@@ -550,7 +551,7 @@ TEST(ServiceFilterTest, Subtitle) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -632,14 +633,14 @@ TEST(ServiceFilterTest, Subtitle) {
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, SuperimposedText) {
@@ -696,7 +697,7 @@ TEST(ServiceFilterTest, SuperimposedText) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -778,14 +779,14 @@ TEST(ServiceFilterTest, SuperimposedText) {
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }
 
 TEST(ServiceFilterTest, PmtSidUnmatched) {
@@ -810,7 +811,7 @@ TEST(ServiceFilterTest, PmtSidUnmatched) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).Times(1);
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*sink, HandlePacket).WillOnce(
         [](const ts::TSPacket& packet) {
           EXPECT_EQ(ts::PID_PAT, packet.getPID());
@@ -830,12 +831,12 @@ TEST(ServiceFilterTest, PmtSidUnmatched) {
           EXPECT_EQ(0, packet.getCC());
           return true;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   filter->Connect(std::move(sink));
   src.Connect(std::move(filter));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
 }

@@ -57,29 +57,24 @@ class ServiceFilter final : public PacketSink,
   }
 
   bool Start() override {
-    if (!sink_) {
-      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink connected");
-      return false;
-    }
-
-    sink_->Start();
-    return true;
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
+    return sink_->Start();
   }
 
-  bool End() override {
-    if (!sink_) {
-      MIRAKC_ARIB_SERVICE_FILTER_ERROR("No sink connected");
-      return false;
-    }
-
-    return sink_->End();
+  void End() override {
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
+    sink_->End();
   }
 
   int GetExitCode() const override {
-    if (!sink_) {
-      return EXIT_FAILURE;
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
+    auto exit_code = sink_->GetExitCode();
+    if (exit_code == EXIT_SUCCESS) {
+      if (error_) {
+        exit_code = EXIT_FAILURE;
+      }
     }
-    return sink_->GetExitCode();
+    return exit_code;
   }
 
   bool HandlePacket(const ts::TSPacket& packet) override {
@@ -170,6 +165,7 @@ class ServiceFilter final : public PacketSink,
     if (pat.pmts.find(option_.sid) == pat.pmts.end()) {
       MIRAKC_ARIB_SERVICE_FILTER_ERROR("SID#{:04X} not found in PAT", option_.sid);
       done_ = true;
+      error_ = true;
       return;
     }
 
@@ -333,6 +329,7 @@ class ServiceFilter final : public PacketSink,
   std::unordered_set<ts::PID> emm_filter_;
   ts::PID pmt_pid_ = ts::PID_NULL;
   bool done_ = false;
+  bool error_ = false;
 
   MIRAKC_ARIB_NON_COPYABLE(ServiceFilter);
 };

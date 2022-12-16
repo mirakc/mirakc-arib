@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 
 #include <fmt/format.h>
@@ -57,8 +58,7 @@ TEST(RingFileSinkTest, EmptyFile) {
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(RingFileSinkTest, OnePacket) {
@@ -87,8 +87,7 @@ TEST(RingFileSinkTest, OnePacket) {
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(RingFileSinkTest, ReachBufferSize) {
@@ -124,8 +123,7 @@ TEST(RingFileSinkTest, ReachBufferSize) {
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(RingFileSinkTest, ReachChunkSize) {
@@ -174,8 +172,7 @@ TEST(RingFileSinkTest, ReachChunkSize) {
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(RingFileSinkTest, ReachRingSize) {
@@ -266,8 +263,7 @@ TEST(RingFileSinkTest, ReachRingSize) {
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(RingFileSinkTest, FailWriteInFlush) {
@@ -298,7 +294,7 @@ TEST(RingFileSinkTest, FailWriteInFlush) {
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
 }
 
 TEST(RingFileSinkTest, FailSyncInFlush) {
@@ -345,7 +341,7 @@ TEST(RingFileSinkTest, FailSyncInFlush) {
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
 }
 
 TEST(RingFileSinkTest, FailTruncInFlush) {
@@ -427,7 +423,7 @@ TEST(RingFileSinkTest, FailTruncInFlush) {
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
 }
 
 TEST(RingFileSinkTest, FailSeekInFlush) {
@@ -512,7 +508,7 @@ TEST(RingFileSinkTest, FailSeekInFlush) {
   auto sink = std::make_unique<RingFileSink>(std::move(ring), kChunkSize, kNumChunks);
   sink->SetObserver(&observer);
   src.Connect(std::move(sink));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
 }
 
 TEST(RingFileSinkTest, SetPosition) {
@@ -542,6 +538,5 @@ TEST(RingFileSinkTest, SetPosition) {
   sink->SetObserver(&observer);
   sink->SetPosition(kChunkSize);
   src.Connect(std::move(sink));
-  EXPECT_TRUE(src.FeedPackets());
-  EXPECT_EQ(EXIT_SUCCESS, src.GetExitCode());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }

@@ -23,15 +23,12 @@ class PacketSource {
     sink_ = std::move(sink);
   }
 
-  bool FeedPackets() {
-    if (!sink_) {
-      MIRAKC_ARIB_ERROR("No sink connected");
-      return false;
-    }
+  int FeedPackets() {
+    MIRAKC_ARIB_ASSERT(sink_ != nullptr);
     MIRAKC_ARIB_INFO("Feed packets...");
     if (!sink_->Start()) {
       MIRAKC_ARIB_ERROR("Failed to start");
-      return false;
+      return EXIT_FAILURE;
     }
     ts::TSPacket packet;
     while (GetNextPacket(&packet)) {
@@ -39,17 +36,10 @@ class PacketSource {
         break;
       }
     }
-    auto success = sink_->End();
-    MIRAKC_ARIB_INFO("Ended to feed packets {}",
-                     success ? "successfully" : "unsuccessfully");
-    return success;
-  }
-
-  int GetExitCode() const {
-    if (!sink_) {
-      return EXIT_FAILURE;
-    }
-    return sink_->GetExitCode();
+    sink_->End();
+    auto exit_code = sink_->GetExitCode();
+    MIRAKC_ARIB_INFO("Ended with exit-code({})", exit_code);
+    return exit_code;
   }
 
  private:

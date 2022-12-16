@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 
 #include <gmock/gmock.h>
@@ -15,7 +16,8 @@ TEST(PacketSourceTest, EmptyFile) {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);  // Never called
@@ -34,7 +36,8 @@ TEST(PacketSourceTest, OneByteFile) {
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(1));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);  // Never called
@@ -58,7 +61,8 @@ TEST(PacketSourceTest, OnePacketFile) {
         });
     EXPECT_CALL(*sink, HandlePacket).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   FileSource src(std::move(file));
@@ -91,7 +95,8 @@ TEST(PacketSourceTest, Resync) {
     EXPECT_CALL(*sink, HandlePacket)
         .Times(5).WillRepeatedly(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   FileSource src(std::move(file));
@@ -112,7 +117,8 @@ TEST(PacketSourceTest, ResyncFailure) {
           memset(buf, 0, kNBytes);
           return kNBytes;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);  // Never called
@@ -163,7 +169,8 @@ TEST(PacketSourceTest, WrapAroundWhileResync) {
     EXPECT_CALL(*sink, HandlePacket)
         .Times(5).WillRepeatedly(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   FileSource src(std::move(file));
@@ -184,7 +191,8 @@ TEST(PacketSourceTest, ResyncFailedWithEOF) {
           return 1;
         });
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);  // Never called
@@ -211,7 +219,8 @@ TEST(PacketSourceTest, ResyncFailedWithNoSyncByte) {
           memset(buf, 0, 5 * ts::PKT_SIZE);
           return 5 * ts::PKT_SIZE;
         });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);  // Never called
@@ -229,14 +238,15 @@ TEST(PacketSourceTest, Successfully) {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);  // Never called
 
   FileSource src(std::move(file));
   src.Connect(std::move(sink));
-  EXPECT_TRUE(src.FeedPackets());
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
 }
 
 TEST(PacketSourceTest, Unsuccessfully) {
@@ -247,12 +257,13 @@ TEST(PacketSourceTest, Unsuccessfully) {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return(false));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_FAILURE));
   }
 
   EXPECT_CALL(*sink, HandlePacket).Times(0);  // Never called
 
   FileSource src(std::move(file));
   src.Connect(std::move(sink));
-  EXPECT_FALSE(src.FeedPackets());
+  EXPECT_EQ(EXIT_FAILURE, src.FeedPackets());
 }
