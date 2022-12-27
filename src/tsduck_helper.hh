@@ -94,6 +94,8 @@ struct EitSection {
   static constexpr size_t EIT_PAYLOAD_FIXED_SIZE = 6;
   static constexpr size_t EIT_EVENT_FIXED_SIZE = 12;
 
+  EitSection() = default;
+
   EitSection(const ts::Section& section) {
     const auto* data = section.payload();
     auto size = section.payloadSize();
@@ -512,10 +514,14 @@ rapidjson::Value MakeEventsJsonValue(const EitSection& eit, Allocator& allocator
     const auto eid = ts::GetUInt16(data);
 
     ts::Time start_time;
-    ts::DecodeMJD(data + 2, 5, start_time);
+    const auto start_time_undefined = !ts::DecodeMJD(data + 2, 5, start_time);
     start_time -= kJstTzOffset;  // JST -> UTC
     const auto start_time_unix = start_time - ts::Time::UnixEpoch;
 
+    bool duration_undefined = false;
+    duration_undefined = duration_undefined || !ts::IsValidBCD(data[7]);
+    duration_undefined = duration_undefined || !ts::IsValidBCD(data[8]);
+    duration_undefined = duration_undefined || !ts::IsValidBCD(data[9]);
     const auto hour = ts::DecodeBCD(data[7]);
     const auto min = ts::DecodeBCD(data[8]);
     const auto sec = ts::DecodeBCD(data[9]);
@@ -592,8 +598,18 @@ rapidjson::Value MakeEventsJsonValue(const EitSection& eit, Allocator& allocator
 
     rapidjson::Value event(rapidjson::kObjectType);
     event.AddMember("eventId", eid, allocator);
-    event.AddMember("startTime", start_time_unix, allocator);
-    event.AddMember("duration", duration, allocator);
+    if (start_time_undefined) {
+      // null
+      event.AddMember("startTime", rapidjson::Value(), allocator);
+    } else {
+      event.AddMember("startTime", start_time_unix, allocator);
+    }
+    if (duration_undefined) {
+      // null
+      event.AddMember("duration", rapidjson::Value(), allocator);
+    } else {
+      event.AddMember("duration", duration, allocator);
+    }
     event.AddMember("scrambled", ca_controlled, allocator);
     event.AddMember("descriptors", descriptors, allocator);
 

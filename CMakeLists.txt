@@ -857,6 +857,7 @@ if(MIRAKC_ARIB_TEST)
     test/start_seeker_test.cc
     test/test.cc
     test/test_helper.hh
+    test/tsduck_helper_test.cc
   )
 
   target_include_directories(mirakc-arib-test
