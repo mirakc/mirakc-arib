@@ -47,7 +47,7 @@ class EitpfCollector final : public PacketSink,
 
  private:
   static bool IsCollected(
-      EitSection& eit, const std::map<uint64_t, uint8_t>& versions) {
+      const EitSection& eit, const std::map<uint64_t, uint8_t>& versions) {
       const auto it = versions.find(eit.service_triple());
       if (it == versions.end()) {
         return false;
@@ -64,6 +64,14 @@ class EitpfCollector final : public PacketSink,
     }
     if (option_.following && following_versions_.size() != option_.sids.size()) {
       return false;
+    }
+    if (option_.present && option_.following) {
+      // EIT[p] and EIT[f] have the same version.
+      for (const auto& pair : present_versions_) {
+        if (following_versions_.at(pair.first) != pair.second) {
+          return false;
+        }
+      }
     }
     MIRAKC_ARIB_INFO("Collected all sections");
     return true;
