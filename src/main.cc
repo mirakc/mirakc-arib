@@ -239,7 +239,7 @@ Options:
     Stop collecting if there is no progress for the specified time (ms).
     Elapsed time is computed using TDT/TOT.
 
-    It makes no sence to specify a time limit less than 5 seconds.  Because TOT
+    It makes no sense to specify a time limit less than 5 seconds.  Because TOT
     comes every 5 seconds in Japan.
 
   --streaming
@@ -862,7 +862,7 @@ Description:
 
   The CLOCK is one of PCR, DTS or PTS.  It's formatted like below:
 
-    <decimal integer of PCR base>+<decimal integer of PCR extention>
+    <decimal integer of PCR base>+<decimal integer of PCR extension>
 
   Currently, the following packets and tables are shown:
 
