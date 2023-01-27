@@ -71,8 +71,8 @@ class TableProgress {
 
     for (size_t i = eit.section_index(); i <= eit.last_section_index(); ++i) {
       if (section_versions_[i] != 0xFF && section_versions_[i] != eit.version) {
-        MIRAKC_ARIB_INFO("  Version changed: sec#{:02X}: {:02d} -> {:02d}",
-                         i, section_versions_[i], eit.version);
+        MIRAKC_ARIB_INFO("  Version changed: sec#{:02X}: {:02d} -> {:02d}", i,
+            section_versions_[i], eit.version);
       }
       section_versions_[i] = eit.version;
     }
@@ -201,8 +201,8 @@ class TableProgress {
   }
 
   // Bitmap
-  uint8_t collected_[kNumSegments] = { 0 };
-  uint8_t unused_[kNumSegments] = { 0 };
+  uint8_t collected_[kNumSegments] = {0};
+  uint8_t unused_[kNumSegments] = {0};
   uint8_t section_versions_[kNumSections];
   bool completed_ = false;
 
@@ -254,8 +254,8 @@ class TableGroupProgress {
   }
 
   void Show(const char* label) const {
-    MIRAKC_ARIB_TRACE("    {}: last-table-index({}), ltid-changed({})",
-                      label, last_table_index_, last_table_index_change_count_);
+    MIRAKC_ARIB_TRACE("    {}: last-table-index({}), ltid-changed({})", label, last_table_index_,
+        last_table_index_change_count_);
     for (size_t i = 0; i < kNumTables; ++i) {
       if (tables_[i].IsCompleted()) {
         continue;
@@ -280,8 +280,8 @@ class TableGroupProgress {
       return false;
     }
     if (last_table_index_ != eit.last_table_index()) {
-      MIRAKC_ARIB_INFO("  Last table index changed: {} -> {}",
-                       last_table_index_, eit.last_table_index());
+      MIRAKC_ARIB_INFO(
+          "  Last table index changed: {} -> {}", last_table_index_, eit.last_table_index());
       last_table_index_change_count_++;
       return false;
     }
@@ -428,9 +428,7 @@ class EitCollector final : public PacketSink,
                            public ts::SectionHandlerInterface,
                            public ts::TableHandlerInterface {
  public:
-  explicit EitCollector(const EitCollectorOption& option)
-      : option_(option),
-        demux_(context_) {
+  explicit EitCollector(const EitCollectorOption& option) : option_(option), demux_(context_) {
     MIRAKC_ARIB_ASSERT(option_.collect_actual || option_.collect_others);
     if (spdlog::default_logger()->should_log(spdlog::level::trace)) {
       EnableShowProgress();
@@ -454,8 +452,7 @@ class EitCollector final : public PacketSink,
     auto min = elapse / ts::MilliSecPerMin;
     auto sec = (elapse - min * ts::MilliSecPerMin) / ts::MilliSecPerSec;
     auto ms = elapse % ts::MilliSecPerSec;
-    MIRAKC_ARIB_INFO(
-        "Collected {} services, {} sections, {}:{:02d}.{:03d} elapsed",
+    MIRAKC_ARIB_INFO("Collected {} services, {} sections, {}:{:02d}.{:03d} elapsed",
         progress_.CountServices(), progress_.CountSections(), min, sec, ms);
   }
 
@@ -502,13 +499,11 @@ class EitCollector final : public PacketSink,
 
     EitSection eit(section);
     if (!option_.sids.IsEmpty() && !option_.sids.Contain(eit.sid)) {
-      MIRAKC_ARIB_DEBUG(
-          "Ignore SID#{:04X} according to the inclusion list", eit.sid);
+      MIRAKC_ARIB_DEBUG("Ignore SID#{:04X} according to the inclusion list", eit.sid);
       return;
     }
     if (!option_.xsids.IsEmpty() && option_.xsids.Contain(eit.sid)) {
-      MIRAKC_ARIB_DEBUG(
-          "Ignore SID#{:04X} according to the exclusion list", eit.sid);
+      MIRAKC_ARIB_DEBUG("Ignore SID#{:04X} according to the exclusion list", eit.sid);
       return;
     }
     if (CheckCollected(eit)) {
@@ -518,9 +513,8 @@ class EitCollector final : public PacketSink,
     MIRAKC_ARIB_INFO(
         "EIT: onid({:04X}) tsid({:04X}) sid({:04X}) tid({:04X}/{:02X})"
         " sec({:02X}:{:02X}/{:02X}) ver({:02d})",
-        eit.nid, eit.tsid, eit.sid, eit.tid, eit.last_table_id,
-        eit.section_number, eit.segment_last_section_number,
-        eit.last_section_number, eit.version);
+        eit.nid, eit.tsid, eit.sid, eit.tid, eit.last_table_id, eit.section_number,
+        eit.segment_last_section_number, eit.last_section_number, eit.version);
 
     WriteEitSection(eit);
     UpdateProgress(eit);
@@ -614,7 +608,7 @@ class EitCollector final : public PacketSink,
   ts::DuckContext context_;
   ts::SectionDemux demux_;
   bool has_timestamp_ = false;
-  ts::Time timestamp_;  // JST
+  ts::Time timestamp_;     // JST
   ts::Time last_updated_;  // JST
   CollectProgress progress_;
   bool show_progress_ = false;

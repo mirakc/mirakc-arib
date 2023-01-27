@@ -61,7 +61,9 @@ class BenchmarkSink final : public PacketSink {
  public:
   BenchmarkSink() = default;
   ~BenchmarkSink() override = default;
-  bool HandlePacket(const ts::TSPacket&) override { return true; }
+  bool HandlePacket(const ts::TSPacket&) override {
+    return true;
+  }
 };
 
 void BM_FileSource(benchmark::State& state) {
@@ -72,8 +74,7 @@ void BM_FileSource(benchmark::State& state) {
   for (auto _ : state) {
     src.FeedPackets();
   }
-  state.SetItemsProcessed(
-      BenchmarkFile::kNumPackets * static_cast<int64_t>(state.iterations()));
+  state.SetItemsProcessed(BenchmarkFile::kNumPackets * static_cast<int64_t>(state.iterations()));
 }
 
 }  // namespace

@@ -25,10 +25,9 @@ class RingFileSink final : public PacketRingSink {
     MIRAKC_ARIB_ASSERT(num_chunks > 0);
     MIRAKC_ARIB_ASSERT(num_chunks <= kMaxNumChunks);
     MIRAKC_ARIB_ASSERT_MSG(
-        chunk_size % kBufferSize == 0,
-        "The chunk size must be a multiple of the buffer size");
-    MIRAKC_ARIB_INFO("{}: {} bytes * {} chunks = {} bytes",
-                     file_->path(), chunk_size, num_chunks, ring_size_);
+        chunk_size % kBufferSize == 0, "The chunk size must be a multiple of the buffer size");
+    MIRAKC_ARIB_INFO(
+        "{}: {} bytes * {} chunks = {} bytes", file_->path(), chunk_size, num_chunks, ring_size_);
   }
 
   ~RingFileSink() override = default;
@@ -80,11 +79,9 @@ class RingFileSink final : public PacketRingSink {
     MIRAKC_ARIB_ASSERT(pos <= std::numeric_limits<int64_t>::max());
     MIRAKC_ARIB_ASSERT(pos % kBufferSize == 0);
     MIRAKC_ARIB_ASSERT_MSG(
-        pos < ring_size_,
-        "The position must be smaller than the ring buffer size");
+        pos < ring_size_, "The position must be smaller than the ring buffer size");
     MIRAKC_ARIB_ASSERT_MSG(
-        pos % chunk_size_ == 0,
-        "The position must be a multiple of the chunk size");
+        pos % chunk_size_ == 0, "The position must be a multiple of the chunk size");
 
     int64_t offset = static_cast<int64_t>(pos);
     if (file_->Seek(offset, SeekMode::kSet) != offset) {
@@ -155,8 +152,8 @@ class RingFileSink final : public PacketRingSink {
     }
 
     if (ring_pos_ == ring_size_) {
-      MIRAKC_ARIB_DEBUG("{}: Reached the end of the ring buffer, truncate at {}",
-                        file_->path(), ring_pos_);
+      MIRAKC_ARIB_DEBUG(
+          "{}: Reached the end of the ring buffer, truncate at {}", file_->path(), ring_pos_);
       if (!file_->Trunc(ring_size_)) {
         return false;
       }

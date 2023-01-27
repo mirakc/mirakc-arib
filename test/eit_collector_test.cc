@@ -10,7 +10,7 @@
 #include "test_helper.hh"
 
 namespace {
-const EitCollectorOption kEmptyOption {};
+const EitCollectorOption kEmptyOption{};
 }
 
 TEST(EitCollectorTest, NoPacket) {

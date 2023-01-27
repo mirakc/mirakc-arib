@@ -27,9 +27,7 @@ class EitpfCollector final : public PacketSink,
                              public JsonlSource,
                              public ts::SectionHandlerInterface {
  public:
-  explicit EitpfCollector(const EitpfCollectorOption& option)
-      : option_(option),
-        demux_(context_) {
+  explicit EitpfCollector(const EitpfCollectorOption& option) : option_(option), demux_(context_) {
     demux_.setSectionHandler(this);
     demux_.addPID(ts::PID_EIT);
     MIRAKC_ARIB_DEBUG("Demux EIT");
@@ -46,13 +44,12 @@ class EitpfCollector final : public PacketSink,
   }
 
  private:
-  static bool IsCollected(
-      const EitSection& eit, const std::map<uint64_t, uint8_t>& versions) {
-      const auto it = versions.find(eit.service_triple());
-      if (it == versions.end()) {
-        return false;
-      }
-      return it->second == eit.version;
+  static bool IsCollected(const EitSection& eit, const std::map<uint64_t, uint8_t>& versions) {
+    const auto it = versions.find(eit.service_triple());
+    if (it == versions.end()) {
+      return false;
+    }
+    return it->second == eit.version;
   }
 
   bool Done() const {
@@ -99,8 +96,7 @@ class EitpfCollector final : public PacketSink,
 
     EitSection eit(section);
     if (!option_.sids.IsEmpty() && !option_.sids.Contain(eit.sid)) {
-      MIRAKC_ARIB_DEBUG(
-          "Ignore SID#{:04X} according to the inclusion list", eit.sid);
+      MIRAKC_ARIB_DEBUG("Ignore SID#{:04X} according to the inclusion list", eit.sid);
       return;
     }
 
@@ -111,9 +107,8 @@ class EitpfCollector final : public PacketSink,
       MIRAKC_ARIB_INFO(
           "EIT[p]: onid({:04X}) tsid({:04X}) sid({:04X}) tid({:04X}/{:02X})"
           " sec({:02X}:{:02X}/{:02X}) ver({:02d})",
-          eit.nid, eit.tsid, eit.sid, eit.tid, eit.last_table_id,
-          eit.section_number, eit.segment_last_section_number,
-          eit.last_section_number, eit.version);
+          eit.nid, eit.tsid, eit.sid, eit.tid, eit.last_table_id, eit.section_number,
+          eit.segment_last_section_number, eit.last_section_number, eit.version);
       if (option_.present) {
         WriteEitSection(eit);
       }
@@ -125,9 +120,8 @@ class EitpfCollector final : public PacketSink,
       MIRAKC_ARIB_INFO(
           "EIT[f]: onid({:04X}) tsid({:04X}) sid({:04X}) tid({:04X}/{:02X})"
           " sec({:02X}:{:02X}/{:02X}) ver({:02d})",
-          eit.nid, eit.tsid, eit.sid, eit.tid, eit.last_table_id,
-          eit.section_number, eit.segment_last_section_number,
-          eit.last_section_number, eit.version);
+          eit.nid, eit.tsid, eit.sid, eit.tid, eit.last_table_id, eit.section_number,
+          eit.segment_last_section_number, eit.last_section_number, eit.version);
       if (option_.following) {
         WriteEitSection(eit);
       }

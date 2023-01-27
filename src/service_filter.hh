@@ -14,16 +14,11 @@
 #include "packet_source.hh"
 #include "tsduck_helper.hh"
 
-#define MIRAKC_ARIB_SERVICE_FILTER_TRACE(...) \
-  MIRAKC_ARIB_TRACE("service-filter: " __VA_ARGS__)
-#define MIRAKC_ARIB_SERVICE_FILTER_DEBUG(...) \
-  MIRAKC_ARIB_DEBUG("service-filter: " __VA_ARGS__)
-#define MIRAKC_ARIB_SERVICE_FILTER_INFO(...) \
-  MIRAKC_ARIB_INFO("service-filter: " __VA_ARGS__)
-#define MIRAKC_ARIB_SERVICE_FILTER_WARN(...) \
-  MIRAKC_ARIB_WARN("service-filter: " __VA_ARGS__)
-#define MIRAKC_ARIB_SERVICE_FILTER_ERROR(...) \
-  MIRAKC_ARIB_ERROR("service-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_FILTER_TRACE(...) MIRAKC_ARIB_TRACE("service-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_FILTER_DEBUG(...) MIRAKC_ARIB_DEBUG("service-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_FILTER_INFO(...) MIRAKC_ARIB_INFO("service-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_FILTER_WARN(...) MIRAKC_ARIB_WARN("service-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_FILTER_ERROR(...) MIRAKC_ARIB_ERROR("service-filter: " __VA_ARGS__)
 
 namespace {
 
@@ -32,8 +27,7 @@ struct ServiceFilterOption final {
   std::optional<ts::Time> time_limit = std::nullopt;  // JST
 };
 
-class ServiceFilter final : public PacketSink,
-                            public ts::TableHandlerInterface {
+class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface {
  public:
   explicit ServiceFilter(const ServiceFilterOption& option)
       : option_(option),
@@ -145,8 +139,7 @@ class ServiceFilter final : public PacketSink,
 
   void HandlePat(const ts::BinaryTable& table) {
     if (table.sourcePID() != ts::PID_PAT) {
-      MIRAKC_ARIB_SERVICE_FILTER_WARN(
-          "PAT delivered with PID#{:04X}, skip", table.sourcePID());
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("PAT delivered with PID#{:04X}, skip", table.sourcePID());
       return;
     }
 
@@ -190,7 +183,7 @@ class ServiceFilter final : public PacketSink,
     MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Demux PMT#{:04X}", pmt_pid_);
 
     // Remove other services from PAT.
-    for (auto it = pat.pmts.begin(); it != pat.pmts.end(); ) {
+    for (auto it = pat.pmts.begin(); it != pat.pmts.end();) {
       if (it->first != option_.sid) {
         it = pat.pmts.erase(it);
       } else {
@@ -215,8 +208,7 @@ class ServiceFilter final : public PacketSink,
     psi_filter_.insert(ts::PID_CDT);
     psi_filter_.insert(pmt_pid_);
     MIRAKC_ARIB_SERVICE_FILTER_DEBUG(
-        "PSI/SI filter += PAT CAT NIT SDT EIT RST TDT/TOT BIT CDT PMT#{:04X}",
-        pmt_pid_);
+        "PSI/SI filter += PAT CAT NIT SDT EIT RST TDT/TOT BIT CDT PMT#{:04X}", pmt_pid_);
   }
 
   void HandleCat(const ts::BinaryTable& table) {

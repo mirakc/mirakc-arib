@@ -9,7 +9,7 @@
 #include "test_helper.hh"
 
 namespace {
-const EitpfCollectorOption kOption {};
+const EitpfCollectorOption kOption{};
 }
 
 TEST(EitpfCollectorTest, NoPacket) {
@@ -61,42 +61,40 @@ TEST(EitpfCollectorTest, PresentFollowing) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(0, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(4, doc["events"][0]["eventId"]);
-          EXPECT_EQ(0, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(1, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(5, doc["events"][0]["eventId"]);
-          EXPECT_EQ(1000, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(0, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(4, doc["events"][0]["eventId"]);
+      EXPECT_EQ(0, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(1, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(5, doc["events"][0]["eventId"]);
+      EXPECT_EQ(1000, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
   }
 
   collector->Connect(std::move(sink));
@@ -141,24 +139,23 @@ TEST(EitpfCollectorTest, Present) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(0, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(4, doc["events"][0]["eventId"]);
-          EXPECT_EQ(0, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(0, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(4, doc["events"][0]["eventId"]);
+      EXPECT_EQ(0, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
   }
 
   collector->Connect(std::move(sink));
@@ -196,31 +193,30 @@ TEST(EitpfCollectorTest, Following) {
 
   EitpfCollectorOption option(kOption);
   option.sids.Add(3);
-  option.present =false;
+  option.present = false;
 
   auto collector = std::make_unique<EitpfCollector>(option);
   auto sink = std::make_unique<MockJsonlSink>();
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(1, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(5, doc["events"][0]["eventId"]);
-          EXPECT_EQ(1000, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(1, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(5, doc["events"][0]["eventId"]);
+      EXPECT_EQ(1000, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
   }
 
   collector->Connect(std::move(sink));
@@ -273,78 +269,74 @@ TEST(EitpfCollectorTest, PresentFollowingStreaming) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(0, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(4, doc["events"][0]["eventId"]);
-          EXPECT_EQ(0, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(1, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(5, doc["events"][0]["eventId"]);
-          EXPECT_EQ(1000, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(0, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(2, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(4, doc["events"][0]["eventId"]);
-          EXPECT_EQ(0, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(1, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(2, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(5, doc["events"][0]["eventId"]);
-          EXPECT_EQ(1000, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(0, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(4, doc["events"][0]["eventId"]);
+      EXPECT_EQ(0, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(1, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(5, doc["events"][0]["eventId"]);
+      EXPECT_EQ(1000, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(0, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(2, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(4, doc["events"][0]["eventId"]);
+      EXPECT_EQ(0, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(1, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(2, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(5, doc["events"][0]["eventId"]);
+      EXPECT_EQ(1000, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
   }
 
   collector->Connect(std::move(sink));
@@ -398,42 +390,40 @@ TEST(EitpfCollectorTest, PresentStreaming) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(0, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(4, doc["events"][0]["eventId"]);
-          EXPECT_EQ(0, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(0, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(2, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(4, doc["events"][0]["eventId"]);
-          EXPECT_EQ(0, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(0, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(4, doc["events"][0]["eventId"]);
+      EXPECT_EQ(0, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(0, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(2, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(4, doc["events"][0]["eventId"]);
+      EXPECT_EQ(0, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
   }
 
   collector->Connect(std::move(sink));
@@ -480,49 +470,47 @@ TEST(EitpfCollectorTest, FollowingStreaming) {
 
   EitpfCollectorOption option(kOption);
   option.streaming = true;
-  option.present =false;
+  option.present = false;
 
   auto collector = std::make_unique<EitpfCollector>(option);
   auto sink = std::make_unique<MockJsonlSink>();
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(1, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(5, doc["events"][0]["eventId"]);
-          EXPECT_EQ(1000, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(1, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(2, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(5, doc["events"][0]["eventId"]);
-          EXPECT_EQ(1000, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(1, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(5, doc["events"][0]["eventId"]);
+      EXPECT_EQ(1000, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(1, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(2, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(5, doc["events"][0]["eventId"]);
+      EXPECT_EQ(1000, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
   }
 
   collector->Connect(std::move(sink));
@@ -567,42 +555,40 @@ TEST(EitpfCollectorTest, Sids) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(0, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(4, doc["events"][0]["eventId"]);
-          EXPECT_EQ(0, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(1, doc["originalNetworkId"]);
-          EXPECT_EQ(2, doc["transportStreamId"]);
-          EXPECT_EQ(3, doc["serviceId"]);
-          EXPECT_EQ(78, doc["tableId"]);
-          EXPECT_EQ(1, doc["sectionNumber"]);
-          EXPECT_EQ(1, doc["lastSectionNumber"]);
-          EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
-          EXPECT_EQ(1, doc["versionNumber"]);
-          EXPECT_EQ(1, doc["events"].Size());
-          EXPECT_EQ(5, doc["events"][0]["eventId"]);
-          EXPECT_EQ(1000, doc["events"][0]["startTime"]);
-          EXPECT_EQ(1000, doc["events"][0]["duration"]);
-          EXPECT_EQ(false, doc["events"][0]["scrambled"]);
-          EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(0, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(4, doc["events"][0]["eventId"]);
+      EXPECT_EQ(0, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(1, doc["originalNetworkId"]);
+      EXPECT_EQ(2, doc["transportStreamId"]);
+      EXPECT_EQ(3, doc["serviceId"]);
+      EXPECT_EQ(78, doc["tableId"]);
+      EXPECT_EQ(1, doc["sectionNumber"]);
+      EXPECT_EQ(1, doc["lastSectionNumber"]);
+      EXPECT_EQ(1, doc["segmentLastSectionNumber"]);
+      EXPECT_EQ(1, doc["versionNumber"]);
+      EXPECT_EQ(1, doc["events"].Size());
+      EXPECT_EQ(5, doc["events"][0]["eventId"]);
+      EXPECT_EQ(1000, doc["events"][0]["startTime"]);
+      EXPECT_EQ(1000, doc["events"][0]["duration"]);
+      EXPECT_EQ(false, doc["events"][0]["scrambled"]);
+      EXPECT_TRUE(doc["events"][0]["descriptors"].Empty());
+      return true;
+    });
   }
 
   collector->Connect(std::move(sink));

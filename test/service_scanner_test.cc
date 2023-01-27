@@ -10,7 +10,7 @@
 #include "test_helper.hh"
 
 namespace {
-const ServiceScannerOption kEmptyOption {};
+const ServiceScannerOption kEmptyOption{};
 }
 
 TEST(ServiceScannerTest, NoPacket) {
@@ -19,7 +19,7 @@ TEST(ServiceScannerTest, NoPacket) {
   auto sink = std::make_unique<MockJsonlSink>();
 
   EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false));  // EOF
-  EXPECT_CALL(*sink, HandleDocument).Times(0);  // Never called
+  EXPECT_CALL(*sink, HandleDocument).Times(0);                       // Never called
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
@@ -64,27 +64,26 @@ TEST(ServiceScannerTest, Complete) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument).WillOnce(
-      [](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":1,)"
-              R"("name":"service-1",)"
-              R"("type":1,)"
-              R"("logoId":-1)"
-            "},{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":2,)"
-              R"("name":"service-2",)"
-              R"("type":1,)"
-              R"("logoId":-1)"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":1,)"
+        R"("name":"service-1",)"
+        R"("type":1,)"
+        R"("logoId":-1)"
+        "},{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":2,)"
+        R"("name":"service-2",)"
+        R"("type":1,)"
+        R"("logoId":-1)"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
@@ -241,27 +240,26 @@ TEST(ServiceScannerTest, NonStandardNit) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument).WillOnce(
-      [](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":1,)"
-              R"("name":"service-1",)"
-              R"("type":1,)"
-              R"("logoId":-1)"
-            "},{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":2,)"
-              R"("name":"service-2",)"
-              R"("type":1,)"
-              R"("logoId":-1)"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":1,)"
+        R"("name":"service-1",)"
+        R"("type":1,)"
+        R"("logoId":-1)"
+        "},{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":2,)"
+        R"("name":"service-2",)"
+        R"("type":1,)"
+        R"("logoId":-1)"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
@@ -315,27 +313,26 @@ TEST(ServiceScannerTest, ServiceTypes) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument).WillOnce(
-      [](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":1,)"
-              R"("name":"service-1",)"
-              R"("type":1,)"
-              R"("logoId":-1)"
-            "},{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":2,)"
-              R"("name":"service-2",)"
-              R"("type":2,)"
-              R"("logoId":-1)"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":1,)"
+        R"("name":"service-1",)"
+        R"("type":1,)"
+        R"("logoId":-1)"
+        "},{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":2,)"
+        R"("name":"service-2",)"
+        R"("type":2,)"
+        R"("logoId":-1)"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
@@ -384,20 +381,19 @@ TEST(ServiceScannerTest, InclusionList) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument).WillOnce(
-      [](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":1,)"
-              R"("name":"service-1",)"
-              R"("type":1,)"
-              R"("logoId":-1)"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":1,)"
+        R"("name":"service-1",)"
+        R"("type":1,)"
+        R"("logoId":-1)"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));
@@ -446,20 +442,19 @@ TEST(ServiceScannerTest, ExclusionList) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument).WillOnce(
-      [](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":2,)"
-              R"("name":"service-2",)"
-              R"("type":1,)"
-              R"("logoId":-1)"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":2,)"
+        R"("name":"service-2",)"
+        R"("type":1,)"
+        R"("logoId":-1)"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   scanner->Connect(std::move(sink));
   src.Connect(std::move(scanner));

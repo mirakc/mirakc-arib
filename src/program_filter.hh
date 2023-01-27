@@ -15,16 +15,11 @@
 #include "packet_source.hh"
 #include "tsduck_helper.hh"
 
-#define MIRAKC_ARIB_PROGRAM_FILTER_TRACE(...) \
-  MIRAKC_ARIB_TRACE("program-filter: " __VA_ARGS__)
-#define MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(...) \
-  MIRAKC_ARIB_DEBUG("program-filter: " __VA_ARGS__)
-#define MIRAKC_ARIB_PROGRAM_FILTER_INFO(...) \
-  MIRAKC_ARIB_INFO("program-filter: " __VA_ARGS__)
-#define MIRAKC_ARIB_PROGRAM_FILTER_WARN(...) \
-  MIRAKC_ARIB_WARN("program-filter: " __VA_ARGS__)
-#define MIRAKC_ARIB_PROGRAM_FILTER_ERROR(...) \
-  MIRAKC_ARIB_ERROR("program-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_PROGRAM_FILTER_TRACE(...) MIRAKC_ARIB_TRACE("program-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(...) MIRAKC_ARIB_DEBUG("program-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_PROGRAM_FILTER_INFO(...) MIRAKC_ARIB_INFO("program-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_PROGRAM_FILTER_WARN(...) MIRAKC_ARIB_WARN("program-filter: " __VA_ARGS__)
+#define MIRAKC_ARIB_PROGRAM_FILTER_ERROR(...) MIRAKC_ARIB_ERROR("program-filter: " __VA_ARGS__)
 
 namespace {
 
@@ -39,30 +34,23 @@ struct ProgramFilterOption final {
   ts::MilliSecond start_margin = 0;
   ts::MilliSecond end_margin = 0;
   std::optional<ts::Time> wait_until = std::nullopt;  // JST
-  bool pre_streaming = false;  // disabled
+  bool pre_streaming = false;                         // disabled
 };
 
-class ProgramFilter final : public PacketSink,
-                            public ts::TableHandlerInterface {
+class ProgramFilter final : public PacketSink, public ts::TableHandlerInterface {
  public:
-  explicit ProgramFilter(const ProgramFilterOption& option)
-      : option_(option),
-        demux_(context_) {
+  explicit ProgramFilter(const ProgramFilterOption& option) : option_(option), demux_(context_) {
     clock_pid_ = option_.clock_pid;
     clock_pcr_ = option_.clock_pcr;
     clock_time_ = option_.clock_time;
     clock_pcr_ready_ = true;
     clock_time_ready_ = true;
     MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
-        "Initial clock: PCR#{:04X}, {:011X} ({})",
-        clock_pid_, clock_pcr_, clock_time_);
-    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
-        "Video tags: {}", fmt::join(option_.video_tags, ", "));
-    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
-        "Audio tags: {}", fmt::join(option_.audio_tags, ", "));
+        "Initial clock: PCR#{:04X}, {:011X} ({})", clock_pid_, clock_pcr_, clock_time_);
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Video tags: {}", fmt::join(option_.video_tags, ", "));
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Audio tags: {}", fmt::join(option_.audio_tags, ", "));
     if (option_.wait_until.has_value()) {
-      MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
-          "Wait until: {}", option_.wait_until.value());
+      MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Wait until: {}", option_.wait_until.value());
     }
 
     demux_.setTableHandler(this);
@@ -293,8 +281,7 @@ class ProgramFilter final : public PacketSink,
     //       ...
     //
     if (table.sourcePID() != ts::PID_PAT) {
-      MIRAKC_ARIB_PROGRAM_FILTER_WARN(
-          "PAT delivered with PID#{:04X}, skip", table.sourcePID());
+      MIRAKC_ARIB_PROGRAM_FILTER_WARN("PAT delivered with PID#{:04X}, skip", table.sourcePID());
       return;
     }
 
@@ -346,8 +333,7 @@ class ProgramFilter final : public PacketSink,
 
     if (clock_pid_ != pcr_pid_) {
       MIRAKC_ARIB_PROGRAM_FILTER_WARN(
-          "PID of PCR has been changed: {:04X} -> {:04X}, need resync",
-          clock_pid_, pcr_pid_);
+          "PID of PCR has been changed: {:04X} -> {:04X}, need resync", clock_pid_, pcr_pid_);
       clock_pid_ = pcr_pid_;
       clock_pcr_ready_ = false;
       clock_time_ready_ = false;
@@ -366,8 +352,8 @@ class ProgramFilter final : public PacketSink,
           MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("PES black list += PES/Video#{:04X} (no tag)", pid);
           continue;
         }
-        const auto& tag_it = std::find(
-            std::begin(option_.video_tags), std::end(option_.video_tags), tag);
+        const auto& tag_it =
+            std::find(std::begin(option_.video_tags), std::end(option_.video_tags), tag);
         if (tag_it == std::end(option_.video_tags)) {
           pes_black_list_.insert(pid);
           MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
@@ -381,8 +367,8 @@ class ProgramFilter final : public PacketSink,
           MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("PES black list += PES/Audio#{:04X} (no tag)", pid);
           continue;
         }
-        const auto& tag_it = std::find(
-            std::begin(option_.audio_tags), std::end(option_.audio_tags), tag);
+        const auto& tag_it =
+            std::find(std::begin(option_.audio_tags), std::end(option_.audio_tags), tag);
         if (tag_it == std::end(option_.audio_tags)) {
           pes_black_list_.insert(pid);
           MIRAKC_ARIB_PROGRAM_FILTER_DEBUG(
@@ -575,9 +561,8 @@ class ProgramFilter final : public PacketSink,
 
     start_pcr_ = ConvertTimeToPcr(event_start_time_);
     end_pcr_ = ConvertTimeToPcr(event_end_time_);
-    MIRAKC_ARIB_PROGRAM_FILTER_INFO(
-        "Updated PCR range: {:011X} ({}) .. {:011X} ({})",
-        start_pcr_, event_start_time_, end_pcr_, event_end_time_);
+    MIRAKC_ARIB_PROGRAM_FILTER_INFO("Updated PCR range: {:011X} ({}) .. {:011X} ({})", start_pcr_,
+        event_start_time_, end_pcr_, event_end_time_);
   }
 
   int64_t ConvertTimeToPcr(const ts::Time& time) {

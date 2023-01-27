@@ -148,9 +148,9 @@ class FileSource final : public PacketSource {
   }
 
   inline bool ValidateResync() const {
-    return buf_[pos_ + 1 * ts::PKT_SIZE] == ts::SYNC_BYTE
-        && buf_[pos_ + 2 * ts::PKT_SIZE] == ts::SYNC_BYTE
-        && buf_[pos_ + 3 * ts::PKT_SIZE] == ts::SYNC_BYTE;
+    return buf_[pos_ + 1 * ts::PKT_SIZE] == ts::SYNC_BYTE &&
+        buf_[pos_ + 2 * ts::PKT_SIZE] == ts::SYNC_BYTE &&
+        buf_[pos_ + 3 * ts::PKT_SIZE] == ts::SYNC_BYTE;
   }
 
   inline size_t available_bytes() const {

@@ -100,7 +100,7 @@ inline std::tuple<std::unique_ptr<uint8_t[]>, size_t> InsertPngChunks(
 
 inline std::string MakeBase64Png(const uint8_t* data, size_t size) {
   auto [png, png_size] = InsertPngChunks(data, size);
-  auto base64 =  cppcodec::base64_rfc4648::encode(png.get(), png_size);
+  auto base64 = cppcodec::base64_rfc4648::encode(png.get(), png_size);
   return std::string("data:image/png;base64,") + base64;
 }
 
@@ -130,11 +130,9 @@ class LibISDBLogger : public LibISDB::Logger {
   MIRAKC_ARIB_NON_COPYABLE(LibISDBLogger);
 };
 
-class LibISDBSourceBridge : public PacketSink,
-                            public LibISDB::SourceFilter {
+class LibISDBSourceBridge : public PacketSink, public LibISDB::SourceFilter {
  public:
-  LibISDBSourceBridge()
-      : LibISDB::SourceFilter(LibISDB::SourceFilter::SourceMode::Push) {}
+  LibISDBSourceBridge() : LibISDB::SourceFilter(LibISDB::SourceFilter::SourceMode::Push) {}
   ~LibISDBSourceBridge() override {}
 
   bool HandlePacket(const ts::TSPacket& packet) override {
@@ -204,20 +202,17 @@ class LogoCollector final : public PacketSink,
   // LibISDB::LogoDownloaderFilter::LogoHandler
   void OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoData& logo) override {
     if (logo.DataSize <= 93) {  // transparent logos
-      MIRAKC_ARIB_DEBUG(
-          "Logo(transparent): type({}) id({}) version({}) size({}) nid({})",
+      MIRAKC_ARIB_DEBUG("Logo(transparent): type({}) id({}) version({}) size({}) nid({})",
           logo.LogoType, logo.LogoID, logo.LogoVersion, logo.DataSize, logo.NetworkID);
       return;
     }
 
-    MIRAKC_ARIB_INFO(
-        "Logo: type({}) id({}) version({}) size({}) nid({})",
-        logo.LogoType, logo.LogoID, logo.LogoVersion, logo.DataSize, logo.NetworkID);
+    MIRAKC_ARIB_INFO("Logo: type({}) id({}) version({}) size({}) nid({})", logo.LogoType,
+        logo.LogoID, logo.LogoVersion, logo.DataSize, logo.NetworkID);
     if (logo.ServiceList.size() > 0) {
       for (const auto& sv : logo.ServiceList) {
         MIRAKC_ARIB_INFO(
-            "Service: nid({}) tsid({}) sid({})",
-            sv.NetworkID, sv.TransportStreamID, sv.ServiceID);
+            "Service: nid({}) tsid({}) sid({})", sv.NetworkID, sv.TransportStreamID, sv.ServiceID);
       }
     }
 

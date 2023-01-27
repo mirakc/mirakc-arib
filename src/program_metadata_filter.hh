@@ -22,8 +22,7 @@ class ProgramMetadataFilter final : public PacketSink,
                                     public ts::TableHandlerInterface {
  public:
   explicit ProgramMetadataFilter(const ProgramMetadataFilterOption& option)
-      : option_(option),
-        demux_(context_) {
+      : option_(option), demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_EIT);
     MIRAKC_ARIB_DEBUG("Demux EIT");

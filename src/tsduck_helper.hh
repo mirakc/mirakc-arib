@@ -19,8 +19,7 @@ static bool g_KeepUnicodeSymbols = false;
 constexpr ts::MilliSecond kJstTzOffset = 9 * ts::MilliSecPerHour;
 
 constexpr int64_t kMaxPcrExt = 300;
-constexpr int64_t kMaxPcr =
-    ((static_cast<int64_t>(1) << 33) - 1) * kMaxPcrExt + (kMaxPcrExt - 1);
+constexpr int64_t kMaxPcr = ((static_cast<int64_t>(1) << 33) - 1) * kMaxPcrExt + (kMaxPcrExt - 1);
 static_assert(kMaxPcr == static_cast<int64_t>(2576980377599));
 constexpr int64_t kPcrUpperBound = kMaxPcr + 1;
 constexpr int64_t kPcrTicksPerSec = 27 * 1000 * 1000;  // 27MHz
@@ -30,8 +29,7 @@ inline ts::Time ConvertUnixTimeToJstTime(ts::MilliSecond unix_time_ms) {
   return ts::Time::UnixEpoch + unix_time_ms + kJstTzOffset;
 }
 
-inline bool CheckComponentTagByRange(
-    const ts::PMT::Stream& stream, uint8_t min, uint8_t max) {
+inline bool CheckComponentTagByRange(const ts::PMT::Stream& stream, uint8_t min, uint8_t max) {
   uint8_t tag;
   if (stream.getComponentTag(tag)) {
     if (tag >= min && tag <= max) {
@@ -116,10 +114,8 @@ struct EitSection {
 
   inline uint64_t service_triple() const {
     // service triple
-    return
-        static_cast<uint64_t>(nid)  << 48 |
-        static_cast<uint64_t>(tsid) << 32 |
-        static_cast<uint32_t>(sid)  << 16;
+    return static_cast<uint64_t>(nid) << 48 | static_cast<uint64_t>(tsid) << 32 |
+        static_cast<uint32_t>(sid) << 16;
   }
 
   inline size_t table_index() const {
@@ -167,8 +163,7 @@ inline LibISDB::String DecodeAribString(const LibISDB::ARIBString& str) {
 }
 
 rapidjson::Value MakeJsonValue(
-    const LibISDB::ShortEventDescriptor* desc,
-    rapidjson::Document::AllocatorType& allocator) {
+    const LibISDB::ShortEventDescriptor* desc, rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value json(rapidjson::kObjectType);
   json.AddMember("$type", "ShortEvent", allocator);
   LibISDB::ARIBString event_name;
@@ -183,8 +178,7 @@ rapidjson::Value MakeJsonValue(
 }
 
 rapidjson::Value MakeJsonValue(
-    const LibISDB::ComponentDescriptor* desc,
-    rapidjson::Document::AllocatorType& allocator) {
+    const LibISDB::ComponentDescriptor* desc, rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value json(rapidjson::kObjectType);
   json.AddMember("$type", "Component", allocator);
   json.AddMember("streamContent", desc->GetStreamContent(), allocator);
@@ -199,8 +193,7 @@ rapidjson::Value MakeJsonValue(
 }
 
 rapidjson::Value MakeJsonValue(
-    const LibISDB::ContentDescriptor* desc,
-    rapidjson::Document::AllocatorType& allocator) {
+    const LibISDB::ContentDescriptor* desc, rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value nibbles(rapidjson::kArrayType);
   for (int i = 0; i < desc->GetNibbleCount(); ++i) {
     LibISDB::ContentDescriptor::NibbleInfo info;
@@ -219,8 +212,7 @@ rapidjson::Value MakeJsonValue(
 }
 
 rapidjson::Value MakeJsonValue(
-    const LibISDB::AudioComponentDescriptor* desc,
-    rapidjson::Document::AllocatorType& allocator) {
+    const LibISDB::AudioComponentDescriptor* desc, rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value json(rapidjson::kObjectType);
   json.AddMember("$type", "AudioComponent", allocator);
   json.AddMember("streamContent", desc->GetStreamContent(), allocator);
@@ -243,8 +235,7 @@ rapidjson::Value MakeJsonValue(
 }
 
 rapidjson::Value MakeJsonValue(
-    const LibISDB::SeriesDescriptor* desc,
-    rapidjson::Document::AllocatorType& allocator) {
+    const LibISDB::SeriesDescriptor* desc, rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value json(rapidjson::kObjectType);
   json.AddMember("$type", "Series", allocator);
   json.AddMember("seriesId", desc->GetSeriesID(), allocator);
@@ -253,8 +244,7 @@ rapidjson::Value MakeJsonValue(
   LibISDB::DateTime expire_date;
   if (desc->GetExpireDate(&expire_date)) {
     json.AddMember(
-        "expireDate",
-        static_cast<uint64_t>(expire_date.GetLinearMilliseconds()), allocator);
+        "expireDate", static_cast<uint64_t>(expire_date.GetLinearMilliseconds()), allocator);
   }
   json.AddMember("episodeNumber", desc->GetEpisodeNumber(), allocator);
   json.AddMember("lastEpisodeNumber", desc->GetLastEpisodeNumber(), allocator);
@@ -265,8 +255,7 @@ rapidjson::Value MakeJsonValue(
   return json;
 }
 
-rapidjson::Value MakeJsonValue(
-    uint8_t group_type,
+rapidjson::Value MakeJsonValue(uint8_t group_type,
     const LibISDB::EventGroupDescriptor::EventInfo& info,
     rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value json(rapidjson::kObjectType);
@@ -285,8 +274,7 @@ rapidjson::Value MakeJsonValue(
 }
 
 rapidjson::Value MakeJsonValue(
-    const LibISDB::EventGroupDescriptor* desc,
-    rapidjson::Document::AllocatorType& allocator) {
+    const LibISDB::EventGroupDescriptor* desc, rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value json(rapidjson::kObjectType);
   json.AddMember("$type", "EventGroup", allocator);
   json.AddMember("groupType", desc->GetGroupType(), allocator);
@@ -301,8 +289,7 @@ rapidjson::Value MakeJsonValue(
   return json;
 }
 
-rapidjson::Value MakeJsonValue(
-    const LibISDB::String& desc, const LibISDB::String& item,
+rapidjson::Value MakeJsonValue(const LibISDB::String& desc, const LibISDB::String& item,
     rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value json(rapidjson::kArrayType);
   json.PushBack(rapidjson::Value().SetString(desc, allocator), allocator);
@@ -310,19 +297,15 @@ rapidjson::Value MakeJsonValue(
   return json;
 }
 
-rapidjson::Value MakeJsonValue(
-    const LibISDB::ARIBString& desc, const LibISDB::ARIBString& item,
+rapidjson::Value MakeJsonValue(const LibISDB::ARIBString& desc, const LibISDB::ARIBString& item,
     rapidjson::Document::AllocatorType& allocator) {
   return MakeJsonValue(DecodeAribString(desc), DecodeAribString(item), allocator);
 }
 
-rapidjson::Value MakeJsonValue(
-    const ts::ByteBlock& desc, const ts::ByteBlock& item,
+rapidjson::Value MakeJsonValue(const ts::ByteBlock& desc, const ts::ByteBlock& item,
     rapidjson::Document::AllocatorType& allocator) {
-  return MakeJsonValue(
-      LibISDB::ARIBString(desc.data(), desc.size()),
-      LibISDB::ARIBString(item.data(), item.size()),
-      allocator);
+  return MakeJsonValue(LibISDB::ARIBString(desc.data(), desc.size()),
+      LibISDB::ARIBString(item.data(), item.size()), allocator);
 }
 
 inline bool HasExtendedEventItems(const ts::DescriptorList& descs) {
@@ -330,8 +313,7 @@ inline bool HasExtendedEventItems(const ts::DescriptorList& descs) {
 }
 
 rapidjson::Value MakeExtendedEventJsonValue(
-    const ts::DescriptorList& descs,
-    rapidjson::Document::AllocatorType& allocator) {
+    const ts::DescriptorList& descs, rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value items(rapidjson::kArrayType);
 
   ts::ByteBlock eed_desc;
@@ -398,13 +380,11 @@ rapidjson::Value MakeExtendedEventJsonValue(
 }
 
 rapidjson::Value MakeExtendedEventJsonValue(
-    const LibISDB::DescriptorBlock& desc_block,
-    rapidjson::Document::AllocatorType& allocator) {
+    const LibISDB::DescriptorBlock& desc_block, rapidjson::Document::AllocatorType& allocator) {
   LibISDB::ARIBStringDecoder decoder;
   auto flags = GetAribStringDecodeFlag();
   LibISDB::EventInfo::ExtendedTextInfoList ext_list;
-  if (!LibISDB::GetEventExtendedTextList(
-          &desc_block, decoder, flags, &ext_list)) {
+  if (!LibISDB::GetEventExtendedTextList(&desc_block, decoder, flags, &ext_list)) {
     return rapidjson::Value();
   }
 
@@ -421,8 +401,7 @@ rapidjson::Value MakeExtendedEventJsonValue(
 }
 
 rapidjson::Value MakeJsonValue(
-    const ts::DescriptorList& descs,
-    rapidjson::Document::AllocatorType& allocator) {
+    const ts::DescriptorList& descs, rapidjson::Document::AllocatorType& allocator) {
   rapidjson::Value descriptors(rapidjson::kArrayType);
   for (size_t i = 0; i < descs.size(); ++i) {
     const auto& dp = descs[i];
@@ -486,8 +465,7 @@ rapidjson::Value MakeJsonValue(
 }
 
 rapidjson::Value MakeJsonValue(
-    const ts::EIT::Event& event,
-    rapidjson::Document::AllocatorType& allocator) {
+    const ts::EIT::Event& event, rapidjson::Document::AllocatorType& allocator) {
   const auto eid = event.event_id;
   auto start_time = event.start_time - kJstTzOffset;  // JST -> UTC
   const auto start_time_unix = start_time - ts::Time::UnixEpoch;
@@ -526,8 +504,7 @@ rapidjson::Value MakeEventsJsonValue(const EitSection& eit, Allocator& allocator
     const auto min = ts::DecodeBCD(data[8]);
     const auto sec = ts::DecodeBCD(data[9]);
     const ts::MilliSecond duration =
-        hour * ts::MilliSecPerHour + min * ts::MilliSecPerMin +
-        sec * ts::MilliSecPerSec;
+        hour * ts::MilliSecPerHour + min * ts::MilliSecPerMin + sec * ts::MilliSecPerSec;
 
     const uint8_t running_status = (data[10] >> 5) & 0x07;
 

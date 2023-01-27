@@ -26,9 +26,7 @@ class PcrSynchronizer final : public PacketSink,
                               public JsonlSource,
                               public ts::TableHandlerInterface {
  public:
-  PcrSynchronizer(const PcrSynchronizerOption& option)
-      : option_(option),
-        demux_(context_) {
+  PcrSynchronizer(const PcrSynchronizerOption& option) : option_(option), demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
   }
@@ -41,7 +39,7 @@ class PcrSynchronizer final : public PacketSink,
     }
 
     auto time = time_ - ts::Time::UnixEpoch;  // UNIX time (ms)
-    time -= kJstTzOffset;  // JST -> UTC;
+    time -= kJstTzOffset;                     // JST -> UTC;
 
     rapidjson::Document json(rapidjson::kArrayType);
     auto& allocator = json.GetAllocator();
@@ -128,8 +126,7 @@ class PcrSynchronizer final : public PacketSink,
 
   void HandlePat(const ts::BinaryTable& table) {
     if (table.sourcePID() != ts::PID_PAT) {
-      MIRAKC_ARIB_WARN(
-          "PAT delivered with PID#{:04X}, skip", table.sourcePID());
+      MIRAKC_ARIB_WARN("PAT delivered with PID#{:04X}, skip", table.sourcePID());
       return;
     }
 
@@ -151,13 +148,11 @@ class PcrSynchronizer final : public PacketSink,
 
     for (const auto& [sid, pmt_pid] : pat.pmts) {
       if (!option_.sids.IsEmpty() && !option_.sids.Contain(sid)) {
-        MIRAKC_ARIB_DEBUG(
-            "Ignore SID#{:04X} according to the inclusion list", sid);
+        MIRAKC_ARIB_DEBUG("Ignore SID#{:04X} according to the inclusion list", sid);
         continue;
       }
       if (!option_.xsids.IsEmpty() && option_.xsids.Contain(sid)) {
-        MIRAKC_ARIB_DEBUG(
-            "Ignore SID#{:04X} according to the exclusion list", sid);
+        MIRAKC_ARIB_DEBUG("Ignore SID#{:04X} according to the exclusion list", sid);
         continue;
       }
       pmt_pids_[sid] = pmt_pid;
@@ -174,7 +169,6 @@ class PcrSynchronizer final : public PacketSink,
 
   void HandleSdt(const ts::BinaryTable& table) {
     ts::SDT sdt(context_, table);
-
 
     if (!sdt.isValid()) {
       MIRAKC_ARIB_WARN("Broken SDT, skip");
@@ -195,8 +189,8 @@ class PcrSynchronizer final : public PacketSink,
       }
       ++pmt_count_;
       demux_.addPID(pid);
-      MIRAKC_ARIB_DEBUG("Demux PMT#{:04X} for SID#{:04X} ServiceType({:02X})",
-                        pid, sid, service_type);
+      MIRAKC_ARIB_DEBUG(
+          "Demux PMT#{:04X} for SID#{:04X} ServiceType({:02X})", pid, sid, service_type);
     }
   }
 
@@ -289,7 +283,7 @@ class PcrSynchronizer final : public PacketSink,
   std::map<uint16_t, ts::PID> pcr_pid_map_;  // SID -> PID of PCR
   std::set<ts::PID> pcr_pids_;
   std::map<ts::PID, int64_t> pcr_map_;  // PID of PCR -> PCR
-  ts::Time time_;  // JST
+  ts::Time time_;                       // JST
   bool started_ = false;
   bool done_ = false;
 };
