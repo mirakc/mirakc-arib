@@ -727,6 +727,7 @@ TEST(ProgramFilterTest, StartPcrUnderflow) {
   auto filter = std::make_unique<ProgramFilter>(option);
   auto sink = std::make_unique<MockSink>();
 
+  // clang-format off
   // TDT tables are used for emulating PES and PCR packets.
   src.LoadXml(fmt::format(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -758,10 +759,11 @@ TEST(ProgramFilterTest, StartPcrUnderflow) {
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
       <TDT UTC_time="1970-01-01 01:00:00" test-pid="0x0301" />
-   </tsduck>
-  )",
-  kPcrUpperBound - (2 * ts::MilliSecPerHour * kPcrTicksPerMs)  // 01:00:00
+    </tsduck>
+    )",
+    kPcrUpperBound - (2 * ts::MilliSecPerHour * kPcrTicksPerMs)  // 01:00:00
   ));
+  // clang-format on
 
   {
     testing::InSequence seq;
