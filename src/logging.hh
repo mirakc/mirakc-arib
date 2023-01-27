@@ -21,9 +21,9 @@ inline void InitLogger(const std::string& name) {
 }  // namespace
 
 #if defined(MIRAKC_ARIB_ENABLE_LOGGING_SOURCE_LOC)
-#define MIRAKC_ARIB_SOURCE_LOC (spdlog::source_loc { __FILE__, __LINE__, SPDLOG_FUNCTION })
+#define MIRAKC_ARIB_SOURCE_LOC (spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION})
 #else
-#define MIRAKC_ARIB_SOURCE_LOC (spdlog::source_loc {})
+#define MIRAKC_ARIB_SOURCE_LOC (spdlog::source_loc{})
 #endif
 
 #define MIRAKC_ARIB_LOG(...) spdlog::log(MIRAKC_ARIB_SOURCE_LOC, __VA_ARGS__)
@@ -37,14 +37,14 @@ inline void InitLogger(const std::string& name) {
 // that improves the performance significantly.
 
 #define MIRAKC_ARIB_ASSERT(cond) \
-  ((cond) ? (void)0 : \
-   (MIRAKC_ARIB_LOG(spdlog::level::critical, \
-                    "Assertion failed: " #cond), std::abort()))
+  ((cond) ? (void)0 \
+          : (MIRAKC_ARIB_LOG(spdlog::level::critical, "Assertion failed: " #cond), std::abort()))
 
 #define MIRAKC_ARIB_ASSERT_MSG(cond, ...) \
-  ((cond) ? (void)0 : \
-   (MIRAKC_ARIB_LOG(spdlog::level::critical, \
-                    "Assertion failed: " #cond ": " __VA_ARGS__), std::abort()))
+  ((cond) ? (void)0 \
+          : (MIRAKC_ARIB_LOG( \
+                 spdlog::level::critical, "Assertion failed: " #cond ": " __VA_ARGS__), \
+                std::abort()))
 
 #define MIRAKC_ARIB_NEVER_REACH(...) \
   (MIRAKC_ARIB_LOG(spdlog::level::critical, __VA_ARGS__), std::abort())

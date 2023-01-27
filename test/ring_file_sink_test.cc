@@ -44,14 +44,13 @@ TEST(RingFileSinkTest, EmptyFile) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*file, Read)
-        .WillOnce(testing::Return(0));  // EOF
+    EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
   }
 
-  EXPECT_CALL(*ring, Write).Times(0);  // never called
-  EXPECT_CALL(*ring, Sync).Times(0);  // never called
-  EXPECT_CALL(*ring, Trunc).Times(0);  // never called
-  EXPECT_CALL(*ring, Seek).Times(0);   // never called
+  EXPECT_CALL(*ring, Write).Times(0);            // never called
+  EXPECT_CALL(*ring, Sync).Times(0);             // never called
+  EXPECT_CALL(*ring, Trunc).Times(0);            // never called
+  EXPECT_CALL(*ring, Seek).Times(0);             // never called
   EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
@@ -68,19 +67,17 @@ TEST(RingFileSinkTest, OnePacket) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*file, Read)
-        .WillOnce([](uint8_t* buf, size_t) {
-          ts::NullPacket.copyTo(buf);
-          return ts::PKT_SIZE;
-        });
-    EXPECT_CALL(*file, Read)
-        .WillOnce(testing::Return(0));  // EOF
+    EXPECT_CALL(*file, Read).WillOnce([](uint8_t* buf, size_t) {
+      ts::NullPacket.copyTo(buf);
+      return ts::PKT_SIZE;
+    });
+    EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
   }
 
-  EXPECT_CALL(*ring, Write).Times(0);  // never called
-  EXPECT_CALL(*ring, Sync).Times(0);  // never called
-  EXPECT_CALL(*ring, Trunc).Times(0);  // never called
-  EXPECT_CALL(*ring, Seek).Times(0);  // never called
+  EXPECT_CALL(*ring, Write).Times(0);            // never called
+  EXPECT_CALL(*ring, Sync).Times(0);             // never called
+  EXPECT_CALL(*ring, Trunc).Times(0);            // never called
+  EXPECT_CALL(*ring, Seek).Times(0);             // never called
   EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
@@ -99,24 +96,20 @@ TEST(RingFileSinkTest, ReachBufferSize) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*file, Read)
-        .Times(kNumPackets)
-        .WillRepeatedly([](uint8_t* buf, size_t) {
-          ts::NullPacket.copyTo(buf);
-          return ts::PKT_SIZE;
-        });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
-    EXPECT_CALL(*file, Read)
-        .WillOnce(testing::Return(0));  // EOF
+    EXPECT_CALL(*file, Read).Times(kNumPackets).WillRepeatedly([](uint8_t* buf, size_t) {
+      ts::NullPacket.copyTo(buf);
+      return ts::PKT_SIZE;
+    });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
+    EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
   }
 
-  EXPECT_CALL(*ring, Sync).Times(0);  // never called
-  EXPECT_CALL(*ring, Trunc).Times(0);  // never called
-  EXPECT_CALL(*ring, Seek).Times(0);  // never called
+  EXPECT_CALL(*ring, Sync).Times(0);             // never called
+  EXPECT_CALL(*ring, Trunc).Times(0);            // never called
+  EXPECT_CALL(*ring, Seek).Times(0);             // never called
   EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
@@ -136,36 +129,27 @@ TEST(RingFileSinkTest, ReachChunkSize) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*file, Read)
-        .Times(kNumPackets1)
-        .WillRepeatedly([](uint8_t* buf, size_t) {
-          ts::NullPacket.copyTo(buf);
-          return ts::PKT_SIZE;
-        });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
+    EXPECT_CALL(*file, Read).Times(kNumPackets1).WillRepeatedly([](uint8_t* buf, size_t) {
+      ts::NullPacket.copyTo(buf);
+      return ts::PKT_SIZE;
+    });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets2 - kNumPackets1)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
-    EXPECT_CALL(*ring, Sync)
-        .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnEndOfChunk)
-        .WillOnce([](uint64_t pos) {
-          EXPECT_EQ(kChunkSize, pos);
-        });
-    EXPECT_CALL(*file, Read)
-        .WillOnce(testing::Return(0));  // EOF
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
+    EXPECT_CALL(*ring, Sync).WillOnce(testing::Return(true));
+    EXPECT_CALL(observer, OnEndOfChunk).WillOnce([](uint64_t pos) { EXPECT_EQ(kChunkSize, pos); });
+    EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
   }
 
   FileSource src(std::move(file));
@@ -178,8 +162,7 @@ TEST(RingFileSinkTest, ReachChunkSize) {
 TEST(RingFileSinkTest, ReachRingSize) {
   constexpr auto kNumPackets1 = RingFileSink::kBufferSize / ts::PKT_SIZE + 1;
   constexpr auto kNumPackets2 = kChunkSize / ts::PKT_SIZE + 1;
-  constexpr auto kNumPackets3 =
-      (kChunkSize + RingFileSink::kBufferSize) / ts::PKT_SIZE + 1;
+  constexpr auto kNumPackets3 = (kChunkSize + RingFileSink::kBufferSize) / ts::PKT_SIZE + 1;
   constexpr auto kNumPackets4 = kRingSize / ts::PKT_SIZE + 1;
 
   auto file = std::make_unique<MockFile>();
@@ -188,75 +171,58 @@ TEST(RingFileSinkTest, ReachRingSize) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*file, Read)
-        .Times(kNumPackets1)
-        .WillRepeatedly([](uint8_t* buf, size_t) {
-          ts::NullPacket.copyTo(buf);
-          return ts::PKT_SIZE;
-        });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
+    EXPECT_CALL(*file, Read).Times(kNumPackets1).WillRepeatedly([](uint8_t* buf, size_t) {
+      ts::NullPacket.copyTo(buf);
+      return ts::PKT_SIZE;
+    });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets2 - kNumPackets1)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
-    EXPECT_CALL(*ring, Sync)
-        .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnEndOfChunk)
-        .WillOnce([](uint64_t pos) {
-          EXPECT_EQ(kChunkSize, pos);
-        });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
+    EXPECT_CALL(*ring, Sync).WillOnce(testing::Return(true));
+    EXPECT_CALL(observer, OnEndOfChunk).WillOnce([](uint64_t pos) { EXPECT_EQ(kChunkSize, pos); });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets3 - kNumPackets2)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets4 - kNumPackets3)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
-    EXPECT_CALL(*ring, Sync)
-        .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnEndOfChunk)
-        .WillOnce([](uint64_t pos) {
-          EXPECT_EQ(kRingSize, pos);
-        });
-    EXPECT_CALL(*ring, Trunc)
-        .WillOnce([](int64_t size) {
-          EXPECT_EQ(kRingSize, size);
-          return true;
-        });
-    EXPECT_CALL(*ring, Seek)
-        .WillOnce([](int64_t offset, SeekMode mode) {
-          EXPECT_EQ(0, offset);
-          EXPECT_EQ(SeekMode::kSet, mode);
-          return 0;
-        });
-    EXPECT_CALL(*file, Read)
-        .WillOnce(testing::Return(0));  // EOF
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
+    EXPECT_CALL(*ring, Sync).WillOnce(testing::Return(true));
+    EXPECT_CALL(observer, OnEndOfChunk).WillOnce([](uint64_t pos) { EXPECT_EQ(kRingSize, pos); });
+    EXPECT_CALL(*ring, Trunc).WillOnce([](int64_t size) {
+      EXPECT_EQ(kRingSize, size);
+      return true;
+    });
+    EXPECT_CALL(*ring, Seek).WillOnce([](int64_t offset, SeekMode mode) {
+      EXPECT_EQ(0, offset);
+      EXPECT_EQ(SeekMode::kSet, mode);
+      return 0;
+    });
+    EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
   }
 
   FileSource src(std::move(file));
@@ -275,19 +241,16 @@ TEST(RingFileSinkTest, FailWriteInFlush) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*file, Read)
-        .Times(kNumPackets)
-        .WillRepeatedly([](uint8_t* buf, size_t) {
-          ts::NullPacket.copyTo(buf);
-          return ts::PKT_SIZE;
-        });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce(testing::Return(-1));
+    EXPECT_CALL(*file, Read).Times(kNumPackets).WillRepeatedly([](uint8_t* buf, size_t) {
+      ts::NullPacket.copyTo(buf);
+      return ts::PKT_SIZE;
+    });
+    EXPECT_CALL(*ring, Write).WillOnce(testing::Return(-1));
   }
 
-  EXPECT_CALL(*ring, Sync).Times(0);  // never called
-  EXPECT_CALL(*ring, Trunc).Times(0);  // never called
-  EXPECT_CALL(*ring, Seek).Times(0);   // never called
+  EXPECT_CALL(*ring, Sync).Times(0);             // never called
+  EXPECT_CALL(*ring, Trunc).Times(0);            // never called
+  EXPECT_CALL(*ring, Seek).Times(0);             // never called
   EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
@@ -307,34 +270,29 @@ TEST(RingFileSinkTest, FailSyncInFlush) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*file, Read)
-        .Times(kNumPackets1)
-        .WillRepeatedly([](uint8_t* buf, size_t) {
-          ts::NullPacket.copyTo(buf);
-          return ts::PKT_SIZE;
-        });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
+    EXPECT_CALL(*file, Read).Times(kNumPackets1).WillRepeatedly([](uint8_t* buf, size_t) {
+      ts::NullPacket.copyTo(buf);
+      return ts::PKT_SIZE;
+    });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets2 - kNumPackets1)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
-    EXPECT_CALL(*ring, Sync)
-        .WillOnce(testing::Return(false));
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
+    EXPECT_CALL(*ring, Sync).WillOnce(testing::Return(false));
   }
 
-  EXPECT_CALL(*ring, Trunc).Times(0);  // never called
-  EXPECT_CALL(*ring, Seek).Times(0);  // never called
+  EXPECT_CALL(*ring, Trunc).Times(0);            // never called
+  EXPECT_CALL(*ring, Seek).Times(0);             // never called
   EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));
@@ -347,8 +305,7 @@ TEST(RingFileSinkTest, FailSyncInFlush) {
 TEST(RingFileSinkTest, FailTruncInFlush) {
   constexpr auto kNumPackets1 = RingFileSink::kBufferSize / ts::PKT_SIZE + 1;
   constexpr auto kNumPackets2 = kChunkSize / ts::PKT_SIZE + 1;
-  constexpr auto kNumPackets3 =
-      (kChunkSize + RingFileSink::kBufferSize) / ts::PKT_SIZE + 1;
+  constexpr auto kNumPackets3 = (kChunkSize + RingFileSink::kBufferSize) / ts::PKT_SIZE + 1;
   constexpr auto kNumPackets4 = kRingSize / ts::PKT_SIZE + 1;
 
   auto file = std::make_unique<MockFile>();
@@ -357,64 +314,51 @@ TEST(RingFileSinkTest, FailTruncInFlush) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*file, Read)
-        .Times(kNumPackets1)
-        .WillRepeatedly([](uint8_t* buf, size_t) {
-          ts::NullPacket.copyTo(buf);
-          return ts::PKT_SIZE;
-        });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
+    EXPECT_CALL(*file, Read).Times(kNumPackets1).WillRepeatedly([](uint8_t* buf, size_t) {
+      ts::NullPacket.copyTo(buf);
+      return ts::PKT_SIZE;
+    });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets2 - kNumPackets1)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
-    EXPECT_CALL(*ring, Sync)
-        .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnEndOfChunk)
-        .WillOnce([](uint64_t pos) {
-          EXPECT_EQ(kChunkSize, pos);
-        });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
+    EXPECT_CALL(*ring, Sync).WillOnce(testing::Return(true));
+    EXPECT_CALL(observer, OnEndOfChunk).WillOnce([](uint64_t pos) { EXPECT_EQ(kChunkSize, pos); });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets3 - kNumPackets2)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets4 - kNumPackets3)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
-    EXPECT_CALL(*ring, Sync)
-        .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnEndOfChunk)
-        .WillOnce([](uint64_t pos) {
-          EXPECT_EQ(kChunkSize * 2, pos);
-        });
-    EXPECT_CALL(*ring, Trunc)
-        .WillOnce(testing::Return(false));
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
+    EXPECT_CALL(*ring, Sync).WillOnce(testing::Return(true));
+    EXPECT_CALL(observer, OnEndOfChunk).WillOnce([](uint64_t pos) {
+      EXPECT_EQ(kChunkSize * 2, pos);
+    });
+    EXPECT_CALL(*ring, Trunc).WillOnce(testing::Return(false));
   }
 
   EXPECT_CALL(*ring, Seek).Times(0);  // never called
@@ -429,8 +373,7 @@ TEST(RingFileSinkTest, FailTruncInFlush) {
 TEST(RingFileSinkTest, FailSeekInFlush) {
   constexpr auto kNumPackets1 = RingFileSink::kBufferSize / ts::PKT_SIZE + 1;
   constexpr auto kNumPackets2 = kChunkSize / ts::PKT_SIZE + 1;
-  constexpr auto kNumPackets3 =
-      (kChunkSize + RingFileSink::kBufferSize) / ts::PKT_SIZE + 1;
+  constexpr auto kNumPackets3 = (kChunkSize + RingFileSink::kBufferSize) / ts::PKT_SIZE + 1;
   constexpr auto kNumPackets4 = kRingSize / ts::PKT_SIZE + 1;
 
   auto file = std::make_unique<MockFile>();
@@ -439,69 +382,55 @@ TEST(RingFileSinkTest, FailSeekInFlush) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*file, Read)
-        .Times(kNumPackets1)
-        .WillRepeatedly([](uint8_t* buf, size_t) {
-          ts::NullPacket.copyTo(buf);
-          return ts::PKT_SIZE;
-        });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
+    EXPECT_CALL(*file, Read).Times(kNumPackets1).WillRepeatedly([](uint8_t* buf, size_t) {
+      ts::NullPacket.copyTo(buf);
+      return ts::PKT_SIZE;
+    });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets2 - kNumPackets1)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
-    EXPECT_CALL(*ring, Sync)
-        .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnEndOfChunk)
-        .WillOnce([](uint64_t pos) {
-          EXPECT_EQ(kChunkSize, pos);
-        });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
+    EXPECT_CALL(*ring, Sync).WillOnce(testing::Return(true));
+    EXPECT_CALL(observer, OnEndOfChunk).WillOnce([](uint64_t pos) { EXPECT_EQ(kChunkSize, pos); });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets3 - kNumPackets2)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
     EXPECT_CALL(*file, Read)
         .Times(kNumPackets4 - kNumPackets3)
         .WillRepeatedly([](uint8_t* buf, size_t) {
           ts::NullPacket.copyTo(buf);
           return ts::PKT_SIZE;
         });
-    EXPECT_CALL(*ring, Write)
-        .WillOnce([](uint8_t* buf, size_t size) {
-          EXPECT_EQ(RingFileSink::kBufferSize, size);
-          return size;
-        });
-    EXPECT_CALL(*ring, Sync)
-        .WillOnce(testing::Return(true));
-    EXPECT_CALL(observer, OnEndOfChunk)
-        .WillOnce([](uint64_t pos) {
-          EXPECT_EQ(kChunkSize * 2, pos);
-        });
-    EXPECT_CALL(*ring, Trunc)
-        .WillOnce([](int64_t size) {
-          EXPECT_EQ(kRingSize, static_cast<uint64_t>(size));
-          return true;
-        });
-    EXPECT_CALL(*ring, Seek)
-        .WillOnce(testing::Return(-1));
+    EXPECT_CALL(*ring, Write).WillOnce([](uint8_t* buf, size_t size) {
+      EXPECT_EQ(RingFileSink::kBufferSize, size);
+      return size;
+    });
+    EXPECT_CALL(*ring, Sync).WillOnce(testing::Return(true));
+    EXPECT_CALL(observer, OnEndOfChunk).WillOnce([](uint64_t pos) {
+      EXPECT_EQ(kChunkSize * 2, pos);
+    });
+    EXPECT_CALL(*ring, Trunc).WillOnce([](int64_t size) {
+      EXPECT_EQ(kRingSize, static_cast<uint64_t>(size));
+      return true;
+    });
+    EXPECT_CALL(*ring, Seek).WillOnce(testing::Return(-1));
   }
 
   FileSource src(std::move(file));
@@ -518,19 +447,17 @@ TEST(RingFileSinkTest, SetPosition) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*ring, Seek)
-        .WillOnce([](int64_t offset, SeekMode mode) {
-          EXPECT_EQ(kChunkSize, offset);
-          EXPECT_EQ(SeekMode::kSet, mode);
-          return 0;
-        });
-    EXPECT_CALL(*file, Read)
-        .WillOnce(testing::Return(0));  // EOF
+    EXPECT_CALL(*ring, Seek).WillOnce([](int64_t offset, SeekMode mode) {
+      EXPECT_EQ(kChunkSize, offset);
+      EXPECT_EQ(SeekMode::kSet, mode);
+      return 0;
+    });
+    EXPECT_CALL(*file, Read).WillOnce(testing::Return(0));  // EOF
   }
 
-  EXPECT_CALL(*ring, Write).Times(0);  // never called
-  EXPECT_CALL(*ring, Sync).Times(0);  // never called
-  EXPECT_CALL(*ring, Trunc).Times(0);  // never called
+  EXPECT_CALL(*ring, Write).Times(0);            // never called
+  EXPECT_CALL(*ring, Sync).Times(0);             // never called
+  EXPECT_CALL(*ring, Trunc).Times(0);            // never called
   EXPECT_CALL(observer, OnEndOfChunk).Times(0);  // never called
 
   FileSource src(std::move(file));

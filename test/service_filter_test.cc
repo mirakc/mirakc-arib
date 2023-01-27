@@ -11,7 +11,7 @@
 #include "test_helper.hh"
 
 namespace {
-const ServiceFilterOption kOption { 0x0001 };
+const ServiceFilterOption kOption{0x0001};
 }
 
 TEST(ServiceFilterTest, NoPacket) {
@@ -42,12 +42,11 @@ TEST(ServiceFilterTest, NullPacket) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(src, GetNextPacket).WillOnce(
-        [](ts::TSPacket* packet) {
-          *packet = ts::NullPacket;
-          return true;
-        });
-    EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false)); // EOF
+    EXPECT_CALL(src, GetNextPacket).WillOnce([](ts::TSPacket* packet) {
+      *packet = ts::NullPacket;
+      return true;
+    });
+    EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false));  // EOF
     EXPECT_CALL(*sink, End).WillOnce(testing::Return());
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
@@ -139,74 +138,63 @@ TEST(ServiceFilterTest, ServiceStream) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          TableValidator<ts::PAT> validator(ts::PID_PAT);
-          EXPECT_CALL(validator, Validate).WillOnce(
-              [](const ts::PAT& pat) {
-                EXPECT_TRUE(pat.isValid());
-                EXPECT_EQ(1, pat.pmts.size());
-                EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
-              });
-          validator.FeedPacket(packet);
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0101, packet.getPID());
-          TableValidator<ts::PMT> validator(0x0101);
-          EXPECT_CALL(validator, Validate).WillOnce(
-              [](const ts::PMT& pmt) {
-                EXPECT_TRUE(pmt.isValid());
-                EXPECT_EQ(3, pmt.streams.size());
-                EXPECT_TRUE(pmt.streams.find(0x0301) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0302) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0303) != pmt.streams.end());
-              });
-          validator.FeedPacket(packet);
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_TOT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0301, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0302, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0303, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_EIT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0301, packet.getPID());
-          EXPECT_EQ(1, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0302, packet.getPID());
-          EXPECT_EQ(1, packet.getCC());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      TableValidator<ts::PAT> validator(ts::PID_PAT);
+      EXPECT_CALL(validator, Validate).WillOnce([](const ts::PAT& pat) {
+        EXPECT_TRUE(pat.isValid());
+        EXPECT_EQ(1, pat.pmts.size());
+        EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
+      });
+      validator.FeedPacket(packet);
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      TableValidator<ts::PMT> validator(0x0101);
+      EXPECT_CALL(validator, Validate).WillOnce([](const ts::PMT& pmt) {
+        EXPECT_TRUE(pmt.isValid());
+        EXPECT_EQ(3, pmt.streams.size());
+        EXPECT_TRUE(pmt.streams.find(0x0301) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0302) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0303) != pmt.streams.end());
+      });
+      validator.FeedPacket(packet);
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_TOT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0301, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0302, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0303, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_EIT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0301, packet.getPID());
+      EXPECT_EQ(1, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0302, packet.getPID());
+      EXPECT_EQ(1, packet.getCC());
+      return true;
+    });
     EXPECT_CALL(*sink, End).WillOnce(testing::Return());
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
@@ -261,46 +249,38 @@ TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0101, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0301, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0302, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0102, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0303, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0304, packet.getPID());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0301, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0302, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0102, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0303, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0304, packet.getPID());
+      return true;
+    });
     EXPECT_CALL(*sink, End).WillOnce(testing::Return());
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
@@ -346,43 +326,36 @@ TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0101, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0301, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0302, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0101, packet.getPID());
-          EXPECT_EQ(1, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0303, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0304, packet.getPID());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0301, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0302, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      EXPECT_EQ(1, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0303, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0304, packet.getPID());
+      return true;
+    });
     EXPECT_CALL(*sink, End).WillOnce(testing::Return());
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
@@ -424,17 +397,15 @@ TEST(ServiceFilterTest, TimeLimitTot) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_TOT, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_TOT, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
     EXPECT_CALL(*sink, End).WillOnce(testing::Return());
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
@@ -476,17 +447,15 @@ TEST(ServiceFilterTest, TimeLimitTdt) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_TDT, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_TDT, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
     EXPECT_CALL(*sink, End).WillOnce(testing::Return());
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
@@ -552,87 +521,75 @@ TEST(ServiceFilterTest, Subtitle) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          TableValidator<ts::PAT> validator(ts::PID_PAT);
-          EXPECT_CALL(validator, Validate).WillOnce(
-              [](const ts::PAT& pat) {
-                EXPECT_TRUE(pat.isValid());
-                EXPECT_EQ(1, pat.pmts.size());
-                EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
-              });
-          validator.FeedPacket(packet);
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0101, packet.getPID());
-          TableValidator<ts::PMT> validator(0x0101);
-          EXPECT_CALL(validator, Validate).WillOnce(
-              [](const ts::PMT& pmt) {
-                EXPECT_TRUE(pmt.isValid());
-                EXPECT_EQ(8, pmt.streams.size());
-                EXPECT_TRUE(pmt.streams.find(0x0300) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0301) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0302) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0303) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0304) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0305) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0306) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0307) != pmt.streams.end());
-              });
-          validator.FeedPacket(packet);
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0300, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0301, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0302, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0303, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0304, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0305, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0306, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0307, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      TableValidator<ts::PAT> validator(ts::PID_PAT);
+      EXPECT_CALL(validator, Validate).WillOnce([](const ts::PAT& pat) {
+        EXPECT_TRUE(pat.isValid());
+        EXPECT_EQ(1, pat.pmts.size());
+        EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
+      });
+      validator.FeedPacket(packet);
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      TableValidator<ts::PMT> validator(0x0101);
+      EXPECT_CALL(validator, Validate).WillOnce([](const ts::PMT& pmt) {
+        EXPECT_TRUE(pmt.isValid());
+        EXPECT_EQ(8, pmt.streams.size());
+        EXPECT_TRUE(pmt.streams.find(0x0300) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0301) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0302) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0303) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0304) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0305) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0306) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0307) != pmt.streams.end());
+      });
+      validator.FeedPacket(packet);
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0300, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0301, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0302, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0303, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0304, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0305, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0306, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0307, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
     EXPECT_CALL(*sink, End).WillOnce(testing::Return());
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
@@ -698,87 +655,75 @@ TEST(ServiceFilterTest, SuperimposedText) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          TableValidator<ts::PAT> validator(ts::PID_PAT);
-          EXPECT_CALL(validator, Validate).WillOnce(
-              [](const ts::PAT& pat) {
-                EXPECT_TRUE(pat.isValid());
-                EXPECT_EQ(1, pat.pmts.size());
-                EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
-              });
-          validator.FeedPacket(packet);
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0101, packet.getPID());
-          TableValidator<ts::PMT> validator(0x0101);
-          EXPECT_CALL(validator, Validate).WillOnce(
-              [](const ts::PMT& pmt) {
-                EXPECT_TRUE(pmt.isValid());
-                EXPECT_EQ(8, pmt.streams.size());
-                EXPECT_TRUE(pmt.streams.find(0x0308) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x0309) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x030A) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x030B) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x030C) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x030D) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x030E) != pmt.streams.end());
-                EXPECT_TRUE(pmt.streams.find(0x030F) != pmt.streams.end());
-              });
-          validator.FeedPacket(packet);
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0308, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0309, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x030A, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x030B, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x030C, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x030D, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x030E, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x030F, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      TableValidator<ts::PAT> validator(ts::PID_PAT);
+      EXPECT_CALL(validator, Validate).WillOnce([](const ts::PAT& pat) {
+        EXPECT_TRUE(pat.isValid());
+        EXPECT_EQ(1, pat.pmts.size());
+        EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
+      });
+      validator.FeedPacket(packet);
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      TableValidator<ts::PMT> validator(0x0101);
+      EXPECT_CALL(validator, Validate).WillOnce([](const ts::PMT& pmt) {
+        EXPECT_TRUE(pmt.isValid());
+        EXPECT_EQ(8, pmt.streams.size());
+        EXPECT_TRUE(pmt.streams.find(0x0308) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x0309) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x030A) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x030B) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x030C) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x030D) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x030E) != pmt.streams.end());
+        EXPECT_TRUE(pmt.streams.find(0x030F) != pmt.streams.end());
+      });
+      validator.FeedPacket(packet);
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0308, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0309, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x030A, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x030B, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x030C, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x030D, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x030E, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x030F, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
     EXPECT_CALL(*sink, End).WillOnce(testing::Return());
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
@@ -812,25 +757,22 @@ TEST(ServiceFilterTest, PmtSidUnmatched) {
   {
     testing::InSequence seq;
     EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(ts::PID_PAT, packet.getPID());
-          TableValidator<ts::PAT> validator(ts::PID_PAT);
-          EXPECT_CALL(validator, Validate).WillOnce(
-              [](const ts::PAT& pat) {
-                EXPECT_TRUE(pat.isValid());
-                EXPECT_EQ(1, pat.pmts.size());
-                EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
-              });
-          validator.FeedPacket(packet);
-          return true;
-        });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce(
-        [](const ts::TSPacket& packet) {
-          EXPECT_EQ(0x0101, packet.getPID());
-          EXPECT_EQ(0, packet.getCC());
-          return true;
-        });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      TableValidator<ts::PAT> validator(ts::PID_PAT);
+      EXPECT_CALL(validator, Validate).WillOnce([](const ts::PAT& pat) {
+        EXPECT_TRUE(pat.isValid());
+        EXPECT_EQ(1, pat.pmts.size());
+        EXPECT_EQ(0x0101, pat.pmts.at(0x0001));
+      });
+      validator.FeedPacket(packet);
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      EXPECT_EQ(0, packet.getCC());
+      return true;
+    });
     EXPECT_CALL(*sink, End).WillOnce(testing::Return());
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }

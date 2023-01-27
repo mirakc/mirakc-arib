@@ -9,9 +9,7 @@
 #include "test_helper.hh"
 
 namespace {
-const AirtimeTrackerOption kOption {
-  0x0003, 0x0004
-};
+const AirtimeTrackerOption kOption{0x0003, 0x0004};
 }
 
 TEST(AirtimeTrackerTest, NoPacket) {
@@ -48,13 +46,11 @@ TEST(AirtimeTrackerTest, Present) {
    </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument).WillOnce(
-      [](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":0,"duration":1000})",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":0,"duration":1000})",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   tracker->Connect(std::move(sink));
   src.Connect(std::move(tracker));
@@ -83,13 +79,11 @@ TEST(AirtimeTrackerTest, Following) {
    </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument).WillOnce(
-      [](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":1000,"duration":1000})",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":1000,"duration":1000})",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   tracker->Connect(std::move(sink));
   src.Connect(std::move(tracker));
@@ -138,27 +132,21 @@ TEST(AirtimeTrackerTest, Changes) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":1000,"duration":1000})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":2000,"duration":1000})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*sink, HandleDocument).WillOnce(
-        [](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":2000,"duration":1000})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":1000,"duration":1000})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":2000,"duration":1000})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"nid":1,"tsid":2,"sid":3,"eid":4,"startTime":2000,"duration":1000})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
   }
 
   tracker->Connect(std::move(sink));

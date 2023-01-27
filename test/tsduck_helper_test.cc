@@ -4,6 +4,7 @@
 #include "tsduck_helper.hh"
 
 TEST(TsduckHelperTest, MakeEventsJsonValue) {
+  // clang-format off
   static const uint8_t kData[] = {
     // event_id
     0x00, 0x01,
@@ -12,6 +13,7 @@ TEST(TsduckHelperTest, MakeEventsJsonValue) {
     // running_status, free_CA_mode, descriptors_loop_length
     0x00, 0x00,
   };
+  // clang-format on
   EitSection eit;
   eit.events_data = kData;
   eit.events_size = sizeof(kData);
@@ -27,6 +29,7 @@ TEST(TsduckHelperTest, MakeEventsJsonValue) {
 }
 
 TEST(TsduckHelperTest, MakeEventsJsonValue_UndefinedStartTimeAndDuration) {
+  // clang-format off
   static const uint8_t kData[] = {
     // event_id
     0x00, 0x01,
@@ -35,6 +38,7 @@ TEST(TsduckHelperTest, MakeEventsJsonValue_UndefinedStartTimeAndDuration) {
     // running_status, free_CA_mode, descriptors_loop_length
     0x00, 0x00,
   };
+  // clang-format on
   EitSection eit;
   eit.events_data = kData;
   eit.events_size = sizeof(kData);

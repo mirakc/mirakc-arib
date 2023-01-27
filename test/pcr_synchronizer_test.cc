@@ -10,7 +10,7 @@
 #include "test_helper.hh"
 
 namespace {
-const PcrSynchronizerOption kEmptyOption {};
+const PcrSynchronizerOption kEmptyOption{};
 }
 
 TEST(PcrSynchronizerTest, NoPacket) {
@@ -19,7 +19,7 @@ TEST(PcrSynchronizerTest, NoPacket) {
   auto sink = std::make_unique<MockJsonlSink>();
 
   EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false));  // EOF
-  EXPECT_CALL(*sink, HandleDocument).Times(0);  // Never called
+  EXPECT_CALL(*sink, HandleDocument).Times(0);                       // Never called
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
@@ -71,31 +71,30 @@ TEST(PcrSynchronizerTest, Successful) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument)
-      .WillOnce([](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":1,)"
-              R"("clock":{)"
-                R"("pid":2305,)"
-                R"("pcr":102,)"
-                R"("time":1546365845000)"
-              R"(})"
-            "},{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":2,)"
-              R"("clock":{)"
-                R"("pid":2306,)"
-                R"("pcr":202,)"
-                R"("time":1546365845000)"
-              R"(})"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":1,)"
+        R"("clock":{)"
+        R"("pid":2305,)"
+        R"("pcr":102,)"
+        R"("time":1546365845000)"
+        R"(})"
+        "},{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":2,)"
+        R"("clock":{)"
+        R"("pid":2306,)"
+        R"("pcr":202,)"
+        R"("time":1546365845000)"
+        R"(})"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
@@ -175,31 +174,30 @@ TEST(PcrSynchronizerTest, Reset) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument)
-      .WillOnce([](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":1,)"
-              R"("clock":{)"
-                R"("pid":2305,)"
-                R"("pcr":103,)"
-                R"("time":1546365850000)"
-              R"(})"
-            "},{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":2,)"
-              R"("clock":{)"
-                R"("pid":2306,)"
-                R"("pcr":203,)"
-                R"("time":1546365850000)"
-              R"(})"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":1,)"
+        R"("clock":{)"
+        R"("pid":2305,)"
+        R"("pcr":103,)"
+        R"("time":1546365850000)"
+        R"(})"
+        "},{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":2,)"
+        R"("clock":{)"
+        R"("pid":2306,)"
+        R"("pcr":203,)"
+        R"("time":1546365850000)"
+        R"(})"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
@@ -304,22 +302,21 @@ TEST(PcrSynchronizerTest, InclusionList) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument)
-      .WillOnce([](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":1,)"
-              R"("clock":{)"
-                R"("pid":2305,)"
-                R"("pcr":102,)"
-                R"("time":1546365845000)"
-              R"(})"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":1,)"
+        R"("clock":{)"
+        R"("pid":2305,)"
+        R"("pcr":102,)"
+        R"("time":1546365845000)"
+        R"(})"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
@@ -375,22 +372,21 @@ TEST(PcrSynchronizerTest, ExclusionList) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument)
-      .WillOnce([](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":2,)"
-              R"("clock":{)"
-                R"("pid":2306,)"
-                R"("pcr":202,)"
-                R"("time":1546365845000)"
-              R"(})"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":2,)"
+        R"("clock":{)"
+        R"("pid":2306,)"
+        R"("pcr":202,)"
+        R"("time":1546365845000)"
+        R"(})"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));
@@ -457,31 +453,30 @@ TEST(PcrSynchronizerTest, AbnormalPcrPackets) {
     </tsduck>
   )");
 
-  EXPECT_CALL(*sink, HandleDocument)
-      .WillOnce([](const rapidjson::Document& doc) {
-        EXPECT_EQ(
-            "[{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":1,)"
-              R"("clock":{)"
-                R"("pid":2305,)"
-                R"("pcr":102,)"
-                R"("time":1546365845000)"
-              R"(})"
-            "},{"
-              R"("nid":2,)"
-              R"("tsid":3,)"
-              R"("sid":2,)"
-              R"("clock":{)"
-                R"("pid":2306,)"
-                R"("pcr":202,)"
-                R"("time":1546365845000)"
-              R"(})"
-            "}]",
-            MockJsonlSink::Stringify(doc));
-        return true;
-      });
+  EXPECT_CALL(*sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+    EXPECT_EQ(
+        "[{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":1,)"
+        R"("clock":{)"
+        R"("pid":2305,)"
+        R"("pcr":102,)"
+        R"("time":1546365845000)"
+        R"(})"
+        "},{"
+        R"("nid":2,)"
+        R"("tsid":3,)"
+        R"("sid":2,)"
+        R"("clock":{)"
+        R"("pid":2306,)"
+        R"("pcr":202,)"
+        R"("time":1546365845000)"
+        R"(})"
+        "}]",
+        MockJsonlSink::Stringify(doc));
+    return true;
+  });
 
   sync->Connect(std::move(sink));
   src.Connect(std::move(sync));

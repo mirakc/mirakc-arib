@@ -239,7 +239,7 @@ Options:
     Stop collecting if there is no progress for the specified time (ms).
     Elapsed time is computed using TDT/TOT.
 
-    It makes no sence to specify a time limit less than 5 seconds.  Because TOT
+    It makes no sense to specify a time limit less than 5 seconds.  Because TOT
     comes every 5 seconds in Japan.
 
   --streaming
@@ -862,7 +862,7 @@ Description:
 
   The CLOCK is one of PCR, DTS or PTS.  It's formatted like below:
 
-    <decimal integer of PCR base>+<decimal integer of PCR extention>
+    <decimal integer of PCR base>+<decimal integer of PCR extension>
 
   Currently, the following packets and tables are shown:
 
@@ -899,9 +899,8 @@ class PosixFile final : public File {
  public:
   enum class Mode { kWrite };
 
-  PosixFile(const std::string& path)
-      : path_(path) {
-    if  (path.empty()) {
+  PosixFile(const std::string& path) : path_(path) {
+    if (path.empty()) {
       stdio_ = true;
       path_ = "<stdin>";
       fd_ = STDIN_FILENO;
@@ -911,14 +910,12 @@ class PosixFile final : public File {
       if (fd_ > 0) {
         MIRAKC_ARIB_INFO("Read packets from {}...", path);
       } else {
-        MIRAKC_ARIB_ERROR(
-            "Failed to open {}: {} ({})", path, std::strerror(errno), errno);
+        MIRAKC_ARIB_ERROR("Failed to open {}: {} ({})", path, std::strerror(errno), errno);
       }
     }
   }
 
-  PosixFile(const std::string& path, Mode)
-      : path_(path) {
+  PosixFile(const std::string& path, Mode) : path_(path) {
     if (path.empty()) {
       stdio_ = true;
       path_ = "<stdout>";
@@ -929,8 +926,7 @@ class PosixFile final : public File {
       if (fd_ > 0) {
         MIRAKC_ARIB_INFO("Write packets to {}...", path);
       } else {
-        MIRAKC_ARIB_ERROR(
-            "Failed to open {}: {} ({})", path, std::strerror(errno), errno);
+        MIRAKC_ARIB_ERROR("Failed to open {}: {} ({})", path, std::strerror(errno), errno);
       }
     }
   }
@@ -974,8 +970,8 @@ class PosixFile final : public File {
     MIRAKC_ARIB_ASSERT(!stdio_);
     auto result = ftruncate(fd_, static_cast<off_t>(size));
     if (result < 0) {
-      MIRAKC_ARIB_ERROR("Failed to truncate {} to {}: {} ({})",
-          path_, size, std::strerror(errno), errno);
+      MIRAKC_ARIB_ERROR(
+          "Failed to truncate {} to {}: {} ({})", path_, size, std::strerror(errno), errno);
       return false;
     }
     return true;
@@ -1064,8 +1060,8 @@ void LoadClockBaseline(const Args& args, ClockBaseline* cbl) {
 
   ts::PID pid = static_cast<uint16_t>(args.at(kClockPid).asLong());
   auto pcr = args.at(kClockPcr).asInt64();
-  auto time = ConvertUnixTimeToJstTime(
-      static_cast<ts::MilliSecond>(args.at(kClockTime).asInt64()));
+  auto time =
+      ConvertUnixTimeToJstTime(static_cast<ts::MilliSecond>(args.at(kClockTime).asInt64()));
 
   // Don't change the order of the following method calls.
   cbl->SetPid(pid);
@@ -1075,8 +1071,8 @@ void LoadClockBaseline(const Args& args, ClockBaseline* cbl) {
   MIRAKC_ARIB_INFO("Clock: PID={:04X} PCR={:011X} Time={}", pid, pcr, time);
 }
 
-void LoadComponentTags(const Args& args, const std::string& name,
-    std::unordered_set<uint8_t>* tags) {
+void LoadComponentTags(
+    const Args& args, const std::string& name, std::unordered_set<uint8_t>* tags) {
   if (!args.at(name)) {
     return;
   }
@@ -1120,8 +1116,7 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
   LoadSidSet(args, "--sids", &opt->sids);
   LoadSidSet(args, "--xsids", &opt->xsids);
   if (args.at(kTimeLimit)) {
-    opt->time_limit =
-        static_cast<ts::MilliSecond>(args.at(kTimeLimit).asInt64());
+    opt->time_limit = static_cast<ts::MilliSecond>(args.at(kTimeLimit).asInt64());
   }
   opt->streaming = args.at(kStreaming).asBool();
   opt->collect_actual = !args.at(kOnlyOthers).asBool();
@@ -1130,10 +1125,11 @@ void LoadOption(const Args& args, EitCollectorOption* opt) {
   if (use_unicode_symbol) {
     g_KeepUnicodeSymbols = true;
   }
-  MIRAKC_ARIB_INFO("Options: time-limit={}, streaming={} collect-actual={} "
-                   "collect-others={} use-unicode-symbol={}",
-                   opt->time_limit, opt->streaming, opt->collect_actual,
-                   opt->collect_others, use_unicode_symbol);
+  MIRAKC_ARIB_INFO(
+      "Options: time-limit={}, streaming={} collect-actual={} "
+      "collect-others={} use-unicode-symbol={}",
+      opt->time_limit, opt->streaming, opt->collect_actual, opt->collect_others,
+      use_unicode_symbol);
 }
 
 void LoadOption(const Args& args, EitpfCollectorOption* opt) {
@@ -1146,8 +1142,8 @@ void LoadOption(const Args& args, EitpfCollectorOption* opt) {
   opt->streaming = args.at(kStreaming).asBool();
   opt->following = !args.at(kPresent).asBool();
   opt->present = !args.at(kFollowing).asBool();
-  MIRAKC_ARIB_INFO("Options: streaming={} preset={} following={}",
-                   opt->streaming, opt->present, opt->following);
+  MIRAKC_ARIB_INFO("Options: streaming={} preset={} following={}", opt->streaming, opt->present,
+      opt->following);
 }
 
 void LoadOption(const Args& args, ServiceFilterOption* opt) {
@@ -1178,21 +1174,19 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
   opt->eid = static_cast<uint16_t>(args.at(kEid).asLong());
   opt->clock_pid = static_cast<uint16_t>(args.at(kClockPid).asLong());
   opt->clock_pcr = args.at(kClockPcr).asInt64();
-  opt->clock_time = ConvertUnixTimeToJstTime(
-      static_cast<ts::MilliSecond>(args.at(kClockTime).asInt64()));
+  opt->clock_time =
+      ConvertUnixTimeToJstTime(static_cast<ts::MilliSecond>(args.at(kClockTime).asInt64()));
   LoadComponentTags(args, kAudioTags, &opt->audio_tags);
   LoadComponentTags(args, kVideoTags, &opt->video_tags);
   if (args.at(kStartMargin)) {
-    opt->start_margin =
-        static_cast<ts::MilliSecond>(args.at(kStartMargin).asInt64());
+    opt->start_margin = static_cast<ts::MilliSecond>(args.at(kStartMargin).asInt64());
   }
   if (args.at(kEndMargin)) {
-    opt->end_margin =
-        static_cast<ts::MilliSecond>(args.at(kEndMargin).asInt64());
+    opt->end_margin = static_cast<ts::MilliSecond>(args.at(kEndMargin).asInt64());
   }
   if (args.at(kWaitUntil)) {
-    opt->wait_until = ConvertUnixTimeToJstTime(
-        static_cast<ts::MilliSecond>(args.at(kWaitUntil).asInt64()));
+    opt->wait_until =
+        ConvertUnixTimeToJstTime(static_cast<ts::MilliSecond>(args.at(kWaitUntil).asInt64()));
   }
   opt->pre_streaming = args.at(kPreStreaming).asBool();
   if (opt->wait_until.has_value()) {
@@ -1200,16 +1194,15 @@ void LoadOption(const Args& args, ProgramFilterOption* opt) {
         "ProgramFilterOptions: sid={:04X} eid={:04X}"
         " clock=({:04X}, {:011X}, {}) margin=({}, {}) wait-until=\"{}\""
         " pre-streaming={}",
-        opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time,
-        opt->start_margin, opt->end_margin, opt->wait_until.value(),
-        opt->pre_streaming);
+        opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time, opt->start_margin,
+        opt->end_margin, opt->wait_until.value(), opt->pre_streaming);
   } else {
     MIRAKC_ARIB_INFO(
         "ProgramFilterOptions: sid={:04X} eid={:04X}"
         " clock=({:04X}, {:011X}, {}) margin=({}, {}) wait-until=none"
         " pre-streaming={}",
-        opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time,
-        opt->start_margin, opt->end_margin, opt->pre_streaming);
+        opt->sid, opt->eid, opt->clock_pid, opt->clock_pcr, opt->clock_time, opt->start_margin,
+        opt->end_margin, opt->pre_streaming);
   }
 }
 
@@ -1286,8 +1279,7 @@ void LoadOption(const Args& args, StartSeekerOption* opt) {
 
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   if (args.at(kMaxDuration)) {
-    opt->max_duration =
-        static_cast<ts::MilliSecond>(args.at(kMaxDuration).asInt64());
+    opt->max_duration = static_cast<ts::MilliSecond>(args.at(kMaxDuration).asInt64());
   }
   if (args.at(kMaxPackets)) {
     opt->max_packets = static_cast<size_t>(args.at(kMaxPackets).asLong());
@@ -1296,8 +1288,8 @@ void LoadOption(const Args& args, StartSeekerOption* opt) {
     fmt::print(kSeekStartHelp);
     exit(EXIT_FAILURE);
   }
-  MIRAKC_ARIB_INFO("Options: sid={:04X} max-duration={} max-packets={}",
-                   opt->sid, opt->max_duration, opt->max_packets);
+  MIRAKC_ARIB_INFO("Options: sid={:04X} max-duration={} max-packets={}", opt->sid,
+      opt->max_duration, opt->max_packets);
 }
 
 std::unique_ptr<PacketSink> MakePacketSink(const Args& args) {
@@ -1436,19 +1428,12 @@ int main(int argc, char* argv[]) {
     g_KeepUnicodeSymbols = true;
   }
 
-  auto version = fmt::format(kVersion,
-                             MIRAKC_ARIB_VERSION,
-                             MIRAKC_ARIB_DOCOPT_VERSION,
-                             MIRAKC_ARIB_FMT_VERSION,
-                             MIRAKC_ARIB_SPDLOG_VERSION,
-                             MIRAKC_ARIB_RAPIDJSON_VERSION,
-                             MIRAKC_ARIB_CPPCODEC_VERSION,
-                             MIRAKC_ARIB_ARIBB24_VERSION,
-                             MIRAKC_ARIB_TSDUCK_ARIB_VERSION,
-                             MIRAKC_ARIB_LIBISDB_VERSION);
+  auto version = fmt::format(kVersion, MIRAKC_ARIB_VERSION, MIRAKC_ARIB_DOCOPT_VERSION,
+      MIRAKC_ARIB_FMT_VERSION, MIRAKC_ARIB_SPDLOG_VERSION, MIRAKC_ARIB_RAPIDJSON_VERSION,
+      MIRAKC_ARIB_CPPCODEC_VERSION, MIRAKC_ARIB_ARIBB24_VERSION, MIRAKC_ARIB_TSDUCK_ARIB_VERSION,
+      MIRAKC_ARIB_LIBISDB_VERSION);
 
-  auto args =
-      docopt::docopt(kUsage, { argv + 1, argv + argc }, false, version);
+  auto args = docopt::docopt(kUsage, {argv + 1, argv + argc}, false, version);
 
   if (args.at("-h").asBool() || args.at("--help").asBool()) {
     ShowHelp(args);

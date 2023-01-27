@@ -24,8 +24,8 @@ class MockFile final : public File {
     return path_;
   }
 
-  MOCK_METHOD(ssize_t, Read, (uint8_t* buf, size_t len), (override));
-  MOCK_METHOD(ssize_t, Write, (uint8_t* buf, size_t len), (override));
+  MOCK_METHOD(ssize_t, Read, (uint8_t * buf, size_t len), (override));
+  MOCK_METHOD(ssize_t, Write, (uint8_t * buf, size_t len), (override));
   MOCK_METHOD(bool, Sync, (), (override));
   MOCK_METHOD(bool, Trunc, (int64_t), (override));
   MOCK_METHOD(int64_t, Seek, (int64_t, SeekMode), (override));
@@ -56,8 +56,7 @@ class MockSink final : public PacketSink {
 class MockRingSink final : public PacketRingSink {
  public:
   MockRingSink(size_t chunk_size, size_t num_chunks)
-      : chunk_size_(chunk_size),
-        ring_size_(chunk_size * num_chunks) {}
+      : chunk_size_(chunk_size), ring_size_(chunk_size * num_chunks) {}
   ~MockRingSink() override = default;
 
   MOCK_METHOD(bool, Start, (), (override));
@@ -122,9 +121,8 @@ class TableSource final : public PacketSource {
     doc.parse(ts::UString::FromUTF8(xml));
 
     const auto* root = doc.rootElement();
-    for (const auto* node = root->firstChildElement();
-         node != nullptr;
-         node =node->nextSiblingElement()) {
+    for (const auto* node = root->firstChildElement(); node != nullptr;
+         node = node->nextSiblingElement()) {
       ts::PID pid;
       node->getIntAttribute<ts::PID>(pid, u"test-pid", true, 0, 0x0000, 0x1FFF);
 

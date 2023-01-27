@@ -6,3 +6,4 @@
 .clangd/
 .envrc
 .DS_Store
+megalinter-reports/

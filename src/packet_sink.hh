@@ -15,9 +15,13 @@ class PacketSink {
  public:
   PacketSink() = default;
   virtual ~PacketSink() = default;
-  virtual bool Start() { return true; }
+  virtual bool Start() {
+    return true;
+  }
   virtual void End() {}
-  virtual int GetExitCode() const { return EXIT_SUCCESS; }
+  virtual int GetExitCode() const {
+    return EXIT_SUCCESS;
+  }
   virtual bool HandlePacket(const ts::TSPacket& packet) = 0;
 
  private:
@@ -42,7 +46,9 @@ class PacketRingSink : public PacketSink {
   virtual uint64_t pos() const = 0;
   virtual bool SetPosition(uint64_t pos) = 0;
   virtual void SetObserver(PacketRingObserver* observer) = 0;
-  virtual bool IsBroken() const { return false; }
+  virtual bool IsBroken() const {
+    return false;
+  }
 
  private:
   MIRAKC_ARIB_NON_COPYABLE(PacketRingSink);
@@ -94,8 +100,7 @@ class StdoutSink final : public PacketSink {
     while (nwritten < pos_) {
       auto res = write(kStdoutFd, buf_ + nwritten, pos_ - nwritten);
       if (res < 0) {
-        MIRAKC_ARIB_ERROR(
-            "Failed to write packets: {} ({})", std::strerror(errno), errno);
+        MIRAKC_ARIB_ERROR("Failed to write packets: {} ({})", std::strerror(errno), errno);
         return false;
       }
       nwritten += res;

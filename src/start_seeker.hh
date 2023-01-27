@@ -20,12 +20,9 @@ struct StartSeekerOption final {
   uint32_t max_packets = 0;
 };
 
-class StartSeeker final : public PacketSink,
-                          public ts::TableHandlerInterface {
+class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
  public:
-  explicit StartSeeker(const StartSeekerOption& option)
-      : option_(option),
-        demux_(context_) {
+  explicit StartSeeker(const StartSeekerOption& option) : option_(option), demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
     MIRAKC_ARIB_DEBUG("Demux += PAT");
@@ -89,8 +86,7 @@ class StartSeeker final : public PacketSink,
 
     if (option_.max_packets != 0) {
       if (option_.max_packets == packets_.size()) {
-        MIRAKC_ARIB_INFO(
-            "The number of packets reached the limit, start streaming");
+        MIRAKC_ARIB_INFO("The number of packets reached the limit, start streaming");
         SendPackets();
         state_ = kStreaming;
         return true;
@@ -115,8 +111,7 @@ class StartSeeker final : public PacketSink,
 
     if (end_pcr_ < 0) {
       end_pcr_ = (pcr + option_.max_duration * kPcrTicksPerMs) % kPcrUpperBound;
-      MIRAKC_ARIB_DEBUG(
-          "End PCR: {:010d}+{:03d}", end_pcr_ / 300, end_pcr_ % 300);
+      MIRAKC_ARIB_DEBUG("End PCR: {:010d}+{:03d}", end_pcr_ / 300, end_pcr_ % 300);
       return true;
     }
 
@@ -174,8 +169,7 @@ class StartSeeker final : public PacketSink,
 
   void HandlePat(const ts::BinaryTable& table) {
     if (table.sourcePID() != ts::PID_PAT) {
-      MIRAKC_ARIB_WARN(
-          "PAT delivered with PID#{:04X}, skip", table.sourcePID());
+      MIRAKC_ARIB_WARN("PAT delivered with PID#{:04X}, skip", table.sourcePID());
       return;
     }
 
@@ -240,8 +234,7 @@ class StartSeeker final : public PacketSink,
 
     if (changed) {
       transition_index_ = table.getFirstTSPacketIndex();
-      MIRAKC_ARIB_DEBUG(
-          "The number of audio streams is changed at {}", transition_index_);
+      MIRAKC_ARIB_DEBUG("The number of audio streams is changed at {}", transition_index_);
       MIRAKC_ARIB_DEBUG("Demux -= PAT PMT#{:04X}", pmt_pid_);
       demux_.removePID(pmt_pid_);
       demux_.removePID(ts::PID_PAT);

@@ -14,8 +14,8 @@ constexpr size_t kNumBuffers = 2;
 constexpr size_t kNumChunks = 2;
 constexpr size_t kChunkSize = RingFileSink::kBufferSize * kNumBuffers;
 constexpr uint64_t kRingSize = kChunkSize * kNumChunks;
-const ServiceRecorderOption kOption { "/dev/null", 3, kChunkSize, kNumChunks };
-}
+const ServiceRecorderOption kOption{"/dev/null", 3, kChunkSize, kNumChunks};
+}  // namespace
 
 TEST(ServiceRecorderTest, NoPacket) {
   ServiceRecorderOption option = kOption;
@@ -26,26 +26,20 @@ TEST(ServiceRecorderTest, NoPacket) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"start"})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"stop","data":{"reset":false}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
   }
 
   EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false));  // EOF
 
-  auto ring = std::make_unique<RingFileSink>(
-      std::move(file), option.chunk_size, option.num_chunks);
+  auto ring =
+      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
   recorder->ServiceRecorder::Connect(std::move(ring));
   recorder->JsonlSource::Connect(std::move(json_sink));
@@ -90,51 +84,41 @@ TEST(ServiceRecorderTest, EventStart) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"start"})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"chunk","data":{"chunk":{)"
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
-              R"(}}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-start","data":{)"
+                R"(}}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-start","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426800000,)"
-                  R"("pos":0)"
+                R"("timestamp":1609426800000,)"
+                R"("pos":0)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"stop","data":{"reset":false}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
   }
 
   EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
@@ -142,8 +126,8 @@ TEST(ServiceRecorderTest, EventStart) {
   EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
 
-  auto ring = std::make_unique<RingFileSink>(
-      std::move(file), option.chunk_size, option.num_chunks);
+  auto ring =
+      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
   recorder->ServiceRecorder::Connect(std::move(ring));
   recorder->JsonlSource::Connect(std::move(json_sink));
@@ -190,115 +174,96 @@ TEST(ServiceRecorderTest, EventProgress) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*ring_sink, Start)
-        .WillOnce(testing::Return(true));
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"start"})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"chunk","data":{"chunk":{)"
+    EXPECT_CALL(*ring_sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
-              R"(}}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-start","data":{)"
+                R"(}}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-start","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426800000,)"
-                  R"("pos":0)"
+                R"("timestamp":1609426800000,)"
+                R"("pos":0)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-update","data":{)"
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-update","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426800000,)"
-                  R"("pos":16384)"
+                R"("timestamp":1609426800000,)"
+                R"("pos":16384)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"chunk","data":{"chunk":{)"
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":16384)"
-              R"(}}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-update","data":{)"
+                R"(}}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-update","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426800000,)"
-                  R"("pos":0)"
+                R"("timestamp":1609426800000,)"
+                R"("pos":0)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"chunk","data":{"chunk":{)"
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
-              R"(}}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"stop","data":{"reset":false}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
+                R"(}}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
     EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
   }
 
@@ -357,95 +322,81 @@ TEST(ServiceRecorderTest, EventEnd) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"start"})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"chunk","data":{"chunk":{)"
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
-              R"(}}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-start","data":{)"
+                R"(}}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-start","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426800000,)"
-                  R"("pos":0)"
+                R"("timestamp":1609426800000,)"
+                R"("pos":0)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-end","data":{)"
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-end","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426801000,)"
-                  R"("pos":376)"
+                R"("timestamp":1609426801000,)"
+                R"("pos":376)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-start","data":{)"
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-start","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":5,)"
-                  R"("startTime":1609426801000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":5,)"
+                R"("startTime":1609426801000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426801000,)"
-                  R"("pos":376)"
+                R"("timestamp":1609426801000,)"
+                R"("pos":376)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"stop","data":{"reset":false}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
   }
 
   EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
@@ -453,8 +404,8 @@ TEST(ServiceRecorderTest, EventEnd) {
   EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
 
-  auto ring = std::make_unique<RingFileSink>(
-      std::move(file), option.chunk_size, option.num_chunks);
+  auto ring =
+      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
   recorder->ServiceRecorder::Connect(std::move(ring));
   recorder->JsonlSource::Connect(std::move(json_sink));
@@ -509,95 +460,81 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"start"})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"chunk","data":{"chunk":{)"
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
-              R"(}}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-start","data":{)"
+                R"(}}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-start","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426800000,)"
-                  R"("pos":0)"
+                R"("timestamp":1609426800000,)"
+                R"("pos":0)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-end","data":{)"
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-end","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426800000,)"
-                  R"("pos":188)"
+                R"("timestamp":1609426800000,)"
+                R"("pos":188)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-start","data":{)"
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-start","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":6,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":6,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426800000,)"
-                  R"("pos":188)"
+                R"("timestamp":1609426800000,)"
+                R"("pos":188)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"stop","data":{"reset":false}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
   }
 
   EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
@@ -605,8 +542,8 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
   EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
 
-  auto ring = std::make_unique<RingFileSink>(
-      std::move(file), option.chunk_size, option.num_chunks);
+  auto ring =
+      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
   recorder->ServiceRecorder::Connect(std::move(ring));
   recorder->JsonlSource::Connect(std::move(json_sink));
@@ -661,51 +598,41 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"start"})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"chunk","data":{"chunk":{)"
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426801000,"pos":0)"
-              R"(}}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-start","data":{)"
+                R"(}}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-start","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":5,)"
-                  R"("startTime":1609426801000,)"
-                  R"("duration":1000,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":5,)"
+                R"("startTime":1609426801000,)"
+                R"("duration":1000,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426801000,)"
-                  R"("pos":0)"
+                R"("timestamp":1609426801000,)"
+                R"("pos":0)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"stop","data":{"reset":false}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
   }
 
   EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
@@ -713,8 +640,8 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
   EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
 
-  auto ring = std::make_unique<RingFileSink>(
-      std::move(file), option.chunk_size, option.num_chunks);
+  auto ring =
+      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
   recorder->ServiceRecorder::Connect(std::move(ring));
   recorder->JsonlSource::Connect(std::move(json_sink));
@@ -773,95 +700,81 @@ TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
 
   {
     testing::InSequence seq;
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"start"})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"chunk","data":{"chunk":{)"
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
-              R"(}}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-start","data":{)"
+                R"(}}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-start","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":0,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":0,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426800000,)"
-                  R"("pos":0)"
+                R"("timestamp":1609426800000,)"
+                R"("pos":0)"
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-end","data":{)"
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-end","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":4,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":0,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":4,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":0,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426801000,)"
-                  R"("pos":752)"  // 188 * 4
+                R"("timestamp":1609426801000,)"
+                R"("pos":752)"  // 188 * 4
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"event-start","data":{)"
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"event-start","data":{)"
                 R"("originalNetworkId":1,)"
                 R"("transportStreamId":2,)"
                 R"("serviceId":3,)"
                 R"("event":{)"
-                  R"("eventId":5,)"
-                  R"("startTime":1609426800000,)"
-                  R"("duration":0,)"
-                  R"("scrambled":true,)"
-                  R"("descriptors":[])"
+                R"("eventId":5,)"
+                R"("startTime":1609426800000,)"
+                R"("duration":0,)"
+                R"("scrambled":true,)"
+                R"("descriptors":[])"
                 R"(},)"
                 R"("record":{)"
-                  R"("timestamp":1609426801000,)"
-                  R"("pos":752)"  // 188 * 4
+                R"("timestamp":1609426801000,)"
+                R"("pos":752)"  // 188 * 4
                 R"(})"
-              R"(}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
-    EXPECT_CALL(*json_sink, HandleDocument)
-        .WillOnce([](const rapidjson::Document& doc) {
-          EXPECT_EQ(
-              R"({"type":"stop","data":{"reset":false}})",
-              MockJsonlSink::Stringify(doc));
-          return true;
-        });
+                R"(}})",
+          MockJsonlSink::Stringify(doc));
+      return true;
+    });
+    EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+      EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
+      return true;
+    });
   }
 
   EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
@@ -869,8 +782,8 @@ TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
   EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
 
-  auto ring = std::make_unique<RingFileSink>(
-      std::move(file), option.chunk_size, option.num_chunks);
+  auto ring =
+      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
   recorder->ServiceRecorder::Connect(std::move(ring));
   recorder->JsonlSource::Connect(std::move(json_sink));

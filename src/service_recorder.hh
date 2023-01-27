@@ -14,16 +14,11 @@
 #include "packet_sink.hh"
 #include "tsduck_helper.hh"
 
-#define MIRAKC_ARIB_SERVICE_RECORDER_TRACE(...) \
-  MIRAKC_ARIB_TRACE("service-recorder: " __VA_ARGS__)
-#define MIRAKC_ARIB_SERVICE_RECORDER_DEBUG(...) \
-  MIRAKC_ARIB_DEBUG("service-recorder: " __VA_ARGS__)
-#define MIRAKC_ARIB_SERVICE_RECORDER_INFO(...) \
-  MIRAKC_ARIB_INFO("service-recorder: " __VA_ARGS__)
-#define MIRAKC_ARIB_SERVICE_RECORDER_WARN(...) \
-  MIRAKC_ARIB_WARN("service-recorder: " __VA_ARGS__)
-#define MIRAKC_ARIB_SERVICE_RECORDER_ERROR(...) \
-  MIRAKC_ARIB_ERROR("service-recorder: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_RECORDER_TRACE(...) MIRAKC_ARIB_TRACE("service-recorder: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_RECORDER_DEBUG(...) MIRAKC_ARIB_DEBUG("service-recorder: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_RECORDER_INFO(...) MIRAKC_ARIB_INFO("service-recorder: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_RECORDER_WARN(...) MIRAKC_ARIB_WARN("service-recorder: " __VA_ARGS__)
+#define MIRAKC_ARIB_SERVICE_RECORDER_ERROR(...) MIRAKC_ARIB_ERROR("service-recorder: " __VA_ARGS__)
 
 namespace {
 
@@ -41,8 +36,7 @@ class ServiceRecorder final : public PacketSink,
                               public ts::TableHandlerInterface {
  public:
   explicit ServiceRecorder(const ServiceRecorderOption& option)
-      : option_(option),
-        demux_(context_) {
+      : option_(option), demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
     MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("Demux PAT");
@@ -314,8 +308,7 @@ class ServiceRecorder final : public PacketSink,
 
     if (event_started_) {
       if (event_changed) {
-        MIRAKC_ARIB_SERVICE_RECORDER_WARN(
-            "Event#{:04X} has started before Event#{:04X} ends",
+        MIRAKC_ARIB_SERVICE_RECORDER_WARN("Event#{:04X} has started before Event#{:04X} ends",
             GetEvent(new_eit).event_id, GetEvent(eit).event_id);
         UpdateEventBoundary(now, sink_->pos());
         SendEventEndMessage(eit);
@@ -398,9 +391,8 @@ class ServiceRecorder final : public PacketSink,
 
   void SendEventStartMessage(const std::shared_ptr<ts::EIT>& eit) {
     MIRAKC_ARIB_ASSERT(eit);
-    MIRAKC_ARIB_SERVICE_RECORDER_INFO(
-        "Event#{:04X}: Started: {}@{}",
-        GetEvent(eit).event_id, event_boundary_time_, event_boundary_pos_);
+    MIRAKC_ARIB_SERVICE_RECORDER_INFO("Event#{:04X}: Started: {}@{}", GetEvent(eit).event_id,
+        event_boundary_time_, event_boundary_pos_);
     SendEventMessage("event-start", eit, event_boundary_time_, event_boundary_pos_);
   }
 
@@ -414,14 +406,12 @@ class ServiceRecorder final : public PacketSink,
 
   void SendEventEndMessage(const std::shared_ptr<ts::EIT>& eit) {
     MIRAKC_ARIB_ASSERT(eit);
-    MIRAKC_ARIB_SERVICE_RECORDER_INFO(
-        "Event#{:04X}: Ended: {}@{}",
-        GetEvent(eit).event_id, event_boundary_time_, event_boundary_pos_);
+    MIRAKC_ARIB_SERVICE_RECORDER_INFO("Event#{:04X}: Ended: {}@{}", GetEvent(eit).event_id,
+        event_boundary_time_, event_boundary_pos_);
     SendEventMessage("event-end", eit, event_boundary_time_, event_boundary_pos_);
   }
 
-  void SendEventMessage(
-      const std::string& type, const std::shared_ptr<ts::EIT>& eit,
+  void SendEventMessage(const std::string& type, const std::shared_ptr<ts::EIT>& eit,
       const ts::Time& time, uint64_t pos) {
     MIRAKC_ARIB_ASSERT(eit);
 

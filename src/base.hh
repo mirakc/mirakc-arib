@@ -16,13 +16,11 @@ constexpr size_t kBlockSize = 4096;
   clss(const clss&) = delete; \
   clss& operator=(const clss&) = delete
 
-#define MIRAKC_ARIB_EXPECTS(cond) \
-  ((void)((cond) ? 0 : spdlog::critical("`" #cond "` failed")))
+#define MIRAKC_ARIB_EXPECTS(cond) ((void)((cond) ? 0 : spdlog::critical("`" #cond "` failed")))
 
 inline std::string& trim(std::string& str) {
   static const char kWhitespaces[] = "\n";
-  return str
-      .erase(0, str.find_first_not_of(kWhitespaces))
+  return str.erase(0, str.find_first_not_of(kWhitespaces))
       .erase(str.find_last_not_of(kWhitespaces) + 1);
 }
 
@@ -152,8 +150,7 @@ class Clock final {
  public:
   Clock() = default;
 
-  explicit Clock(const ClockBaseline& cbl)
-      : baseline_(cbl) {}
+  explicit Clock(const ClockBaseline& cbl) : baseline_(cbl) {}
 
   ~Clock() = default;
 
@@ -204,14 +201,14 @@ class Clock final {
       MIRAKC_ARIB_ASSERT(delta >= 0);
       if (delta >= kPcrTicksPerSec) {  // delta >= 1s
         MIRAKC_ARIB_WARN("PCR#{:04X}: too large delta {} -> {}, invalidate the clock for resync",
-                         baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
+            baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
         Invalidate();
         return;
       }
     }
     if (pcr < last_pcr_) {
-      MIRAKC_ARIB_DEBUG("PCR#{:04X}: wrap-around {} -> {}",
-                        baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
+      MIRAKC_ARIB_DEBUG("PCR#{:04X}: wrap-around {} -> {}", baseline_.pid(), FormatPcr(last_pcr_),
+          FormatPcr(pcr));
       pcr_wrap_around_ = true;
     }
     last_pcr_ = pcr;

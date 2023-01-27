@@ -21,9 +21,7 @@ class AirtimeTracker final : public PacketSink,
                              public JsonlSource,
                              public ts::TableHandlerInterface {
  public:
-  explicit AirtimeTracker(const AirtimeTrackerOption& option)
-      : option_(option),
-        demux_(context_) {
+  explicit AirtimeTracker(const AirtimeTrackerOption& option) : option_(option), demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_EIT);
     MIRAKC_ARIB_DEBUG("Demux EIT");

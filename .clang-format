@@ -9,3 +9,5 @@ AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 ColumnLimit: 99
+SortIncludes: false
+DerivePointerAlignment: false

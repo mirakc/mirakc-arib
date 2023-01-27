@@ -28,9 +28,7 @@ class ServiceScanner final : public PacketSink,
                              public JsonlSource,
                              public ts::TableHandlerInterface {
  public:
-  explicit ServiceScanner(const ServiceScannerOption& option)
-      : option_(option),
-        demux_(context_) {
+  explicit ServiceScanner(const ServiceScannerOption& option) : option_(option), demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
     demux_.addPID(ts::PID_NIT);
@@ -91,8 +89,7 @@ class ServiceScanner final : public PacketSink,
 
   void HandlePat(const ts::BinaryTable& table) {
     if (table.sourcePID() != ts::PID_PAT) {
-      MIRAKC_ARIB_WARN(
-          "PAT delivered with PID#{:04X}, skip", table.sourcePID());
+      MIRAKC_ARIB_WARN("PAT delivered with PID#{:04X}, skip", table.sourcePID());
       return;
     }
 
@@ -164,14 +161,12 @@ class ServiceScanner final : public PacketSink,
       uint16_t sid = it->first;
 
       if (!option_.sids.IsEmpty() && !option_.sids.Contain(sid)) {
-        MIRAKC_ARIB_DEBUG(
-            "Ignore SID#{:04X} according to the inclusion list", sid);
+        MIRAKC_ARIB_DEBUG("Ignore SID#{:04X} according to the inclusion list", sid);
         continue;
       }
 
       if (!option_.xsids.IsEmpty() && option_.xsids.Contain(sid)) {
-        MIRAKC_ARIB_DEBUG(
-            "Ignore SID#{:04X} according to the exclusion list", sid);
+        MIRAKC_ARIB_DEBUG("Ignore SID#{:04X} according to the exclusion list", sid);
         continue;
       }
 
@@ -190,8 +185,7 @@ class ServiceScanner final : public PacketSink,
       if (i < svit->second.descs.count()) {
         const auto& dp = svit->second.descs[i];
         ts::ARIBLogoTransmissionDescriptor desc(context_, *dp);
-        if (desc.logo_transmission_type == 1 ||
-            desc.logo_transmission_type == 2) {
+        if (desc.logo_transmission_type == 1 || desc.logo_transmission_type == 2) {
           logo_id = desc.logo_id;
         }
       }

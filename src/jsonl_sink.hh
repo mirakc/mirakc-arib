@@ -12,7 +12,9 @@ class JsonlSink {
  public:
   JsonlSink() = default;
   virtual ~JsonlSink() = default;
-  virtual bool HandleDocument(const rapidjson::Document&) { return true; }
+  virtual bool HandleDocument(const rapidjson::Document&) {
+    return true;
+  }
 };
 
 class StdoutJsonlSink final : public JsonlSink {

@@ -16,11 +16,9 @@
 
 namespace {
 
-class PesPrinter final : public PacketSink,
-                         public ts::TableHandlerInterface {
+class PesPrinter final : public PacketSink, public ts::TableHandlerInterface {
  public:
-  PesPrinter()
-      : demux_(context_) {
+  PesPrinter() : demux_(context_) {
     demux_.setTableHandler(this);
     demux_.addPID(ts::PID_PAT);
     demux_.addPID(ts::PID_CAT);
@@ -159,8 +157,8 @@ class PesPrinter final : public PacketSink,
       return;
     }
 
-    Print(fmt::format("PMT: SID#{:04X} PCR#{:04X} V#{}",
-                      pmt.service_id, pmt.pcr_pid, pmt.version));
+    Print(
+        fmt::format("PMT: SID#{:04X} PCR#{:04X} V#{}", pmt.service_id, pmt.pcr_pid, pmt.version));
     if (pmt.pcr_pid != ts::PID_NULL) {
       Clock clock;
       clock.SetPid(pmt.pcr_pid);
@@ -182,8 +180,8 @@ class PesPrinter final : public PacketSink,
         Print(fmt::format("  PES#{:04X} => ARIB-Subtitle#{:02X}", pid, stream.stream_type));
       } else if (IsAribSuperimposedText(stream)) {
         stream_map_[pid] = {"ARIB-SuperimposedText", pmt.pcr_pid};
-        Print(fmt::format("  PES#{:04X} => ARIB-SuperimposedText#{:02X}",
-                          pid, stream.stream_type));
+        Print(
+            fmt::format("  PES#{:04X} => ARIB-SuperimposedText#{:02X}", pid, stream.stream_type));
       } else {
         stream_map_[pid] = {"Other", pmt.pcr_pid};
         Print(fmt::format("  PES#{:04X} => Other#{:02X}", pid, stream.stream_type));
@@ -203,14 +201,12 @@ class PesPrinter final : public PacketSink,
       return;
     }
 
-    Print(fmt::format("EIT p/f Actual: SID#{:04X} V#{}",
-                      eit.service_id, eit.version));
+    Print(fmt::format("EIT p/f Actual: SID#{:04X} V#{}", eit.service_id, eit.version));
     for (size_t i = 0; i < eit.events.size(); ++i) {
       const auto& event = eit.events[i];
-      Print(fmt::format("  Event[{}]: EID#{:04X} {} - {} ({}m)",
-                        i, event.event_id, event.start_time,
-                        event.start_time + event.duration * ts::MilliSecPerSec,
-                        event.duration / 60));
+      Print(
+          fmt::format("  Event[{}]: EID#{:04X} {} - {} ({}m)", i, event.event_id, event.start_time,
+              event.start_time + event.duration * ts::MilliSecPerSec, event.duration / 60));
     }
   }
 
