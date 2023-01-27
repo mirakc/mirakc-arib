@@ -1,3 +1,12 @@
 {
-  "Exclude": ["\\.cc$", "\\.hh$"]
+  "Exclude": [
+    "\\.cc$",
+    "\\.hh$",
+    "CMakeLists\\.txt$",
+    "README\\.md$",
+    "LICENSE-APACHE$",
+    "test/cli_tests\\.sh$",
+    "\\.github/workflows/.*",
+    "\\.gitmodules$"
+  ]
 }
