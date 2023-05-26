@@ -1,4 +1,4 @@
-name: Daily
+name: daily
 
 on:
   schedule:
@@ -17,8 +17,6 @@ jobs:
           # Fetch all history for all branches and tags
           # so that ./scripts/update-deps works properly.
           fetch-depth: 0
-          # Use PAT in order to invoke other workflows.
-          token: ${{ secrets.BOT_GITHUB_TOKEN }}
       - name: git config
         run: |
           # https://github.com/actions/checkout#push-a-commit-using-the-built-in-token

@@ -1,3 +1,8 @@
+name: coverage
+
+on:
+  workflow_call:
+
 jobs:
   coverage:
     runs-on: ubuntu-latest

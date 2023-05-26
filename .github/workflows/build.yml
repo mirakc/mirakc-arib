@@ -1,5 +1,10 @@
+name: build
+
+on:
+  workflow_call:
+
 jobs:
-  linux-build:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -9,9 +14,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: build/vendor
-          key: ${{ runner.os }}-linux-build-${{ hashFiles('CMakeLists.txt') }}
+          key: ${{ runner.os }}-build-${{ hashFiles('CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-linux-build-
+            ${{ runner.os }}-build-
       - name: Install deps
         run: |
           sudo apt-get update

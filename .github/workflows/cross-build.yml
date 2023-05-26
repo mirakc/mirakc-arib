@@ -1,5 +1,10 @@
+name: cross-build
+
+on:
+  workflow_call:
+
 jobs:
-  arm-linux-build:
+  cross-build:
     strategy:
       matrix:
         arch:
@@ -32,9 +37,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: build/vendor
-          key: ${{ runner.os }}-arm-build-${{ matrix.arch }}-${{ hashFiles('CMakeLists.txt') }}
+          key: ${{ runner.os }}-cross-build-${{ matrix.arch }}-${{ hashFiles('CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-arm-build-${{ matrix.arch }}-
+            ${{ runner.os }}-cross-build-${{ matrix.arch }}-
       - name: Install deps
         run: |
           sudo apt-get update

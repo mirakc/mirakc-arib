@@ -1,5 +1,5 @@
 # See https://github.com/dependabot/dependabot-core/issues/2268#issuecomment-831376155
-name: Auto Merge
+name: auto-merge
 
 on:
   workflow_run:
@@ -21,8 +21,6 @@ jobs:
     steps:
       - uses: actions/github-script@v6
         with:
-          # Use PAT in order to invoke other workflows.
-          github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
             const pull_number = context.payload.workflow_run.pull_requests[0].number;
@@ -51,8 +49,6 @@ jobs:
     steps:
       - uses: actions/github-script@v6
         with:
-          # Use PAT in order to invoke other workflows.
-          github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
 
