@@ -8,35 +8,29 @@ env:
   UPDATE_DEPS_TITLE: 'build(deps): update dependencies'
 
 jobs:
+  # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#authenticating-with-github-app-generated-tokens
   update-deps:
     runs-on: ubuntu-latest
     steps:
+      - uses: tibdex/github-app-token@v1
+        id: generate-token
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           # Fetch all history for all branches and tags
           # so that ./scripts/update-deps works properly.
           fetch-depth: 0
-      - name: git config
-        run: |
-          # https://github.com/orgs/community/discussions/26560#discussioncomment-3252339
-          BOT_NAME='github-actions[bot]'
-          BOT_ID="$(curl https://api.github.com/users/$(echo -n github-actions[bot] | jq -sRr '@uri') -sG | jq -r '.id')"
-          git config user.name "$BOT_NAME"
-          git config user.email "$BOT_ID+$BOT_NAME@users.noreply.github.com"
-      - name: Make a pull-request to update dependencies
+      - name: Update dependencies
         run: |
           ./scripts/update-deps
-          if git diff --quiet -- vendor
-          then
-            echo "Not changed"
-          else
-            BRANCH="update-deps-$(date '+%Y%m%d')"
-            git checkout -b $BRANCH
-            git add vendor
-            git commit -m "$UPDATE_DEPS_TITLE"
-            git push -u origin $BRANCH
-            gh pr create -t "$UPDATE_DEPS_TITLE" -b '' -l dependencies
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          title: ${{ env.UPDATE_DEPS_TITLE }}
+          commit-message: ${{ env.UPDATE_DEPS_TITLE }}
+          branch: update-deps
+          delete-branch: true
