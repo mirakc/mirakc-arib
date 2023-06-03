@@ -4,10 +4,8 @@ PROGNAME="$(basename $0)"
 BASEDIR="$(cd $(dirname $0); pwd)"
 PROJDIR="$(cd $BASEDIR/..; pwd)"
 
-BASE_URL='https://api.github.com/repos'
-
-FMT_VERSION="$(curl -s $BASE_URL/fmtlib/fmt/releases/latest | jq -r '.tag_name')"
-SPDLOG_VERSION="$(curl -s $BASE_URL/gabime/spdlog/releases/latest | jq -r '.tag_name')"
+FMT_VERSION="$(gh api repos/fmtlib/fmt/releases/latest --jq '.tag_name')"
+SPDLOG_VERSION="$(gh api repos/gabime/spdlog/releases/latest --jq '.tag_name')"
 
 cat <<EOF
 Latest Tags:
