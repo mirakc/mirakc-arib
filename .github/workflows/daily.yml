@@ -24,8 +24,10 @@ jobs:
           # so that ./scripts/update-deps works properly.
           fetch-depth: 0
       - name: Update dependencies
+        id: update-deps
         run: |
-          ./scripts/update-deps
+          ./scripts/update-deps /tmp/update-deps.log.md
+          echo "body=/tmp/update-deps.log.md" >>"$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
       - name: Create Pull Request
@@ -33,6 +35,8 @@ jobs:
         with:
           token: ${{ steps.generate-token.outputs.token }}
           title: ${{ env.UPDATE_DEPS_TITLE }}
+          body-path: ${{ steps.update-deps.outputs.body }}
           commit-message: ${{ env.UPDATE_DEPS_TITLE }}
           branch: update-deps
           delete-branch: true
+          labels: dependencies
