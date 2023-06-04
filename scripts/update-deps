@@ -8,7 +8,7 @@ LOG_MD_FILE="${1:-/dev/null}"
 
 FMT_CURRENT=$(git -C "$PROJDIR/vendor/fmt" describe --tags)
 FMT_VERSION="$(gh api repos/fmtlib/fmt/releases/latest --jq '.tag_name')"
-if "$FMT_CURRENT" != "$FMT_VERSION"
+if [ "$FMT_CURRENT" != "$FMT_VERSION" ]
 then
   echo "- Bumps vendor/fmt from $FMT_CURRENT to $FMT_VERSION" | \
     tee -a $LOG_MD_FILE
@@ -17,7 +17,7 @@ fi
 
 SPDLOG_CURRENT=$(git -C "$PROJDIR/vendor/spdlog" describe --tags)
 SPDLOG_VERSION="$(gh api repos/gabime/spdlog/releases/latest --jq '.tag_name')"
-if "$SPDLOG_CURRENT" != "$SPDLOG_VERSION"
+if [ "$SPDLOG_CURRENT" != "$SPDLOG_VERSION" ]
 then
   echo "- Bumps vendor/spdlog from $SPDLOG_CURRENT to $SPDLOG_VERSION" | \
     tee -a $LOG_MD_FILE
