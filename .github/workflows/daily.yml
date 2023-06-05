@@ -17,6 +17,10 @@ jobs:
         with:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.PRIVATE_KEY }}
+      - uses: raven-actions/bot-details@v1
+        id: bot-details
+        with:
+          bot-slug-name: 'mirakc-update-deps'
       - uses: actions/checkout@v3
         with:
           submodules: recursive
@@ -37,6 +41,7 @@ jobs:
           title: ${{ env.UPDATE_DEPS_TITLE }}
           body-path: ${{ steps.update-deps.outputs.body }}
           commit-message: ${{ env.UPDATE_DEPS_TITLE }}
+          author: ${{ steps.bot-details.outputs.name-email }}
           branch: update-deps
           delete-branch: true
           labels: dependencies
