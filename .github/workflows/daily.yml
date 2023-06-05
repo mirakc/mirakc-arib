@@ -20,7 +20,7 @@ jobs:
       - uses: raven-actions/bot-details@v1
         id: bot-details
         with:
-          bot-slug-name: 'mirakc-update-deps'
+          bot-slug-name: mirakc-update-deps
       - uses: actions/checkout@v3
         with:
           submodules: recursive
