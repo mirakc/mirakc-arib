@@ -94,7 +94,7 @@ Usage:
     [--pre-streaming] [<file>]
   mirakc-arib filter-program-metadata [--sid=<sid>] [<file>]
   mirakc-arib record-service --sid=<sid> --file=<file>
-    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [<file>]
+    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [--packet-stats] [<file>]
   mirakc-arib track-airtime --sid=<sid> --eid=<eid> [<file>]
   mirakc-arib seek-start --sid=<sid>
     [--max-duration=<ms>] [--max-packets=<num>] [<file>]
@@ -651,7 +651,7 @@ Record a service stream into a ring buffer file
 
 Usage:
   mirakc-arib record-service --sid=<sid> --file=<file>
-    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [<file>]
+    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [--packet-stats] [<file>]
 
 Options:
   -h --help
@@ -673,6 +673,9 @@ Options:
   --start-pos=<pos>  [default: 0]
     A file position to start recoring.
     The value must be a multiple of the chunk size.
+  
+  --packet-stats
+    Enables statistics on TS packets.
 
 Arguments:
   <file>
@@ -1243,6 +1246,7 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
   static const std::string kChunkSize = "--chunk-size";
   static const std::string kNumChunks = "--num-chunks";
   static const std::string kStartPos = "--start-pos";
+  static const std::string kPacketStats = "--packet-stats";
 
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   opt->file = args.at(kFile).asString();
@@ -1280,9 +1284,13 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
       std::abort();
     }
   }
+  if (args.at(kPacketStats).asBool()) {
+    opt->packet_stats = true;
+  }
   MIRAKC_ARIB_INFO(
-      "ServiceRecorderOptions: sid={:04X} file={} chunk-size={} num-chunks={} start-pos={}",
-      opt->sid, opt->file, opt->chunk_size, opt->num_chunks, opt->start_pos);
+      "ServiceRecorderOptions: sid={:04X} file={} chunk-size={} num-chunks={} start-pos={} "
+      "packet-stats={}",
+      opt->sid, opt->file, opt->chunk_size, opt->num_chunks, opt->start_pos, opt->packet_stats);
 }
 
 void LoadOption(const Args& args, AirtimeTrackerOption* opt) {

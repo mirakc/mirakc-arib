@@ -29,6 +29,7 @@
 #include "jsonl_source.hh"
 #include "logging.hh"
 #include "packet_sink.hh"
+#include "packet_stats_collector.hh"
 #include "tsduck_helper.hh"
 
 #define MIRAKC_ARIB_SERVICE_RECORDER_TRACE(...) MIRAKC_ARIB_TRACE("service-recorder: " __VA_ARGS__)
@@ -45,6 +46,7 @@ struct ServiceRecorderOption final {
   size_t chunk_size = 0;
   size_t num_chunks = 0;
   uint64_t start_pos = 0;
+  bool packet_stats = false;
 };
 
 class ServiceRecorderTestAccessor;
@@ -112,6 +114,10 @@ class ServiceRecorder final : public PacketSink,
 
     demux_.feedPacket(packet);
 
+    if (option_.packet_stats) {
+      packet_stats_collector_.CollectPacketStats(packet);
+    }
+
     switch (state_) {
       case State::kPreparing:
         return OnPreparing(packet);
@@ -140,6 +146,7 @@ class ServiceRecorder final : public PacketSink,
     // internal consistency even if no TV program starts.  In this case, the end
     // time of the record for the last TV program (held by `eit_`) is extended.
     SendEventUpdateMessage(eit_, now, pos);
+    SendPacketStatsMessage();
     SendChunkMessage(now, pos);
   }
 
@@ -326,8 +333,7 @@ class ServiceRecorder final : public PacketSink,
       if (event_changed) {
         MIRAKC_ARIB_SERVICE_RECORDER_WARN("Event#{:04X} has started before Event#{:04X} ends",
             GetEvent(new_eit).event_id, GetEvent(eit).event_id);
-        UpdateEventBoundary(now, sink_->pos());
-        SendEventEndMessage(eit);
+        HandleEventEnd(now, eit);
         SendEventStartMessage(new_eit);
       } else {
         if (IsUnspecifiedEventEndTime(GetEvent(eit))) {
@@ -335,8 +341,7 @@ class ServiceRecorder final : public PacketSink,
         } else {
           auto end_time = GetEventEndTime(GetEvent(eit));
           if (now >= end_time) {
-            UpdateEventBoundary(end_time, sink_->pos());
-            SendEventEndMessage(eit);
+            HandleEventEnd(end_time, eit);
             event_started_ = false;  // wait for new event
           }
         }
@@ -354,6 +359,12 @@ class ServiceRecorder final : public PacketSink,
     MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("Update event boundary with {}@{}", time, pos);
     event_boundary_time_ = time;
     event_boundary_pos_ = pos;
+  }
+
+  void HandleEventEnd(const ts::Time& endTime, const std::shared_ptr<ts::EIT>& eit) {
+    UpdateEventBoundary(endTime, sink_->pos());
+    SendPacketStatsMessage();
+    SendEventEndMessage(eit);
   }
 
   void SendStartMessage() {
@@ -426,6 +437,32 @@ class ServiceRecorder final : public PacketSink,
     SendEventMessage("event-end", eit, event_boundary_time_, event_boundary_pos_);
   }
 
+  void SendPacketStatsMessage() {
+    if (!option_.packet_stats) {
+      return;
+    }
+
+    auto error_packets = packet_stats_collector_.GetErrorPackets();
+    auto dropped_packets = packet_stats_collector_.GetDroppedPackets();
+    auto scrambled_packets = packet_stats_collector_.GetScrambledPackets();
+    MIRAKC_ARIB_SERVICE_RECORDER_INFO("PacketStats: Error: {}, Dropped {}, Scrambled: {}",
+        error_packets, dropped_packets, scrambled_packets);
+
+    rapidjson::Document doc(rapidjson::kObjectType);
+    auto& allocator = doc.GetAllocator();
+
+    rapidjson::Value data(rapidjson::kObjectType);
+    data.AddMember("errorPackets", error_packets, allocator);
+    data.AddMember("droppedPackets", dropped_packets, allocator);
+    data.AddMember("scrambledPackets", scrambled_packets, allocator);
+
+    doc.AddMember("type", "packet-stats", allocator);
+    doc.AddMember("data", data, allocator);
+
+    FeedDocument(doc);
+    packet_stats_collector_.ResetPacketStats();
+  }
+
   void SendEventMessage(const std::string& type, const std::shared_ptr<ts::EIT>& eit,
       const ts::Time& time, uint64_t pos) {
     MIRAKC_ARIB_ASSERT(eit);
@@ -480,6 +517,7 @@ class ServiceRecorder final : public PacketSink,
   ts::PID pmt_pid_ = ts::PID_NULL;
   State state_ = State::kPreparing;
   bool event_started_ = false;
+  PacketStatsCollector packet_stats_collector_;
 
   friend class ServiceRecorderTestAccessor;
 
