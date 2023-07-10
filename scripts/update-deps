@@ -6,6 +6,8 @@ PROJDIR="$(cd $BASEDIR/..; pwd)"
 
 LOG_MD_FILE="${1:-/dev/null}"
 
+touch $LOG_MD_FILE
+
 FMT_CURRENT=$(git -C "$PROJDIR/vendor/fmt" describe --tags)
 FMT_VERSION="$(gh api repos/fmtlib/fmt/releases/latest --jq '.tag_name')"
 if [ "$FMT_CURRENT" != "$FMT_VERSION" ]
