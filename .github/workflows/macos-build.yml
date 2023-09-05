@@ -8,7 +8,7 @@ jobs:
     runs-on: macos-latest
     continue-on-error: true  # macOS is unsupported officially
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Cache for external projects
