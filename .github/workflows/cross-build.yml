@@ -58,7 +58,7 @@ jobs:
           readelf -h build/bin/mirakc-arib | grep Machine | grep '${{ matrix.elf-machine }}'
           readelf -h build/bin/mirakc-arib | grep Flags | grep '${{ matrix.elf-flags }}'
       - name: Setup QEMU user-mode emulation
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Show help and version
         run: |
           sudo apt-get install -y --no-install-recommends lsb-release
