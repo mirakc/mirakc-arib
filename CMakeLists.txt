@@ -21,7 +21,7 @@ set(MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS
 #   * scripts/release
 #   * scripts/update-deps.
 #
-set(MIRAKC_ARIB_VERSION "0.21.13"
+set(MIRAKC_ARIB_VERSION "0.21.14"
   CACHE STRING "mirakc-arib version." FORCE)
 #
 # Get the version of the Git submodule
