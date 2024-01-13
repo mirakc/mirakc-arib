@@ -111,18 +111,18 @@ Usages of mirakc-arib are different from `tsp`:
 
 mirakc-arib is static-linked against the following libraries:
 
-* [mirakc/docopt.cpp] forked from [docopt/docopt.cpp] (Boost/MIT)
+* [mirakc/docopt.cpp] forked from [docopt/docopt.cpp] (BSL-1.0 OR MIT)
 * [fmtlib/fmt] (MIT)
 * [gabime/spdlog] w/ [patches/spdlog.patch](./patches/spdlog.patch) (MIT)
 * [Tencent/rapidjson] (MIT)
 * [tplgy/cppcodec] (MIT)
-* [mirakc/tsduck-arib] forked from [tsduck/tsduck] (BSD 2-Clause)
+* [mirakc/tsduck-arib] forked from [tsduck/tsduck] (BSD-2-Clause)
 * [mirakc/aribb24] forked from [nkoriyama/aribb24] (LGPL-3.0)
-* [DBCTRADO/LibISDB] w/ [patches/LibISDB.patch](./patches/LibISDB.patch) (GPLv2)
+* [DBCTRADO/LibISDB] w/ [patches/LibISDB.patch](./patches/LibISDB.patch) (GPL-2.0)
 
 The following libraries are used for testing purposes:
 
-* [google/googletest] (BSD 3-Clause)
+* [google/googletest] (BSD-3-Clause)
 * [google/benchmark] (Apache-2.0)
 
 ## TODO
