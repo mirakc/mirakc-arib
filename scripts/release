@@ -68,7 +68,7 @@ done
 
 trap cleanup EXIT
 
-VERSION=$(npx semver $CURRENT -i $1)
+VERSION=$(deno run npm:semver $CURRENT -i $1)
 
 log "Pulling changes from origin..."
 git pull
