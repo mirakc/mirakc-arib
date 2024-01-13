@@ -9,8 +9,8 @@
 
 Get the repository including the Git submodule:
 
-```console
-$ git clone --recursive https://github.com/mirakc/mirakc-arib.git
+```shell
+git clone --recursive https://github.com/mirakc/mirakc-arib.git
 ```
 
 Make sure that tools listed below has already been installed:
@@ -28,22 +28,22 @@ Make sure that tools listed below has already been installed:
 
 Then:
 
-```console
-$ cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release
-$ ninja -C build vendor
-$ ninja -C build
-$ build/bin/mirakc-arib -h
+```shell
+cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release
+ninja -C build vendor
+ninja -C build
+build/bin/mirakc-arib -h
 ```
 
 ### Cross compilation
 
 Use a CMake toolchain file like below:
 
-```console
-$ cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release \
-    -D CMAKE_TOOLCHAIN_FILE=/path/to/toolchain.cmake
-$ ninja -C build vendor
-$ ninja -C build
+```shell
+cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release \
+  -D CMAKE_TOOLCHAIN_FILE=/path/to/toolchain.cmake
+ninja -C build vendor
+ninja -C build
 ```
 
 Content shown below is a CMake toolchain file which can be used for a cross
@@ -70,18 +70,18 @@ Several CMake toolchain files are included in the
 
 ## How to test
 
-```console
-$ cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Debug -D MIRAKC_ARIB_TEST=ON
-$ ninja -C build vendor
-$ ninja -C build test
+```shell
+cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Debug -D MIRAKC_ARIB_TEST=ON
+ninja -C build vendor
+ninja -C build test
 ```
 
 ## Logging
 
 Define the `MIRAKC_ARIB_LOG` environment variable like below:
 
-```console
-$ cat file.ts | MIRAKC_ARIB_LOG=info mirakc-arib scan-services
+```shell
+cat file.ts | MIRAKC_ARIB_LOG=info mirakc-arib scan-services
 ```
 
 One of the following log levels can be specified:
