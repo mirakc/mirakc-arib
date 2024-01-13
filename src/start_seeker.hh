@@ -79,7 +79,7 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
 
     if (transition_index_ > 0) {
       MIRAKC_ARIB_INFO("Found transition point, start streaming");
-      SendPackets(SeekPat());
+      SendPackets(transition_index_);
       state_ = kStreaming;
       return true;
     }
@@ -125,17 +125,6 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
     SendPackets();
     state_ = kStreaming;
     return true;
-  }
-
-  size_t SeekPat() const {
-    MIRAKC_ARIB_ASSERT(transition_index_ != 0);
-    for (auto i = transition_index_ - 1; i != 0; --i) {
-      const auto& packet = packets_[i];
-      if (packet.getPID() == ts::PID_PAT && packet.getPUSI()) {
-        return i;
-      }
-    }
-    return 0;
   }
 
   bool SendPackets(size_t index = 0) {
@@ -199,6 +188,9 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
     pmt_pid_ = new_pmt_pid;
     demux_.addPID(pmt_pid_);
     MIRAKC_ARIB_DEBUG("Demux += PMT#{:04X}", pmt_pid_);
+
+    candidate_index_ = table.getFirstTSPacketIndex();
+    MIRAKC_ARIB_DEBUG("candidate PAT packet#{}", candidate_index_);
   }
 
   void HandlePmt(const ts::BinaryTable& table) {
@@ -217,24 +209,35 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
     pcr_pid_ = pmt.pcr_pid;
     MIRAKC_ARIB_DEBUG("PCR#{:04X}", pcr_pid_);
 
-    // Currently, we check only the number of audio streams.
-    size_t num_audio_streams = 0;
+    std::unordered_set<ts::PID> video_pids;
+    std::unordered_set<ts::PID> audio_pids;
     for (const auto& [pid, stream] : pmt.streams) {
+      if (stream.isVideo()) {
+        MIRAKC_ARIB_DEBUG("Found video#{:04X}", pid);
+        video_pids.insert(pid);
+      }
       if (stream.isAudio()) {
-        num_audio_streams++;
+        MIRAKC_ARIB_DEBUG("Found audio#{:04X}", pid);
+        audio_pids.insert(pid);
       }
     }
 
     bool changed = false;
-    if (num_audio_streams_ > 0 && num_audio_streams_ != num_audio_streams) {
+    if (!video_pids_.empty() && video_pids_ != video_pids) {
       changed = true;
+      MIRAKC_ARIB_DEBUG("video streams change");
     }
-    num_audio_streams_ = num_audio_streams;
-    MIRAKC_ARIB_DEBUG("Found {} audio streams", num_audio_streams);
+    if (!audio_pids_.empty() && audio_pids_ != audio_pids) {
+      changed = true;
+      MIRAKC_ARIB_DEBUG("audio streams change");
+    }
+
+    video_pids_ = video_pids;
+    audio_pids_ = audio_pids;
 
     if (changed) {
-      transition_index_ = table.getFirstTSPacketIndex();
-      MIRAKC_ARIB_DEBUG("The number of audio streams is changed at {}", transition_index_);
+      transition_index_ = candidate_index_;
+      MIRAKC_ARIB_DEBUG("The content changes at packet#{}", transition_index_);
       MIRAKC_ARIB_DEBUG("Demux -= PAT PMT#{:04X}", pmt_pid_);
       demux_.removePID(pmt_pid_);
       demux_.removePID(ts::PID_PAT);
@@ -250,9 +253,11 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
   ts::TSPacketVector packets_;
   ts::PID pmt_pid_ = ts::PID_NULL;
   ts::PID pcr_pid_ = ts::PID_NULL;
-  size_t num_audio_streams_ = 0;
+  std::unordered_set<ts::PID> video_pids_;
+  std::unordered_set<ts::PID> audio_pids_;
   int64_t end_pcr_ = -1;
   size_t transition_index_ = 0;
+  size_t candidate_index_ = 0;  // index of a PAT packet
 
   MIRAKC_ARIB_NON_COPYABLE(StartSeeker);
 };
