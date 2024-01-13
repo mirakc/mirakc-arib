@@ -1,29 +1,28 @@
 diff --git include/spdlog/cfg/env.h include/spdlog/cfg/env.h
-index 1f39ebbb..87e3a5f7 100644
+index 6e554145..10a44dc5 100644
 --- include/spdlog/cfg/env.h
 +++ include/spdlog/cfg/env.h
-@@ -25,9 +25,9 @@
+@@ -25,8 +25,8 @@
  
  namespace spdlog {
  namespace cfg {
--inline void load_env_levels()
-+inline void load_env_levels(const char *env_var = "SPDLOG_LEVEL")
- {
+-inline void load_env_levels() {
 -    auto env_val = details::os::getenv("SPDLOG_LEVEL");
++inline void load_env_levels(const char *env_var = "SPDLOG_LEVEL") {
 +    auto env_val = details::os::getenv(env_var);
-     if (!env_val.empty())
-     {
+     if (!env_val.empty()) {
          helpers::load_levels(env_val);
+     }
 diff --git include/spdlog/details/registry.h include/spdlog/details/registry.h
-index b069c3f5..f0e25abe 100644
+index 56a6886e..9f08fe47 100644
 --- include/spdlog/details/registry.h
 +++ include/spdlog/details/registry.h
-@@ -97,7 +97,7 @@ private:
+@@ -104,7 +104,7 @@ private:
      std::unordered_map<std::string, std::shared_ptr<logger>> loggers_;
      log_levels log_levels_;
      std::unique_ptr<formatter> formatter_;
 -    spdlog::level::level_enum global_log_level_ = level::info;
 +    spdlog::level::level_enum global_log_level_ = level::off;  // compatible with env_logger in Rust
      level::level_enum flush_level_ = level::off;
-     void (*err_handler_)(const std::string &msg) = nullptr;
+     err_handler err_handler_;
      std::shared_ptr<thread_pool> tp_;
