@@ -620,11 +620,6 @@ TEST(StartSeekerTest, PmtSidUnmatched) {
     });
     EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
       EXPECT_EQ(0x0101, packet.getPID());
-      EXPECT_EQ(1, packet.getCC());
-      return true;
-    });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
-      EXPECT_EQ(0x0101, packet.getPID());
       EXPECT_EQ(2, packet.getCC());
       return true;
     });

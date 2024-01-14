@@ -79,6 +79,7 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
 
     if (transition_index_ > 0) {
       MIRAKC_ARIB_INFO("Found transition point, start streaming");
+      SendPacket(pat_index_);
       SendPackets(transition_index_);
       state_ = kStreaming;
       return true;
@@ -125,6 +126,10 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
     SendPackets();
     state_ = kStreaming;
     return true;
+  }
+
+  bool SendPacket(size_t index) {
+    return sink_->HandlePacket(packets_[index]);
   }
 
   bool SendPackets(size_t index = 0) {
@@ -189,8 +194,9 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
     demux_.addPID(pmt_pid_);
     MIRAKC_ARIB_DEBUG("Demux += PMT#{:04X}", pmt_pid_);
 
-    candidate_index_ = table.getFirstTSPacketIndex();
-    MIRAKC_ARIB_DEBUG("candidate PAT packet#{}", candidate_index_);
+    // We assume that the PAT consists of a single packet.
+    pat_index_ = table.getFirstTSPacketIndex();
+    MIRAKC_ARIB_DEBUG("PAT packet#{}", pat_index_);
   }
 
   void HandlePmt(const ts::BinaryTable& table) {
@@ -236,7 +242,7 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
     audio_pids_ = audio_pids;
 
     if (changed) {
-      transition_index_ = candidate_index_;
+      transition_index_ = table.getFirstTSPacketIndex();
       MIRAKC_ARIB_DEBUG("The content changes at packet#{}", transition_index_);
       MIRAKC_ARIB_DEBUG("Demux -= PAT PMT#{:04X}", pmt_pid_);
       demux_.removePID(pmt_pid_);
@@ -257,7 +263,7 @@ class StartSeeker final : public PacketSink, public ts::TableHandlerInterface {
   std::unordered_set<ts::PID> audio_pids_;
   int64_t end_pcr_ = -1;
   size_t transition_index_ = 0;
-  size_t candidate_index_ = 0;  // index of a PAT packet
+  size_t pat_index_ = 0;  // index of a PAT packet
 
   MIRAKC_ARIB_NON_COPYABLE(StartSeeker);
 };
