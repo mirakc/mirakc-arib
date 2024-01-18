@@ -3,6 +3,10 @@ name: weekly
 on:
   schedule:
     - cron: '19 19 * * 4'  # 19:19 (UTC), Thursday
+  workflow_dispatch:
+
+env:
+  DENO_DIR: /tmp/deno
 
 jobs:
   release:
@@ -15,6 +19,9 @@ jobs:
           submodules: recursive
           # Fetch all history for all tags and branches
           fetch-depth: 0
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
       - name: git config
         run: |
           git config user.name "${{ steps.bot-details.outputs.name }}"
