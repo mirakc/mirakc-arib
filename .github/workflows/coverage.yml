@@ -12,14 +12,14 @@ jobs:
         with:
           submodules: recursive
       - name: Cache for external projects
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build/vendor
           key: ${{ runner.os }}-coverage-${{ hashFiles('CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-coverage-
       - name: Cache for grcov
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
