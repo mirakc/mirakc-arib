@@ -40,7 +40,7 @@ TEST(ProgramFilterTest, WaitReady) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -63,14 +63,14 @@ TEST(ProgramFilterTest, WaitReady) {
         <event event_id="0x1001" start_time="1970-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -81,8 +81,8 @@ TEST(ProgramFilterTest, WaitReady) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="2" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="2" />
    </tsduck>
   )");
 
@@ -150,7 +150,7 @@ TEST(ProgramFilterTest, AlreadyStarted) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -173,10 +173,10 @@ TEST(ProgramFilterTest, AlreadyStarted) {
         <event event_id="0x1002" start_time="1970-01-01 01:00:00"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -187,10 +187,10 @@ TEST(ProgramFilterTest, AlreadyStarted) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
    </tsduck>
   )");
 
@@ -264,7 +264,7 @@ TEST(ProgramFilterTest, EndStreaming) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -287,10 +287,10 @@ TEST(ProgramFilterTest, EndStreaming) {
         <event event_id="0x1002" start_time="1970-01-01 01:00:00"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -301,18 +301,18 @@ TEST(ProgramFilterTest, EndStreaming) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="2"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="2"
            test-pcr="97199999999" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="2" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="2" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="3"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="3"
            test-pcr="97200000000" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="3" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="3" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="3" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="3" />
    </tsduck>
   )");
 
@@ -399,7 +399,7 @@ TEST(ProgramFilterTest, UpdatePcrRange) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -422,10 +422,10 @@ TEST(ProgramFilterTest, UpdatePcrRange) {
         <event event_id="0x1002" start_time="1970-01-01 01:00:00"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -436,14 +436,14 @@ TEST(ProgramFilterTest, UpdatePcrRange) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="2"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="2"
            test-pcr="97199999999" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="2" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="2" />
       <EIT type="pf" version="2" current="true" actual="true"
            service_id="0x0001" transport_stream_id="0x1234"
            original_network_id="0x0001" last_table_id="0x4E"
@@ -453,18 +453,18 @@ TEST(ProgramFilterTest, UpdatePcrRange) {
         <event event_id="0x1002" start_time="1970-01-01 02:00:00"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="3"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="3"
            test-pcr="97200000000" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="3" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="3" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="4"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="3" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="3" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="4"
            test-pcr="194399999999" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="4" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="4" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="5"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="4" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="4" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="5"
            test-pcr="194400000000" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="5" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="5" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="5" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="5" />
    </tsduck>
   )");
 
@@ -586,7 +586,7 @@ TEST(ProgramFilterTest, NoEventInEit) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -627,7 +627,7 @@ TEST(ProgramFilterTest, NoFollowingEventInEit) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -675,7 +675,7 @@ TEST(ProgramFilterTest, StartPcrUnderflow) {
   auto sink = std::make_unique<MockSink>();
 
   // clang-format off
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(fmt::format(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -696,7 +696,7 @@ TEST(ProgramFilterTest, StartPcrUnderflow) {
         <event event_id="0x1002" start_time="1970-01-01 02:00:00"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 01:00:00" test-pid="0x0901" test-pcr="{}" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="{}" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -705,7 +705,7 @@ TEST(ProgramFilterTest, StartPcrUnderflow) {
            test-pid="0x0101" test-cc="1">
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
-      <TDT UTC_time="1970-01-01 01:00:00" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
     </tsduck>
     )",
     kPcrUpperBound - (2 * ts::MilliSecPerHour * kPcrTicksPerMs)  // 01:00:00
@@ -764,7 +764,7 @@ TEST(ProgramFilterTest, EndPcrOverflow) {
   auto filter = std::make_unique<ProgramFilter>(option);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(fmt::format(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -785,7 +785,7 @@ TEST(ProgramFilterTest, EndPcrOverflow) {
         <event event_id="0x1002" start_time="1970-01-01 02:00:00"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 01:00:00" test-pid="0x0901" test-pcr="{}" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="{}" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -794,7 +794,7 @@ TEST(ProgramFilterTest, EndPcrOverflow) {
            test-pid="0x0101" test-cc="1">
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
-      <TDT UTC_time="1970-01-01 01:00:00" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
    </tsduck>
   )",
       kPcrUpperBound - (1 * ts::MilliSecPerHour * kPcrTicksPerMs)  // 01:00:00
@@ -850,7 +850,7 @@ TEST(ProgramFilterTest, PreStreaming) {
   auto filter = std::make_unique<ProgramFilter>(option);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used to generate PCR packets and special packets for sleeps.
+  // <generic_short_table> elements are used to generate PCR packets and special packets for sleeps.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -873,7 +873,7 @@ TEST(ProgramFilterTest, PreStreaming) {
         <event event_id="0x1002" start_time="1970-01-01 01:00:00"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-pcr="0" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="0" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -920,7 +920,7 @@ TEST(ProgramFilterTest, AbnormalPcrPackets) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -943,17 +943,17 @@ TEST(ProgramFilterTest, AbnormalPcrPackets) {
         <event event_id="0x1001" start_time="1970-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="2"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="2"
            test-pcr="0xFFFFFFFFFFFFFFFF"/>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="3"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="3"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -964,9 +964,9 @@ TEST(ProgramFilterTest, AbnormalPcrPackets) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="4" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="2" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="4" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="2" />
    </tsduck>
   )");
 
@@ -1039,7 +1039,7 @@ TEST(ProgramFilterTest, PmtSidUnmatched) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -1062,12 +1062,12 @@ TEST(ProgramFilterTest, PmtSidUnmatched) {
         <event event_id="0x1002" start_time="1970-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
       <PMT version="2" current="true" service_id="0x0000" PCR_PID="0x0ABC"
            test-pid="0x0101" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
    </tsduck>
   )");
 
@@ -1120,7 +1120,7 @@ TEST(ProgramFilterTest, EitSidUnmatched) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -1143,14 +1143,14 @@ TEST(ProgramFilterTest, EitSidUnmatched) {
         <event event_id="0x1002" start_time="1970-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
       <EIT type="pf" version="2" current="true" actual="true"
            service_id="0x0000" transport_stream_id="0x1234"
            original_network_id="0x0001" last_table_id="0x4E"
            test-pid="0x0012" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
    </tsduck>
   )");
 
@@ -1203,7 +1203,7 @@ TEST(ProgramFilterTest, ResyncClockBeforeStreaming) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -1226,16 +1226,16 @@ TEST(ProgramFilterTest, ResyncClockBeforeStreaming) {
         <event event_id="0x1001" start_time="1970-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0902"
+      <generic_short_table table_id="0xFF" test-pid="0x0902"
            test-pcr="100000000000" />
       <TOT UTC_time="1970-01-01 00:00:00" test-pid="0x0014" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <TOT UTC_time="1970-01-01 01:00:00" test-pid="0x0014" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0902" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-cc="1"
            test-pcr="100027000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -1246,8 +1246,8 @@ TEST(ProgramFilterTest, ResyncClockBeforeStreaming) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="2" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="2" />
    </tsduck>
   )");
 
@@ -1314,7 +1314,7 @@ TEST(ProgramFilterTest, ResyncClockWhileStreaming) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -1337,9 +1337,9 @@ TEST(ProgramFilterTest, ResyncClockWhileStreaming) {
         <event event_id="0x1002" start_time="1970-01-01 01:00:00"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="0" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="2" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -1350,19 +1350,19 @@ TEST(ProgramFilterTest, ResyncClockWhileStreaming) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0902" test-cc="0"
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-cc="0"
            test-pcr="100027000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0902" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-cc="1"
            test-pcr="197200000000" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="2" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="2" />
       <TOT UTC_time="1970-01-01 01:00:00" test-pid="0x0014" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0902" test-cc="2"
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-cc="2"
            test-pcr="197200000001" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="3" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="3" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="3" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="3" />
    </tsduck>
   )");
 
@@ -1457,7 +1457,7 @@ TEST(ProgramFilterTest, PesBlackList) {
   auto filter = std::make_unique<ProgramFilter>(option);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -1483,14 +1483,14 @@ TEST(ProgramFilterTest, PesBlackList) {
         <event event_id="0x1001" start_time="1970-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -1504,8 +1504,8 @@ TEST(ProgramFilterTest, PesBlackList) {
           <stream_identifier_descriptor component_tag="16" />
         </component>
       </PMT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="2" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="2" />
    </tsduck>
   )");
 
@@ -1569,7 +1569,7 @@ TEST(ProgramFilterTest, WaitUntilTimedout) {
   auto filter = std::make_unique<ProgramFilter>(option);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -1599,7 +1599,7 @@ TEST(ProgramFilterTest, ReachTimeLimitWhileStreaming) {
   auto filter = std::make_unique<ProgramFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -1622,10 +1622,10 @@ TEST(ProgramFilterTest, ReachTimeLimitWhileStreaming) {
         <event event_id="0x1002" start_time="1970-01-01 01:00:00"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="1" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -1636,19 +1636,19 @@ TEST(ProgramFilterTest, ReachTimeLimitWhileStreaming) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
       <TOT UTC_time="1970-01-01 00:00:01" test-pid="0x0014" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="2"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="2"
            test-pcr="97199999999" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="2" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="2" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="3"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="2" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="3"
            test-pcr="97200000000" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="3" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="3" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="3" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="3" />
    </tsduck>
   )");
 

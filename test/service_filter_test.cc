@@ -93,7 +93,7 @@ TEST(ServiceFilterTest, ServiceStream) {
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES packets.
+  // <generic_short_table> elements are used for emulating PES packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -115,12 +115,12 @@ TEST(ServiceFilterTest, ServiceStream) {
         <component elementary_PID="0x0313" stream_type="0x08" />
       </PMT>
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0303" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0311" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0312" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0313" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0303" />
+      <generic_short_table table_id="0xFF" test-pid="0x0311" />
+      <generic_short_table table_id="0xFF" test-pid="0x0312" />
+      <generic_short_table table_id="0xFF" test-pid="0x0313" />
       <EIT type="pf" version="1" current="true" actual="true"
            service_id="0x0001" transport_stream_id="0x1234"
            original_network_id="0x0001" last_table_id="0x4E"
@@ -128,10 +128,10 @@ TEST(ServiceFilterTest, ServiceStream) {
         <event event_id="0x1001" start_time="2019-01-02 03:00:00"
                duration="01:00:00" running_status="starting" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0311" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0312" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0311" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0312" test-cc="1" />
     </tsduck>
   )");
 
@@ -210,7 +210,7 @@ TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES packets.
+  // <generic_short_table> elements are used for emulating PES packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -223,8 +223,8 @@ TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="2" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0102" />
@@ -239,10 +239,10 @@ TEST(ServiceFilterTest, ResetFilterDueToPatChanged) {
         <component elementary_PID="0x0303" stream_type="0x02" />
         <component elementary_PID="0x0304" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0303" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0304" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0303" />
+      <generic_short_table table_id="0xFF" test-pid="0x0304" />
     </tsduck>
   )");
 
@@ -296,7 +296,7 @@ TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES packets.
+  // <generic_short_table> elements are used for emulating PES packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -309,17 +309,17 @@ TEST(ServiceFilterTest, ResetFilterDueToPmtChanged) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PMT version="2" current="true" service_id="0x0001" PCR_PID="0x901"
            test-pid="0x0101" test-cc="1">
         <component elementary_PID="0x0303" stream_type="0x02" />
         <component elementary_PID="0x0304" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0303" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0304" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0303" />
+      <generic_short_table table_id="0xFF" test-pid="0x0304" />
     </tsduck>
   )");
 
@@ -416,62 +416,12 @@ TEST(ServiceFilterTest, TimeLimitTot) {
   EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
 }
 
-TEST(ServiceFilterTest, TimeLimitTdt) {
-  auto option = kOption;
-  option.time_limit = ts::Time(2019, 1, 2, 3, 4, 5);
-
-  TableSource src;
-  auto filter = std::make_unique<ServiceFilter>(option);
-  auto sink = std::make_unique<MockSink>();
-
-  src.LoadXml(R"(
-    <?xml version="1.0" encoding="utf-8"?>
-    <tsduck>
-      <EIT type="pf" version="1" current="true" actual="true"
-           service_id="0x0001" transport_stream_id="0x1234"
-           original_network_id="0x0001" last_table_id="0x4E"
-           test-pid="0x0012" test-cc="1">
-        <event event_id="0x1001" start_time="2019-01-02 03:00:00"
-               duration="01:00:00" running_status="starting" CA_mode="true" />
-      </EIT>
-      <PAT version="1" current="true" transport_stream_id="0x1234"
-           test-pid="0x0000">
-        <service service_id="0x0001" program_map_PID="0x0101" />
-      </PAT>
-      <TDT UTC_time="2019-01-02 03:04:04" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="1" />
-      <TDT UTC_time="2019-01-02 03:04:06" test-pid="0x0014" test-cc="2" />
-    </tsduck>
-  )");
-
-  {
-    testing::InSequence seq;
-    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
-    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
-      EXPECT_EQ(ts::PID_PAT, packet.getPID());
-      return true;
-    });
-    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
-      EXPECT_EQ(ts::PID_TDT, packet.getPID());
-      EXPECT_EQ(0, packet.getCC());
-      return true;
-    });
-    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
-    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
-  }
-
-  filter->Connect(std::move(sink));
-  src.Connect(std::move(filter));
-  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
-  EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
-}
-
 TEST(ServiceFilterTest, Subtitle) {
   TableSource src;
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES packets.
+  // <generic_short_table> elements are used for emulating PES packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -507,14 +457,14 @@ TEST(ServiceFilterTest, Subtitle) {
         </component>
 
       </PMT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0300" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0303" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0304" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0305" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0306" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0307" />
+      <generic_short_table table_id="0xFF" test-pid="0x0300" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0303" />
+      <generic_short_table table_id="0xFF" test-pid="0x0304" />
+      <generic_short_table table_id="0xFF" test-pid="0x0305" />
+      <generic_short_table table_id="0xFF" test-pid="0x0306" />
+      <generic_short_table table_id="0xFF" test-pid="0x0307" />
     </tsduck>
   )");
 
@@ -605,7 +555,7 @@ TEST(ServiceFilterTest, SuperimposedText) {
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PES packets.
+  // <generic_short_table> elements are used for emulating PES packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -641,14 +591,14 @@ TEST(ServiceFilterTest, SuperimposedText) {
         </component>
 
       </PMT>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0308" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0309" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030A" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030B" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030C" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030D" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030E" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x030F" />
+      <generic_short_table table_id="0xFF" test-pid="0x0308" />
+      <generic_short_table table_id="0xFF" test-pid="0x0309" />
+      <generic_short_table table_id="0xFF" test-pid="0x030A" />
+      <generic_short_table table_id="0xFF" test-pid="0x030B" />
+      <generic_short_table table_id="0xFF" test-pid="0x030C" />
+      <generic_short_table table_id="0xFF" test-pid="0x030D" />
+      <generic_short_table table_id="0xFF" test-pid="0x030E" />
+      <generic_short_table table_id="0xFF" test-pid="0x030F" />
     </tsduck>
   )");
 
@@ -739,7 +689,7 @@ TEST(ServiceFilterTest, PmtSidUnmatched) {
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -750,7 +700,7 @@ TEST(ServiceFilterTest, PmtSidUnmatched) {
       </PAT>
       <PMT version="1" current="true" service_id="0x0000" PCR_PID="0x0ABC"
            test-pid="0x0101" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0ABC" test_pcr="0" />
+      <generic_short_table table_id="0xFF" test-pid="0x0ABC" test_pcr="0" />
     </tsduck>
   )");
 

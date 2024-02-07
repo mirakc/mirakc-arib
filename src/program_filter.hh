@@ -57,7 +57,7 @@ class ProgramFilter final : public PacketSink, public ts::TableHandlerInterface 
     demux_.addPID(ts::PID_PAT);
     demux_.addPID(ts::PID_EIT);
     demux_.addPID(ts::PID_TOT);
-    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Demux += PAT EIT TDT/TOT");
+    MIRAKC_ARIB_PROGRAM_FILTER_DEBUG("Demux += PAT EIT TOT");
   }
 
   virtual ~ProgramFilter() override {}
@@ -254,9 +254,6 @@ class ProgramFilter final : public PacketSink, public ts::TableHandlerInterface 
         break;
       case ts::TID_EIT_PF_ACT:
         HandleEit(table);
-        break;
-      case ts::TID_TDT:
-        HandleTdt(table);
         break;
       case ts::TID_TOT:
         HandleTot(table);
@@ -469,25 +466,6 @@ class ProgramFilter final : public PacketSink, public ts::TableHandlerInterface 
       MIRAKC_ARIB_PROGRAM_FILTER_ERROR("Event#{:04X} might have been canceled", option_.eid);
       stop_ = true;
     }
-  }
-
-  void HandleTdt(const ts::BinaryTable& table) {
-    ts::TDT tdt(context_, table);
-
-    if (!tdt.isValid()) {
-      MIRAKC_ARIB_PROGRAM_FILTER_WARN("Broken TDT, skip");
-      return;
-    }
-
-    if (state_ == kWaitReady) {
-      CheckTimeLimit(tdt.utc_time);
-    }
-
-    if (clock_time_ready_) {
-      return;
-    }
-
-    UpdateClockTime(tdt.utc_time);  // JST in ARIB
   }
 
   void HandleTot(const ts::BinaryTable& table) {

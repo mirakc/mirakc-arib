@@ -27,7 +27,6 @@ TEST(EitpfCollectorTest, NoPacket) {
 }
 
 TEST(EitpfCollectorTest, PresentFollowing) {
-  // TDT tables are used for emulating PES and PCR packets.
   TableSource src;
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -104,7 +103,6 @@ TEST(EitpfCollectorTest, PresentFollowing) {
 }
 
 TEST(EitpfCollectorTest, Present) {
-  // TDT tables are used for emulating PES and PCR packets.
   TableSource src;
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -165,7 +163,6 @@ TEST(EitpfCollectorTest, Present) {
 }
 
 TEST(EitpfCollectorTest, Following) {
-  // TDT tables are used for emulating PES and PCR packets.
   TableSource src;
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -226,7 +223,6 @@ TEST(EitpfCollectorTest, Following) {
 }
 
 TEST(EitpfCollectorTest, PresentFollowingStreaming) {
-  // TDT tables are used for emulating PES and PCR packets.
   TableSource src;
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -346,7 +342,6 @@ TEST(EitpfCollectorTest, PresentFollowingStreaming) {
 }
 
 TEST(EitpfCollectorTest, PresentStreaming) {
-  // TDT tables are used for emulating PES and PCR packets.
   TableSource src;
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -433,7 +428,6 @@ TEST(EitpfCollectorTest, PresentStreaming) {
 }
 
 TEST(EitpfCollectorTest, FollowingStreaming) {
-  // TDT tables are used for emulating PES and PCR packets.
   TableSource src;
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -520,7 +514,6 @@ TEST(EitpfCollectorTest, FollowingStreaming) {
 }
 
 TEST(EitpfCollectorTest, Sids) {
-  // TDT tables are used for emulating PES and PCR packets.
   TableSource src;
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>

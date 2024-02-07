@@ -30,7 +30,6 @@ TEST(AirtimeTrackerTest, Present) {
   auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -63,7 +62,6 @@ TEST(AirtimeTrackerTest, Following) {
   auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -96,7 +94,6 @@ TEST(AirtimeTrackerTest, Changes) {
   auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -160,7 +157,6 @@ TEST(AirtimeTrackerTest, EitSidUnmatched) {
   auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -189,7 +185,6 @@ TEST(AirtimeTrackerTest, EventNotFound) {
   auto tracker = std::make_unique<AirtimeTracker>(kOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>

@@ -521,29 +521,14 @@ class EitCollector final : public PacketSink,
   }
 
   void handleTable(ts::SectionDemux&, const ts::BinaryTable& table) override {
-    // In ARIB, the timezone of TDT/TOT is JST.
+    // In ARIB, the timezone of TOT is JST.
     switch (table.tableId()) {
-      case ts::TID_TDT:
-        HandleTdt(table);
-        break;
       case ts::TID_TOT:
         HandleTot(table);
         break;
       default:
         break;
     }
-  }
-
-  inline void HandleTdt(const ts::BinaryTable& table) {
-    ts::TDT tdt(context_, table);
-
-    if (!tdt.isValid()) {
-      MIRAKC_ARIB_WARN("Broken TDT, skip");
-      return;
-    }
-
-    MIRAKC_ARIB_INFO("TDT: {}", tdt.utc_time);
-    HandleTime(tdt.utc_time);
   }
 
   inline void HandleTot(const ts::BinaryTable& table) {

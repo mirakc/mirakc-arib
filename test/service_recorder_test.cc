@@ -54,7 +54,7 @@ TEST(ServiceRecorderTest, EventStart) {
   auto file = std::make_unique<MockFile>();
   auto json_sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -67,7 +67,7 @@ TEST(ServiceRecorderTest, EventStart) {
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
       <TOT UTC_time="2021-01-01 00:00:00" test-pid="0x0014" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
       <EIT type="pf" version="1" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
@@ -78,7 +78,7 @@ TEST(ServiceRecorderTest, EventStart) {
         <event event_id="5" start_time="2021-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
     </tsduck>
   )");
 
@@ -143,7 +143,7 @@ TEST(ServiceRecorderTest, EventProgress) {
   auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
   auto json_sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -156,7 +156,7 @@ TEST(ServiceRecorderTest, EventProgress) {
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
       <TOT UTC_time="2021-01-01 00:00:00" test-pid="0x0014" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
       <EIT type="pf" version="1" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
@@ -167,8 +167,8 @@ TEST(ServiceRecorderTest, EventProgress) {
         <event event_id="5" start_time="2021-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0FFD" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0FFD" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
     </tsduck>
   )");
 
@@ -282,7 +282,7 @@ TEST(ServiceRecorderTest, EventEnd) {
   auto file = std::make_unique<MockFile>();
   auto json_sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -295,7 +295,7 @@ TEST(ServiceRecorderTest, EventEnd) {
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
       <TOT UTC_time="2021-01-01 00:00:00" test-pid="0x0014" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-pcr="0" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="0" />
       <EIT type="pf" version="1" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
@@ -305,9 +305,9 @@ TEST(ServiceRecorderTest, EventEnd) {
         <event event_id="5" start_time="2021-01-01 00:00:01"
                duration="00:00:01" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-pcr="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-pcr="27000000" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="27000000" />
       <EIT type="pf" version="2" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
@@ -421,7 +421,7 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
   auto file = std::make_unique<MockFile>();
   auto json_sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -434,7 +434,7 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
       <TOT UTC_time="2021-01-01 00:00:00" test-pid="0x0014" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
       <EIT type="pf" version="1" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
@@ -445,7 +445,7 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
         <event event_id="5" start_time="2021-01-01 00:00:01"
                duration="01:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
       <EIT type="pf" version="2" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
@@ -559,7 +559,7 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
   auto file = std::make_unique<MockFile>();
   auto json_sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -572,7 +572,7 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
       <TOT UTC_time="2021-01-01 00:00:01" test-pid="0x0014" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
       <EIT type="pf" version="1" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
@@ -583,7 +583,7 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
         <event event_id="5" start_time="2021-01-01 00:00:01"
                duration="00:00:01" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
       <EIT type="pf" version="2" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"
@@ -657,7 +657,7 @@ TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
   auto file = std::make_unique<MockFile>();
   auto json_sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PES and PCR packets.
+  // <generic_short_table> elements are used for emulating PES and PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -670,7 +670,7 @@ TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
         <component elementary_PID="0x0301" stream_type="0x02" />
       </PMT>
       <TOT UTC_time="2021-01-01 00:00:00" test-pid="0x0014" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
       <EIT type="pf" version="1" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
@@ -681,11 +681,11 @@ TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
         <event event_id="5" start_time="2021-01-01 00:00:00"
                duration="00:00:00" running_status="undefined" CA_mode="true" />
       </EIT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="27000000" test-cc="1" />
       <TOT UTC_time="2021-01-01 00:00:01" test-pid="0x0014" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
       <EIT type="pf" version="2" current="true" actual="true"
            service_id="0x0003" transport_stream_id="0x0002"
            original_network_id="0x0001" last_table_id="0x4E"

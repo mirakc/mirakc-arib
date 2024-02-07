@@ -31,7 +31,7 @@ TEST(PcrSynchronizerTest, Successful) {
   auto sync = std::make_unique<PcrSynchronizer>(kEmptyOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -61,13 +61,13 @@ TEST(PcrSynchronizerTest, Successful) {
            test-pid="0x0101" />
       <PMT version="1" current="true" service_id="0x0002" PCR_PID="0x902"
            test-pid="0x0102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="101" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="201" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="101" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="201" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="202" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="103" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="203" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="102" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="202" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="103" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="203" />
     </tsduck>
   )");
 
@@ -107,7 +107,7 @@ TEST(PcrSynchronizerTest, Reset) {
   auto sync = std::make_unique<PcrSynchronizer>(kEmptyOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -137,10 +137,10 @@ TEST(PcrSynchronizerTest, Reset) {
            test-pid="0x0101" />
       <PMT version="1" current="true" service_id="0x0002" PCR_PID="0x902"
            test-pid="0x0102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="101" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="201" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="101" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="201" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="102" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="102" />
       <PAT version="2" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="2">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -167,10 +167,10 @@ TEST(PcrSynchronizerTest, Reset) {
            test-pid="0x0101" test-cc="2" />
       <PMT version="2" current="true" service_id="0x0002" PCR_PID="0x902"
            test-pid="0x0102" test-cc="2" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="202" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="202" />
       <TOT UTC_time="2019-01-02 03:04:10" test-pid="0x0014" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="103" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="203" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="103" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="203" />
     </tsduck>
   )");
 
@@ -210,7 +210,7 @@ TEST(PcrSynchronizerTest, NoPcr) {
   auto sync = std::make_unique<PcrSynchronizer>(kEmptyOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -241,8 +241,8 @@ TEST(PcrSynchronizerTest, NoPcr) {
       <PMT version="1" current="true" service_id="0x0002" PCR_PID="0x902"
            test-pid="0x0102" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0903" test-pcr="302" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0903" test-pcr="303" />
+      <generic_short_table table_id="0xFF" test-pid="0x0903" test-pcr="302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0903" test-pcr="303" />
     </tsduck>
   )");
 
@@ -262,7 +262,7 @@ TEST(PcrSynchronizerTest, InclusionList) {
   auto sync = std::make_unique<PcrSynchronizer>(option);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -292,13 +292,13 @@ TEST(PcrSynchronizerTest, InclusionList) {
            test-pid="0x0101" />
       <PMT version="1" current="true" service_id="0x0002" PCR_PID="0x902"
            test-pid="0x0102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="101" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="201" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="101" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="201" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="202" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="103" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="203" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="102" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="202" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="103" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="203" />
     </tsduck>
   )");
 
@@ -332,7 +332,7 @@ TEST(PcrSynchronizerTest, ExclusionList) {
   auto sync = std::make_unique<PcrSynchronizer>(option);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -362,13 +362,13 @@ TEST(PcrSynchronizerTest, ExclusionList) {
            test-pid="0x0101" />
       <PMT version="1" current="true" service_id="0x0002" PCR_PID="0x902"
            test-pid="0x0102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="101" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="201" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="101" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="201" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="202" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901" test-pcr="103" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902" test-pcr="203" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="102" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="202" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="103" />
+      <generic_short_table table_id="0xFF" test-pid="0x0902" test-pcr="203" />
     </tsduck>
   )");
 
@@ -399,7 +399,7 @@ TEST(PcrSynchronizerTest, AbnormalPcrPackets) {
   auto sync = std::make_unique<PcrSynchronizer>(kEmptyOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -429,26 +429,26 @@ TEST(PcrSynchronizerTest, AbnormalPcrPackets) {
            test-pid="0x0101" />
       <PMT version="1" current="true" service_id="0x0002" PCR_PID="0x902"
            test-pid="0x0102" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="101" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+      <generic_short_table table_id="0xFF" test-pid="0x0902"
            test-pcr="201" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+      <generic_short_table table_id="0xFF" test-pid="0x0902"
            test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0xFFFFFFFFFFFFFFFF" test-cc="2" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+      <generic_short_table table_id="0xFF" test-pid="0x0902"
            test-pcr="0xFFFFFFFFFFFFFFFF" test-cc="2" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="102" test-cc="3" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+      <generic_short_table table_id="0xFF" test-pid="0x0902"
            test-pcr="202" test-cc="3" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="103" test-cc="4" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0902"
+      <generic_short_table table_id="0xFF" test-pid="0x0902"
            test-pcr="203" test-cc="4" />
     </tsduck>
   )");
@@ -489,7 +489,7 @@ TEST(PcrSynchronizerTest, PmtSidUnmatched) {
   auto sync = std::make_unique<PcrSynchronizer>(kEmptyOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -518,7 +518,7 @@ TEST(PcrSynchronizerTest, PmtSidUnmatched) {
       <PMT version="1" current="true" service_id="0x1000" PCR_PID="0x0ABC"
            test-pid="0x0101" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0ABC" test-pcr="302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0ABC" test-pcr="302" />
     </tsduck>
   )");
 
@@ -535,7 +535,7 @@ TEST(PcrSynchronizerTest, PmtPidUnmatched) {
   auto sync = std::make_unique<PcrSynchronizer>(kEmptyOption);
   auto sink = std::make_unique<MockJsonlSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -564,7 +564,7 @@ TEST(PcrSynchronizerTest, PmtPidUnmatched) {
       <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x0ABC"
            test-pid="0x0103" />
       <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0014" test-cc="0" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0ABC" test-pcr="302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0ABC" test-pcr="302" />
     </tsduck>
   )");
 

@@ -43,7 +43,7 @@ class ServiceRecorder final : public PacketSink,
     demux_.addPID(ts::PID_EIT);
     MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("Demux EIT");
     demux_.addPID(ts::PID_TOT);
-    MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("Demux TDT/TOT");
+    MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("Demux TOT");
   }
 
   ~ServiceRecorder() override = default;
@@ -133,9 +133,6 @@ class ServiceRecorder final : public PacketSink,
         break;
       case ts::TID_EIT_PF_ACT:
         HandleEit(table);
-        break;
-      case ts::TID_TDT:
-        HandleTdt(table);
         break;
       case ts::TID_TOT:
         HandleTot(table);
@@ -237,15 +234,6 @@ class ServiceRecorder final : public PacketSink,
     // For keeping the locality of side effects, we don't update eit_ here.  It will be updated
     // in the implementation of the state machine.
     new_eit_ = std::move(eit);
-  }
-
-  void HandleTdt(const ts::BinaryTable& table) {
-    ts::TDT tdt(context_, table);
-    if (!tdt.isValid()) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("Broken TDT, skip");
-      return;
-    }
-    clock_.UpdateTime(tdt.utc_time);  // JST in ARIB
   }
 
   void HandleTot(const ts::BinaryTable& table) {

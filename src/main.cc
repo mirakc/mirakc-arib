@@ -155,7 +155,7 @@ Description:
 static const std::string kSyncClocks = "sync-clocks";
 
 static const std::string kSyncClocksHelp = R"(
-Synchrohize PCR and TOT/TDT
+Synchrohize PCR and TOT
 
 Usage:
   mirakc-arib sync-clocks [--sids=<sid>...] [--xsids=<sid>...] [<file>]
@@ -175,8 +175,8 @@ Arguments:
     Path to a TS file.
 
 Description:
-  `sync-clocks` synchronizes PCR for each service and TDT/TOT with accuracy
-  within 1 second.
+  `sync-clocks` synchronizes PCR for each service and TOT with accuracy within
+  1 second.
 
   `sync-clocks` outputs the result in the following JSON format:
 
@@ -201,7 +201,7 @@ Description:
       27MHz, 42 bits PCR value correspoinding to `clock.time`
 
     clock.time
-      TDT/TOT time in the 64 bits UNIX time format in milliseconds
+      TOT time in the 64 bits UNIX time format in milliseconds
 
   `sync-clocks` collects PCR for each service whose type is included in the
   following list:
@@ -237,7 +237,7 @@ Options:
 
   --time-limit=<ms>  [default: 30000]
     Stop collecting if there is no progress for the specified time (ms).
-    Elapsed time is computed using TDT/TOT.
+    Elapsed time is computed using TOT.
 
     It makes no sense to specify a time limit less than 5 seconds.  Because TOT
     comes every 5 seconds in Japan.
@@ -474,7 +474,7 @@ Description:
     * SDT (PID=0x0011)
     * EIT (PID=0x0012)
     * RST (PID=0x0013)
-    * TDT/TOT (PID=0x0014)
+    * TOT (PID=0x0014)
     * BIT (PID=0x0024)
     * CDT (PID=0x0029)
     * PMT (PID specified in PAT)
@@ -568,8 +568,8 @@ Description:
   broadcasted.
 
   Unlike Mirakurun, `filter-program` determines the start and end times of the
-  TV program by using PCR values synchronized with TDT/TOT.  The
-  `--start-margin` and `--end-margin` adjust these times like below:
+  TV program by using PCR values synchronized with TOT.  The `--start-margin`
+  and `--end-margin` adjust these times like below:
 
           start-margin                         end-margin
     ----|<============|-----------------------|==========>|----
@@ -701,7 +701,7 @@ JSON Messages:
     where:
       timestamp
         Unix time value in ms when started recording data in this chunk.  The
-        Unix time value is calculated using TOT/TDT packets and PCR values.
+        Unix time value is calculated using TOT packets and PCR values.
 
       pos
         File position in bytes.  The value is a multiple of the chunk size.
@@ -858,7 +858,7 @@ Description:
   where '[...]' means that the field is optional.
 
   The DATETIME is NOT based on the system clock.  It's computed from PCR and
-  TDT/TOT included in the TS stream.
+  TOT included in the TS stream.
 
   The CLOCK is one of PCR, DTS or PTS.  It's formatted like below:
 
@@ -871,7 +871,7 @@ Description:
     * CAT
     * PMT
     * EIT p/f Actual
-    * TDT/TOT
+    * TOT
 
   At this moment, `print-pes` doens't support a TS stream which includes
   multiple service streams.

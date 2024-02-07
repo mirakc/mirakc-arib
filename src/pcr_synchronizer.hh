@@ -112,9 +112,6 @@ class PcrSynchronizer final : public PacketSink,
       case ts::TID_SDT_ACT:
         HandleSdt(table);
         break;
-      case ts::TID_TDT:
-        HandleTdt(table);
-        break;
       case ts::TID_TOT:
         HandleTot(table);
         break;
@@ -219,19 +216,8 @@ class PcrSynchronizer final : public PacketSink,
 
     if (pcr_pid_map_.size() == pmt_count_) {
       demux_.addPID(ts::PID_TOT);
-      MIRAKC_ARIB_DEBUG("Demux TDT/TOT");
+      MIRAKC_ARIB_DEBUG("Demux TOT");
     }
-  }
-
-  void HandleTdt(const ts::BinaryTable& table) {
-    ts::TDT tdt(context_, table);
-
-    if (!tdt.isValid()) {
-      MIRAKC_ARIB_WARN("Broken TDT, skip");
-      return;
-    }
-
-    HandleTime(tdt.utc_time);  // JST in ARIB
   }
 
   void HandleTot(const ts::BinaryTable& table) {

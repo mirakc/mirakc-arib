@@ -95,9 +95,6 @@ class PesPrinter final : public PacketSink, public ts::TableHandlerInterface {
       case ts::TID_EIT_PF_ACT:
         HandleEit(table);
         break;
-      case ts::TID_TDT:
-        HandleTdt(table);
-        break;
       case ts::TID_TOT:
         HandleTot(table);
         break;
@@ -207,21 +204,6 @@ class PesPrinter final : public PacketSink, public ts::TableHandlerInterface {
       Print(
           fmt::format("  Event[{}]: EID#{:04X} {} - {} ({}m)", i, event.event_id, event.start_time,
               event.start_time + event.duration * ts::MilliSecPerSec, event.duration / 60));
-    }
-  }
-
-  void HandleTdt(const ts::BinaryTable& table) {
-    ts::TDT tdt(context_, table);
-
-    if (!tdt.isValid()) {
-      MIRAKC_ARIB_WARN("Broken TDT, skip");
-      return;
-    }
-
-    Print(tdt.utc_time, "TDT");  // JST in ARIB
-
-    for (auto& [pid, clock] : clock_map_) {
-      clock.UpdateTime(tdt.utc_time);
     }
   }
 

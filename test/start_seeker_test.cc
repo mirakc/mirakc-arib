@@ -39,7 +39,6 @@ TEST(StartSeekerTest, Eof) {
   auto filter = std::make_unique<StartSeeker>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -73,7 +72,7 @@ TEST(StartSeekerTest, MaxDuration) {
   auto filter = std::make_unique<StartSeeker>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -86,14 +85,14 @@ TEST(StartSeekerTest, MaxDuration) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
    </tsduck>
   )");
 
@@ -157,7 +156,7 @@ TEST(StartSeekerTest, MaxPackets) {
   auto filter = std::make_unique<StartSeeker>(option);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -170,14 +169,14 @@ TEST(StartSeekerTest, MaxPackets) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
    </tsduck>
   )");
 
@@ -239,7 +238,7 @@ TEST(StartSeekerTest, DetectVideoChange) {
   auto filter = std::make_unique<StartSeeker>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -252,10 +251,10 @@ TEST(StartSeekerTest, DetectVideoChange) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="2" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -265,11 +264,11 @@ TEST(StartSeekerTest, DetectVideoChange) {
         <component elementary_PID="0x0302" stream_type="0x0F" />
         <component elementary_PID="0x0303" stream_type="0x02" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0303" test-cc="0" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0303" test-cc="0" />
    </tsduck>
   )");
 
@@ -321,7 +320,7 @@ TEST(StartSeekerTest, DetectAudioChange) {
   auto filter = std::make_unique<StartSeeker>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -334,10 +333,10 @@ TEST(StartSeekerTest, DetectAudioChange) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="2" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -347,11 +346,11 @@ TEST(StartSeekerTest, DetectAudioChange) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0303" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0303" test-cc="0" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0303" test-cc="0" />
    </tsduck>
   )");
 
@@ -403,7 +402,7 @@ TEST(StartSeekerTest, DetectMultipleAudioStreams) {
   auto filter = std::make_unique<StartSeeker>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -416,10 +415,10 @@ TEST(StartSeekerTest, DetectMultipleAudioStreams) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="2" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -430,11 +429,11 @@ TEST(StartSeekerTest, DetectMultipleAudioStreams) {
         <component elementary_PID="0x0302" stream_type="0x0F" />
         <component elementary_PID="0x0303" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0303" test-cc="0" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0303" test-cc="0" />
    </tsduck>
   )");
 
@@ -486,7 +485,7 @@ TEST(StartSeekerTest, AbnormalPcrPackets) {
   auto filter = std::make_unique<StartSeeker>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -499,12 +498,12 @@ TEST(StartSeekerTest, AbnormalPcrPackets) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901" test-cc="2"
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="2"
            test-pcr="0xFFFFFFFFFFFFFFFF" />
       <PAT version="2" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
@@ -516,11 +515,11 @@ TEST(StartSeekerTest, AbnormalPcrPackets) {
         <component elementary_PID="0x0302" stream_type="0x0F" />
         <component elementary_PID="0x0303" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="3"
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="3"
            test-pcr="27000000" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0303" test-cc="0" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0303" test-cc="0" />
    </tsduck>
   )");
 
@@ -572,7 +571,7 @@ TEST(StartSeekerTest, PmtSidUnmatched) {
   auto filter = std::make_unique<StartSeeker>(kOption);
   auto sink = std::make_unique<MockSink>();
 
-  // TDT tables are used for emulating PCR packets.
+  // <generic_short_table> elements are used for emulating PCR packets.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>
@@ -585,10 +584,10 @@ TEST(StartSeekerTest, PmtSidUnmatched) {
         <component elementary_PID="0x0301" stream_type="0x02" />
         <component elementary_PID="0x0302" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0901"
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
            test-pcr="0" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0301" />
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0302" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" />
       <PAT version="2" current="true" transport_stream_id="0x1234"
            test-pid="0x0000" test-cc="1">
         <service service_id="0x0001" program_map_PID="0x0101" />
@@ -601,12 +600,12 @@ TEST(StartSeekerTest, PmtSidUnmatched) {
         <component elementary_PID="0x0302" stream_type="0x0F" />
         <component elementary_PID="0x0303" stream_type="0x0F" />
       </PMT>
-      <TDT UTC_time="1970-01-01 00:00:00" test-pid="0x0ABC" test-pcr="0"/>
-      <TDT UTC_time="1970-01-01 00:00:01" test-pid="0x0901" test-cc="1"
+      <generic_short_table table_id="0xFF" test-pid="0x0ABC" test-pcr="0"/>
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-cc="1"
            test-pcr="27000000"/>
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0301" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0302" test-cc="1" />
-      <TDT UTC_time="1975-01-01 00:00:00" test-pid="0x0303" test-cc="0" />
+      <generic_short_table table_id="0xFF" test-pid="0x0301" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0302" test-cc="1" />
+      <generic_short_table table_id="0xFF" test-pid="0x0303" test-cc="0" />
    </tsduck>
   )");
 

@@ -40,7 +40,7 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
     MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Demux CAT for detecting EMM PIDs");
     if (option_.time_limit.has_value()) {
       demux_.addPID(ts::PID_TOT);
-      MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Demux TDT/TOT for checking the time limit");
+      MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Demux TOT for checking the time limit");
     }
   }
 
@@ -126,9 +126,6 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
       case ts::TID_PMT:
         HandlePmt(table);
         break;
-      case ts::TID_TDT:
-        HandleTdt(table);
-        break;
       case ts::TID_TOT:
         HandleTot(table);
         break;
@@ -208,7 +205,7 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
     psi_filter_.insert(ts::PID_CDT);
     psi_filter_.insert(pmt_pid_);
     MIRAKC_ARIB_SERVICE_FILTER_DEBUG(
-        "PSI/SI filter += PAT CAT NIT SDT EIT RST TDT/TOT BIT CDT PMT#{:04X}", pmt_pid_);
+        "PSI/SI filter += PAT CAT NIT SDT EIT RST TOT BIT CDT PMT#{:04X}", pmt_pid_);
   }
 
   void HandleCat(const ts::BinaryTable& table) {
@@ -278,17 +275,6 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
         MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += Other#{:04X}", pid);
       }
     }
-  }
-
-  void HandleTdt(const ts::BinaryTable& table) {
-    ts::TDT tdt(context_, table);
-
-    if (!tdt.isValid()) {
-      MIRAKC_ARIB_SERVICE_FILTER_WARN("Broken TDT, skip");
-      return;
-    }
-
-    CheckTimeLimit(tdt.utc_time);  // JST in ARIB
   }
 
   void HandleTot(const ts::BinaryTable& table) {
