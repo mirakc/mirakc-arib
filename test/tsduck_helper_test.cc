@@ -3,6 +3,16 @@
 
 #include "tsduck_helper.hh"
 
+TEST(TsduckHelperTest, ConvertUnixTimeToJstTime) {
+  ts::Time unix_epoch_jst = ts::Time::UnixEpoch + kJstTzOffset;
+  EXPECT_EQ(unix_epoch_jst, ConvertUnixTimeToJstTime(0));
+}
+
+TEST(TsduckHelperTest, ConvertJstTimeToUnixTime) {
+  ts::Time unix_epoch_jst = ts::Time::UnixEpoch + kJstTzOffset;
+  EXPECT_EQ(0, ConvertJstTimeToUnixTime(unix_epoch_jst));
+}
+
 TEST(TsduckHelperTest, MakeEventsJsonValue) {
   // clang-format off
   static const uint8_t kData[] = {

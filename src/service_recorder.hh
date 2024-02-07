@@ -374,8 +374,7 @@ class ServiceRecorder final : public PacketSink,
 
     rapidjson::Value chunk(rapidjson::kObjectType);
     {
-      const auto time_utc = time - kJstTzOffset;  // JST -> UTC
-      const auto time_unix = time_utc - ts::Time::UnixEpoch;
+      const auto time_unix = ConvertJstTimeToUnixTime(time);
       chunk.AddMember("timestamp", time_unix, allocator);
       chunk.AddMember("pos", static_cast<uint64_t>(pos), allocator);
     }
@@ -422,8 +421,7 @@ class ServiceRecorder final : public PacketSink,
 
     rapidjson::Value record(rapidjson::kObjectType);
     {
-      const auto time_utc = time - kJstTzOffset;  // JST -> UTC
-      const auto time_unix = time_utc - ts::Time::UnixEpoch;
+      const auto time_unix = ConvertJstTimeToUnixTime(time);
       record.AddMember("timestamp", time_unix, allocator);
       record.AddMember("pos", static_cast<uint64_t>(pos), allocator);
     }

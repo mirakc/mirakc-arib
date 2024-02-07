@@ -16,8 +16,6 @@ constexpr size_t kBlockSize = 4096;
   clss(const clss&) = delete; \
   clss& operator=(const clss&) = delete
 
-#define MIRAKC_ARIB_EXPECTS(cond) ((void)((cond) ? 0 : spdlog::critical("`" #cond "` failed")))
-
 inline std::string& trim(std::string& str) {
   static const char kWhitespaces[] = "\n";
   return str.erase(0, str.find_first_not_of(kWhitespaces))

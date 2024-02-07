@@ -26,7 +26,11 @@ constexpr int64_t kPcrTicksPerSec = 27 * 1000 * 1000;  // 27MHz
 constexpr int64_t kPcrTicksPerMs = kPcrTicksPerSec / ts::MilliSecPerSec;
 
 inline ts::Time ConvertUnixTimeToJstTime(ts::MilliSecond unix_time_ms) {
-  return ts::Time::UnixEpoch + unix_time_ms + kJstTzOffset;
+  return ts::Time::UnixEpoch + (kJstTzOffset + unix_time_ms);
+}
+
+inline ts::MilliSecond ConvertJstTimeToUnixTime(ts::Time jst_time) {
+  return jst_time - ts::Time::UnixEpoch - kJstTzOffset;
 }
 
 inline bool CheckComponentTagByRange(const ts::PMT::Stream& stream, uint8_t min, uint8_t max) {
@@ -467,8 +471,7 @@ rapidjson::Value MakeJsonValue(
 rapidjson::Value MakeJsonValue(
     const ts::EIT::Event& event, rapidjson::Document::AllocatorType& allocator) {
   const auto eid = event.event_id;
-  auto start_time = event.start_time - kJstTzOffset;  // JST -> UTC
-  const auto start_time_unix = start_time - ts::Time::UnixEpoch;
+  const auto start_time_unix = ConvertJstTimeToUnixTime(event.start_time);
   const ts::MilliSecond duration = event.duration * ts::MilliSecPerSec;
   const bool ca_controlled = event.CA_controlled;
   auto descriptors = MakeJsonValue(event.descs, allocator);
@@ -493,8 +496,7 @@ rapidjson::Value MakeEventsJsonValue(const EitSection& eit, Allocator& allocator
 
     ts::Time start_time;
     const auto start_time_undefined = !ts::DecodeMJD(data + 2, 5, start_time);
-    start_time -= kJstTzOffset;  // JST -> UTC
-    const auto start_time_unix = start_time - ts::Time::UnixEpoch;
+    const auto start_time_unix = ConvertJstTimeToUnixTime(start_time);
 
     bool duration_undefined = false;
     duration_undefined = duration_undefined || !ts::IsValidBCD(data[7]);

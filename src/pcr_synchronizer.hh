@@ -38,8 +38,7 @@ class PcrSynchronizer final : public PacketSink,
       return;
     }
 
-    auto time = time_ - ts::Time::UnixEpoch;  // UNIX time (ms)
-    time -= kJstTzOffset;                     // JST -> UTC;
+    auto time = ConvertJstTimeToUnixTime(time_);
 
     rapidjson::Document json(rapidjson::kArrayType);
     auto& allocator = json.GetAllocator();
