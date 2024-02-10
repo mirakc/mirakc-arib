@@ -112,7 +112,9 @@ class ServiceRecorder final : public PacketSink,
     // The `event-update` message must be sent before the `chunk` message.
     // The application may purge expired programs in the message handler for
     // the `chunk` message.  So, the program data must be updated before that.
-    SendEventUpdateMessage(eit_, now, pos);
+    if (event_started_) {
+      SendEventUpdateMessage(eit_, now, pos);
+    }
     SendChunkMessage(now, pos);
   }
 
