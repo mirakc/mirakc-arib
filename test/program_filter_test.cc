@@ -850,7 +850,8 @@ TEST(ProgramFilterTest, PreStreaming) {
   auto filter = std::make_unique<ProgramFilter>(option);
   auto sink = std::make_unique<MockSink>();
 
-  // <generic_short_table> elements are used to generate PCR packets and special packets for sleeps.
+  // <generic_short_table> elements are used to generate PCR packets and special packets for
+  // sleeps.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>

@@ -202,13 +202,11 @@ class Clock final {
       if (gap >= kPcrTicksPerSec) {  // gap >= 1s
         pcr_gap_count_++;
         if (pcr_gap_count_ <= kPcrGapCountThreshold) {
-          MIRAKC_ARIB_WARN(
-              "PCR#{:04X}: large gap {} -> {}, ignore",
-              baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
+          MIRAKC_ARIB_WARN("PCR#{:04X}: large gap {} -> {}, ignore", baseline_.pid(),
+              FormatPcr(last_pcr_), FormatPcr(pcr));
           return;
         }
-        MIRAKC_ARIB_WARN(
-            "PCR#{:04X}: large gap {} -> {}, invalidate the clock for resync",
+        MIRAKC_ARIB_WARN("PCR#{:04X}: large gap {} -> {}, invalidate the clock for resync",
             baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
         Invalidate();
         return;
