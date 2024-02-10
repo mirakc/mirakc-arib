@@ -32,6 +32,11 @@ TEST(ClockTest, Invalidate) {
   EXPECT_TRUE(clock.IsReady());
   EXPECT_EQ(ts::Time(), clock.Now());
 
+  for (uint8_t i = 0; i < Clock::kPcrGapCountThreshold; ++i) {
+    clock.UpdatePcr(kPcrTicksPerSec);
+    EXPECT_TRUE(clock.IsReady());
+  }
+
   clock.UpdatePcr(kPcrTicksPerSec);
   EXPECT_FALSE(clock.IsReady());
 

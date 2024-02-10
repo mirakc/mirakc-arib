@@ -146,6 +146,8 @@ class ClockBaseline final {
 
 class Clock final {
  public:
+  static constexpr uint8_t kPcrGapCountThreshold = 4;
+
   Clock() = default;
 
   explicit Clock(const ClockBaseline& cbl) : baseline_(cbl) {}
@@ -195,13 +197,23 @@ class Clock final {
   void UpdatePcr(int64_t pcr) {
     MIRAKC_ARIB_ASSERT(IsValidPcr(pcr));
     if (IsReady()) {
-      auto delta = ComputeDelta(pcr, last_pcr_);
-      MIRAKC_ARIB_ASSERT(delta >= 0);
-      if (delta >= kPcrTicksPerSec) {  // delta >= 1s
-        MIRAKC_ARIB_WARN("PCR#{:04X}: too large delta {} -> {}, invalidate the clock for resync",
+      auto gap = ComputeDelta(pcr, last_pcr_);
+      MIRAKC_ARIB_ASSERT(gap >= 0);
+      if (gap >= kPcrTicksPerSec) {  // gap >= 1s
+        pcr_gap_count_++;
+        if (pcr_gap_count_ <= kPcrGapCountThreshold) {
+          MIRAKC_ARIB_WARN(
+              "PCR#{:04X}: large gap {} -> {}, ignore",
+              baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
+          return;
+        }
+        MIRAKC_ARIB_WARN(
+            "PCR#{:04X}: large gap {} -> {}, invalidate the clock for resync",
             baseline_.pid(), FormatPcr(last_pcr_), FormatPcr(pcr));
         Invalidate();
         return;
+      } else {
+        pcr_gap_count_ = 0;
       }
     }
     if (pcr < last_pcr_) {
@@ -248,6 +260,7 @@ class Clock final {
   ClockBaseline baseline_;
   ts::Time baseline_local_time_;
   int64_t last_pcr_ = 0;
+  uint8_t pcr_gap_count_ = 0;
   bool ready_ = false;
   bool pcr_wrap_around_ = false;
 };
