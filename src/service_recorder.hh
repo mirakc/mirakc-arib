@@ -145,19 +145,19 @@ class ServiceRecorder final : public PacketSink,
   void HandlePat(const ts::BinaryTable& table) {
     // See comments in ProgramFiler::HandlePat().
     if (table.sourcePID() != ts::PID_PAT) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("PAT delivered with PID#{:04X}, skip", table.sourcePID());
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN("PAT: PID#{:04X}, skip", table.sourcePID());
       return;
     }
 
     ts::PAT pat(context_, table);
 
     if (!pat.isValid()) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("Broken PAT, skip");
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN("PAT: Broken, skip");
       return;
     }
 
     if (pat.ts_id == 0) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("PAT for TSID#0000, skip");
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN("PAT: TSID#0000, skip");
       return;
     }
 
@@ -167,36 +167,36 @@ class ServiceRecorder final : public PacketSink,
     auto new_pmt_pid = pat.pmts[option_.sid];
 
     if (pmt_pid_ != ts::PID_NULL) {
-      MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("Demux -= PMT#{:04X}", pmt_pid_);
+      MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("PAT: Demux -= PMT#{:04X}", pmt_pid_);
       demux_.removePID(pmt_pid_);
       pmt_pid_ = ts::PID_NULL;
     }
 
     pmt_pid_ = new_pmt_pid;
     demux_.addPID(pmt_pid_);
-    MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("Demux += PMT#{:04X}", pmt_pid_);
+    MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("PAT: Demux += PMT#{:04X}", pmt_pid_);
   }
 
   void HandlePmt(const ts::BinaryTable& table) {
     ts::PMT pmt(context_, table);
 
     if (!pmt.isValid()) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("Broken PMT, skip");
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN("PMT: Broken, skip");
       return;
     }
 
     if (pmt.service_id != option_.sid) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("PMT.SID#{} not matched, skip", pmt.service_id);
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN("PMT: SID#{} not matched, skip", pmt.service_id);
       return;
     }
 
     auto pcr_pid = pmt.pcr_pid;
     if (!clock_.HasPid()) {
-      MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("PCR#{:04X}", pcr_pid);
+      MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("PMT: PCR#{:04X}", pcr_pid);
       clock_.SetPid(pcr_pid);
     } else if (clock_.pid() != pcr_pid) {
       MIRAKC_ARIB_SERVICE_RECORDER_WARN(
-          "PCR#{:04X} -> {:04X}, need resync", clock_.pid(), pcr_pid);
+          "PMT: PCR#{:04X} -> {:04X}, need resync", clock_.pid(), pcr_pid);
       clock_.SetPid(pcr_pid);
     }
   }
@@ -205,30 +205,31 @@ class ServiceRecorder final : public PacketSink,
     std::shared_ptr<ts::EIT> eit(new ts::EIT(context_, table));
 
     if (!eit->isValid()) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("Broken EIT, skip");
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN("EIT[p/f]: Broken, skip");
       return;
     }
 
     if (eit->service_id != option_.sid) {
-      MIRAKC_ARIB_TRACE("SID#{:04X} not matched with {:04X}, skip", eit->service_id, option_.sid);
+      MIRAKC_ARIB_SERVICE_RECORDER_DEBUG("EIT[p/f]: SID#{:04X}, skip", eit->service_id);
       return;
     }
 
     auto num_events = eit->events.size();
     if (num_events == 0) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("No event in EIT, skip");
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN("EIT[p/f]: No event contained, skip");
       return;
     }
 
     const auto& event = GetEvent(eit);
     if (IsUnspecifiedEventEndTime(event)) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("Event#{:04}: No end time specified", event.event_id);
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN(
+          "EIT[p/f]: Event#{:04X}: No end time specified", event.event_id);
       MIRAKC_ARIB_SERVICE_RECORDER_DEBUG(
-          "Event#{:04X}: {} .. <unspecified>", event.event_id, event.start_time);
+          "EIT[p/f]: Event#{:04X}: {} .. <unspecified>", event.event_id, event.start_time);
     } else {
       auto end_time = GetEventEndTime(event);
       MIRAKC_ARIB_SERVICE_RECORDER_DEBUG(
-          "Event#{:04X}: {} .. {}", event.event_id, event.start_time, end_time);
+          "EIT[p/f]: Event#{:04X}: {} .. {}", event.event_id, event.start_time, end_time);
     }
 
     // For keeping the locality of side effects, we don't update eit_ here.  It will be updated
@@ -239,7 +240,7 @@ class ServiceRecorder final : public PacketSink,
   void HandleTot(const ts::BinaryTable& table) {
     ts::TOT tot(context_, table);
     if (!tot.isValid()) {
-      MIRAKC_ARIB_SERVICE_RECORDER_WARN("Broken TOT, skip");
+      MIRAKC_ARIB_SERVICE_RECORDER_WARN("TOT: Broken, skip");
       return;
     }
     clock_.UpdateTime(tot.utc_time);  // JST in ARIB
