@@ -1,10 +1,26 @@
 name: coverage
 
 on:
-  workflow_call:
+  push:
+    branches:
+      - main
+      - release
+      - trial-*
+    paths-ignore:
+      - '**.md'
+  # Don't run this workflow on pull_request.
+  # This workflow uses secrets.
+  pull_request_target:
+    branches:
+      - main
+      - release
+    paths-ignore:
+      - '**.md'
 
 jobs:
   coverage:
+    # Skip if this workflow is triggered by dependabot.
+    if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -58,3 +74,5 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
          files: lcov.info
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

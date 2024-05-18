@@ -8,15 +8,9 @@ on:
     paths-ignore:
       - '**.md'
 
+# Don't run jobs which use secrets.
 jobs:
   build:
     uses: ./.github/workflows/build.yml
-    secrets: inherit
   cross-build:
     uses: ./.github/workflows/cross-build.yml
-    secrets: inherit
-  coverage:
-    needs:
-      - build
-    uses: ./.github/workflows/coverage.yml
-    secrets: inherit
