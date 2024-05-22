@@ -1,0 +1,21 @@
+pull_request_rules:
+  - name: Automatically approve PRs from bots
+    conditions:
+      - or:
+          - author = dependabot[bot]
+          - author = mirakc-ci[bot]
+    actions:
+      review:
+        type: APPROVE
+  - name: automatic merge for PRs from bots
+    conditions:
+      - or:
+          - author = dependabot[bot]
+          - author = mirakc-ci[bot]
+      - '#approved-reviews-by >= 1'
+      - check-success = build / build
+      - check-success = cross-build / cross-build (armhf)
+      - check-success = cross-build / cross-build (arm64)
+    actions:
+      merge:
+        method: merge
