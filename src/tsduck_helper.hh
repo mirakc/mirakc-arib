@@ -637,4 +637,5 @@ bool IsAudioVideoService(uint8_t service_type) {
 
 }  // namespace
 
-template <> struct fmt::formatter<ts::Time> : fmt::ostream_formatter {};
+template <>
+struct fmt::formatter<ts::Time> : fmt::ostream_formatter {};
