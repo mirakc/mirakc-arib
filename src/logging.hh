@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <string>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
@@ -10,7 +11,8 @@ namespace {
 
 inline void InitLogger(const std::string& name) {
   auto logger = spdlog::stderr_color_st(name);
-  if (std::getenv("MIRAKC_ARIB_LOG_NO_TIMESTAMP") != nullptr) {
+  const auto* log_no_timestamp = std::getenv("MIRAKC_ARIB_LOG_NO_TIMESTAMP");
+  if (log_no_timestamp != nullptr && std::string(log_no_timestamp) == "1") {
     logger->set_pattern("%^%L%$ %n %v");
   } else {
     logger->set_pattern("%Y-%m-%dT%H:%M:%S.%f %^%L%$ %n %v");

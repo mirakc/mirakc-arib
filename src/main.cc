@@ -1424,7 +1424,7 @@ void ShowHelp(const Args& args) {
 int main(int argc, char* argv[]) {
   spdlog::cfg::load_env_levels("MIRAKC_ARIB_LOG");
 
-  auto keep_unicode_symbols = std::getenv("MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS");
+  const auto* keep_unicode_symbols = std::getenv("MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS");
   if (keep_unicode_symbols != nullptr && std::string(keep_unicode_symbols) == "1") {
     g_KeepUnicodeSymbols = true;
   }
