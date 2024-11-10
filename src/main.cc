@@ -10,6 +10,7 @@
 
 #include <docopt/docopt.h>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <spdlog/cfg/env.h>
 #include <tsduck/tsduck.h>
 

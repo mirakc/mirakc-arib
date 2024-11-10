@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_set>
 
+#include <fmt/ranges.h>
 #include <tsduck/tsduck.h>
 
 #include "base.hh"

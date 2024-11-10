@@ -4,7 +4,7 @@
 
 #include <LibISDB/LibISDB.hpp>
 #include <LibISDB/EPG/EventInfo.hpp>
-#include <fmt/format.h>
+#include <fmt/ostream.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -637,15 +637,4 @@ bool IsAudioVideoService(uint8_t service_type) {
 
 }  // namespace
 
-// Including <fmt/ostream.h> doesn't work as we expected...
-template <>
-struct fmt::formatter<ts::Time> {
-  constexpr auto parse(format_parse_context& ctx) {
-    return ctx.end();
-  }
-
-  template <typename Context>
-  auto format(const ts::Time& time, Context& ctx) {
-    return format_to(ctx.out(), "{}", time.format().toUTF8());
-  }
-};
+template <> struct fmt::formatter<ts::Time> : fmt::ostream_formatter {};
