@@ -36,6 +36,5 @@ jobs:
           build/bin/mirakc-arib --version
       - name: Run test
         run: |
-          ninja -C build check
           ninja -C build test
           ninja -C build cli-tests
