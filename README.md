@@ -73,9 +73,12 @@ Several CMake toolchain files are included in the
 ```shell
 cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Debug -D MIRAKC_ARIB_TEST=ON
 ninja -C build vendor
+ninja -C build check
 ninja -C build test
 ninja -C build cli-tests
 ```
+
+The `check` target requires `clang-format`.
 
 ## Logging
 
