@@ -122,7 +122,7 @@ mirakc-arib is static-linked against the following libraries:
 * [tplgy/cppcodec] (MIT)
 * [mirakc/tsduck-arib] forked from [tsduck/tsduck] (BSD-2-Clause)
 * [mirakc/aribb24] forked from [nkoriyama/aribb24] (LGPL-3.0)
-* [DBCTRADO/LibISDB] w/ [patches/LibISDB.patch](./patches/LibISDB.patch) (GPL-2.0)
+* [DBCTRADO/LibISDB] w/ [patches/LibISDB.patch](./patches/LibISDB.patch) (GPL-2.0-or-later)
 
 The following libraries are used for testing purposes:
 
@@ -152,18 +152,13 @@ implementations:
 
 ## License
 
-Licensed under either of
+Licensed under:
 
-* Apache License, Version 2.0
-  ([LICENSE-APACHE] or http://www.apache.org/licenses/LICENSE-2.0)
-* MIT License
-  ([LICENSE-MIT] or http://opensource.org/licenses/MIT)
+* the GNU General Public License
+  ([LICENSE-MIT] or https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt)
 
-at your option.
-
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in this project by you, as defined in the Apache-2.0 license,
-shall be dual licensed as above, without any additional terms or conditions.
+as published by the Free Software Foundation; either version 2 of the License,
+or (at your option) any later version.
 
 [mirakc/docopt.cpp]: https://github.com/mirakc/docopt.cpp
 [docopt/docopt.cpp]: https://github.com/docopt/docopt.cpp
@@ -181,5 +176,4 @@ shall be dual licensed as above, without any additional terms or conditions.
 [node-aribts]: https://github.com/rndomhack/node-aribts
 [epgdump]: https://github.com/Piro77/epgdump
 [ariblib]: https://github.com/youzaka/ariblib
-[LICENSE-APACHE]: ./LICENSE-APACHE
-[LICENSE-MIT]: ./LICENSE-MIT
+[LICENSE]: ./LICENSE
