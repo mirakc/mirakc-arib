@@ -154,11 +154,8 @@ implementations:
 
 Licensed under:
 
-* the GNU General Public License
-  ([LICENSE] or https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt)
-
-as published by the Free Software Foundation; either version 2 of the License,
-or (at your option) any later version.
+* the GNU General Public License, version 2.0 or later (GPL-2.0-or-later)
+  ([LICENSE] or https://www.gnu.org/licenses/gpl-2.0.html)
 
 [mirakc/docopt.cpp]: https://github.com/mirakc/docopt.cpp
 [docopt/docopt.cpp]: https://github.com/docopt/docopt.cpp
