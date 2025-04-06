@@ -155,7 +155,7 @@ implementations:
 Licensed under:
 
 * the GNU General Public License
-  ([LICENSE-MIT] or https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt)
+  ([LICENSE] or https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt)
 
 as published by the Free Software Foundation; either version 2 of the License,
 or (at your option) any later version.
