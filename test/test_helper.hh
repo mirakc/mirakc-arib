@@ -24,8 +24,8 @@ class MockFile final : public File {
     return path_;
   }
 
-  MOCK_METHOD(ssize_t, Read, (uint8_t * buf, size_t len), (override));
-  MOCK_METHOD(ssize_t, Write, (uint8_t * buf, size_t len), (override));
+  MOCK_METHOD(ssize_t, Read, (uint8_t* buf, size_t len), (override));
+  MOCK_METHOD(ssize_t, Write, (uint8_t* buf, size_t len), (override));
   MOCK_METHOD(bool, Sync, (), (override));
   MOCK_METHOD(bool, Trunc, (int64_t), (override));
   MOCK_METHOD(int64_t, Seek, (int64_t, SeekMode), (override));
@@ -122,7 +122,7 @@ class TableSource final : public PacketSource {
 
     const auto* root = doc.rootElement();
     for (const auto* node = root->firstChildElement(); node != nullptr;
-         node = node->nextSiblingElement()) {
+        node = node->nextSiblingElement()) {
       ts::PID pid;
       node->getIntAttribute<ts::PID>(pid, u"test-pid", true, 0, 0x0000, 0x1FFF);
 

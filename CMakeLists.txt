@@ -937,4 +937,9 @@ if(MIRAKC_ARIB_TEST)
 
   add_custom_target(cli-tests
     sh ${CMAKE_CURRENT_SOURCE_DIR}/test/cli_tests.sh $<TARGET_FILE:mirakc-arib>)
+
+  add_custom_target(check
+    sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/check.sh)
 endif()
+
+add_custom_target(format sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/format.sh)
