@@ -11,6 +11,8 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       # Use `main` in order to use actions/github-script@v7 for avoiding a warning.
       - uses: raven-actions/bot-details@main

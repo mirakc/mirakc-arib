@@ -8,9 +8,7 @@ on:
       - trial-*
     paths-ignore:
       - '**.md'
-  # Don't run this workflow on pull_request.
-  # This workflow uses secrets.
-  pull_request_target:
+  pull_request:
     branches:
       - main
       - release
@@ -23,6 +21,9 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     continue-on-error: true
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,6 +77,6 @@ jobs:
       - name: Update to codecov.io
         uses: codecov/codecov-action@v5
         with:
-         files: lcov.info
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: true
+          use_oidc: true

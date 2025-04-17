@@ -29,6 +29,8 @@ jobs:
             elf-flags: ''
             docker-platform: linux/arm64/v8
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:

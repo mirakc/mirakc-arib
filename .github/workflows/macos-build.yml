@@ -7,6 +7,8 @@ jobs:
   macos-build:
     runs-on: macos-latest
     continue-on-error: true  # macOS is unsupported officially
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
