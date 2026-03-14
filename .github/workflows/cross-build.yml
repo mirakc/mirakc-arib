@@ -58,9 +58,10 @@ jobs:
       - name: Check the binary format
         run: |
           readelf -h build/bin/mirakc-arib | grep Machine | grep "$ELF_MACHINE"
-          readelf -h build/bin/mirakc-arib | grep Flags | grep "$ELF_MACHINE"
+          readelf -h build/bin/mirakc-arib | grep Flags | grep "$ELF_FLAGS"
         env:
           ELF_MACHINE: ${{ matrix.elf-machine }}
+          ELF_FLAGS: ${{ matrix.elf-flags }}
       - name: Setup QEMU user-mode emulation
         uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
       - name: Show help and version
