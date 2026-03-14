@@ -73,7 +73,7 @@ jobs:
           PLATFORM: ${{ matrix.docker-platform }}
       - name: Run tests
         run: |
-          docker run --rm -e CI=$CI -v $(pwd)/build:/build --platform $PLATFORMubuntu:$(lsb_release -cs) /build/bin/mirakc-arib-test --gtest_shuffle
+          docker run --rm -e CI=$CI -v $(pwd)/build:/build --platform $PLATFORM ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib-test --gtest_shuffle
           docker run --rm -e CI=$CI -v $(pwd)/build:/build -v $(pwd)/test:/test --platform $PLATFORM ubuntu:$(lsb_release -cs) sh /test/cli_tests.sh /build/bin/mirakc-arib
         env:
           PLATFORM: ${{ matrix.docker-platform }}
