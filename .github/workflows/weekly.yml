@@ -8,27 +8,39 @@ on:
 env:
   DENO_DIR: /tmp/deno
 
+permissions: {}
+
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      # Use `main` in order to use actions/github-script@v7 for avoiding a warning.
-      - uses: raven-actions/bot-details@main
-        id: bot-details
-      - uses: actions/checkout@v6
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        id: app-token
         with:
+          app-id: ${{ secrets.CI_BOT_APP_ID }}
+          private-key: ${{ secrets.CI_BOT_PRIVATE_KEY }}
+          # The access will be scoped to only the current repository.
+          permission-contents: write
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          token: ${{ steps.app-token.outputs.token }}
           submodules: recursive
           # Fetch all history for all tags and branches
           fetch-depth: 0
-      - uses: denoland/setup-deno@v2
+      - uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb # v2.0.3
         with:
           deno-version: v2.x
+      # See https://github.com/actions/create-github-app-token?tab=readme-ov-file#configure-git-cli-for-an-apps-bot-user
       - name: git config
         run: |
-          git config user.name "${{ steps.bot-details.outputs.name }}"
-          git config user.email "${{ steps.bot-details.outputs.email }}"
+          git config --global user.name "$USER_NAME"
+          git config --global user.email "$USER_EMAIL"
+        env:
+          USER_NAME: ${{ steps.app-token.outputs.app-slug }}[bot]
+          USER_EMAIL: ${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com
       - run: |
           TAG="$(git describe --tags --abbrev=0)"
           if git diff --quiet "$TAG"

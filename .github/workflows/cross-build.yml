@@ -3,6 +3,8 @@ name: cross-build
 on:
   workflow_call:
 
+permissions: {}
+
 jobs:
   cross-build:
     strategy:
@@ -32,23 +34,21 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: false
           submodules: recursive
-      - name: Cache for external projects
-        uses: actions/cache@v5
-        with:
-          path: build/vendor
-          key: ${{ runner.os }}-cross-build-${{ matrix.arch }}-${{ hashFiles('CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cross-build-${{ matrix.arch }}-
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-${{ matrix.host-triple }} libtool make ninja-build pkg-config
+          sudo apt-get install -y --no-install-recommends autoconf automake cmake dos2unix g++-$HOST_TRIPLE libtool make ninja-build pkg-config
+        env:
+          HOST_TRIPLE: ${{ matrix.host-triple }}
       - name: Generate project files
         run: |
-          cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON -D CMAKE_TOOLCHAIN_FILE=toolchain.cmake.d/debian-${{ matrix.arch }}.cmake .
+          cmake -S . -B build -G Ninja -D CMAKE_BUILD_TYPE=Release -D MIRAKC_ARIB_TEST=ON -D CMAKE_TOOLCHAIN_FILE=toolchain.cmake.d/debian-$ARCH.cmake .
+        env:
+          ARCH: ${{ matrix.arch }}
       - name: Build vendor libraries
         run: |
           ninja -C build vendor
@@ -57,16 +57,22 @@ jobs:
           ninja -C build
       - name: Check the binary format
         run: |
-          readelf -h build/bin/mirakc-arib | grep Machine | grep '${{ matrix.elf-machine }}'
-          readelf -h build/bin/mirakc-arib | grep Flags | grep '${{ matrix.elf-flags }}'
+          readelf -h build/bin/mirakc-arib | grep Machine | grep "$ELF_MACHINE"
+          readelf -h build/bin/mirakc-arib | grep Flags | grep "$ELF_MACHINE"
+        env:
+          ELF_MACHINE: ${{ matrix.elf-machine }}
       - name: Setup QEMU user-mode emulation
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
       - name: Show help and version
         run: |
           sudo apt-get install -y --no-install-recommends lsb-release
-          docker run --rm -v $(pwd)/build:/build --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib -h
-          docker run --rm -v $(pwd)/build:/build --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib --version
+          docker run --rm -v $(pwd)/build:/build --platform $PLATFORM ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib -h
+          docker run --rm -v $(pwd)/build:/build --platform $PLATFORM ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib --version
+        env:
+          PLATFORM: ${{ matrix.docker-platform }}
       - name: Run tests
         run: |
-          docker run --rm -e CI=$CI -v $(pwd)/build:/build --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib-test --gtest_shuffle
-          docker run --rm -e CI=$CI -v $(pwd)/build:/build -v $(pwd)/test:/test --platform ${{ matrix.docker-platform }} ubuntu:$(lsb_release -cs) sh /test/cli_tests.sh /build/bin/mirakc-arib
+          docker run --rm -e CI=$CI -v $(pwd)/build:/build --platform $PLATFORMubuntu:$(lsb_release -cs) /build/bin/mirakc-arib-test --gtest_shuffle
+          docker run --rm -e CI=$CI -v $(pwd)/build:/build -v $(pwd)/test:/test --platform $PLATFORM ubuntu:$(lsb_release -cs) sh /test/cli_tests.sh /build/bin/mirakc-arib
+        env:
+          PLATFORM: ${{ matrix.docker-platform }}
