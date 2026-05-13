@@ -353,6 +353,10 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
   }
 
   void HandleTot(const ts::BinaryTable& table) {
+    if (!option_.time_limit.has_value()) {
+      return;
+    }
+
     ts::TOT tot(context_, table);
 
     if (!tot.isValid()) {
