@@ -52,6 +52,10 @@ class ServiceFilterTestAccessor final {
   static const ts::SectionDemux& Demux(const ServiceFilter& filter) {
     return filter.demux_;
   }
+
+  static bool Done(const ServiceFilter& filter) {
+    return filter.done_;
+  }
 };
 
 }  // namespace
@@ -701,6 +705,42 @@ TEST(ServiceFilterTest, TimeLimitTot) {
   src.Connect(std::move(filter));
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_EQ(1, src.GetNumberOfRemainingPackets());
+}
+
+TEST(ServiceFilterTest, IgnoreTotWhenTimeLimitIsUnset) {
+  TableSource src;
+  auto filter = std::make_unique<ServiceFilter>(kOption);
+  auto* filter_ptr = filter.get();
+  auto sink = std::make_unique<MockSink>();
+
+  // When `option_.time_limit` is unset, HandleTot must ignore the TOT; done_ must
+  // remain false so that streaming continues.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <!-- PID_TOT is demuxed only when a time limit is set, but a malformed TS can
+           still carry a TOT on another demuxed PID. 0x0001 is PID_CAT, which is
+           always demuxed, so this TOT reaches HandleTot. -->
+      <TOT UTC_time="2019-01-02 03:04:05" test-pid="0x0001" />
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
+  }
+
+  // No PAT is fed, so psi_filter_ remains empty and CheckFilterForDrop drops
+  // every packet, including PID_CAT (0x0001). Therefore, no packets reach the sink.
+  EXPECT_CALL(*sink, HandlePacket).Times(0);
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
+
+  EXPECT_FALSE(ServiceFilterTestAccessor::Done(*filter_ptr));
 }
 
 TEST(ServiceFilterTest, Subtitle) {
