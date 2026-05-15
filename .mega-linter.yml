@@ -16,4 +16,5 @@ ENABLE_LINTERS:
 SHOW_ELAPSED_TIME: true
 ADDITIONAL_EXCLUDED_DIRECTORIES:
   - .direnv
+  - build
   - vendor
