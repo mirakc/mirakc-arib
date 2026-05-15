@@ -14,6 +14,8 @@ on:
     branches:
       - main
 
+permissions: {}
+
 # Comment env block if you do not want to apply fixes
 env:
   # Apply linter fixes configuration
@@ -42,7 +44,7 @@ jobs:
     # Give the default GITHUB_TOKEN write permission to commit and push, comment
     # issues, and post new Pull Requests; remove the ones you do not need
     permissions:
-      contents: write
+      contents: read
       issues: write
       pull-requests: write
 
@@ -51,7 +53,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v6
         with:
-          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
           # If you use VALIDATE_ALL_CODEBASE = true, you can remove this line to
           # improve performance
