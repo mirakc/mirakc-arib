@@ -7,3 +7,5 @@
 .envrc
 .DS_Store
 megalinter-reports/
+.direnv/
+/node_modules/

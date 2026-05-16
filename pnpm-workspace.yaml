@@ -1,0 +1,13 @@
+minimumReleaseAge: 10080
+minimumReleaseAgeStrict: true
+trustPolicy: no-downgrade
+
+supportedArchitectures:
+  os:
+    - linux
+    - darwin
+  cpu:
+    - x64
+    - arm64
+  libc:
+    - glibc
