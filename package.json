@@ -2,7 +2,7 @@
   "name": "mirakc-arib",
   "private": true,
   "devDependencies": {
-    "mega-linter-runner": "9.4.0"
+    "mega-linter-runner": "9.3.0"
   },
   "devEngines": {
     "packageManager": {

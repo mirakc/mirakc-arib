@@ -208,8 +208,8 @@ importers:
   .:
     devDependencies:
       mega-linter-runner:
-        specifier: 9.4.0
-        version: 9.4.0(@types/node@25.6.2)(@yeoman/adapter@3.1.1(@types/node@25.6.2))(@yeoman/types@1.11.1(@types/node@25.6.2)(@yeoman/adapter@3.1.1(@types/node@25.6.2))(mem-fs@4.1.4))
+        specifier: 9.3.0
+        version: 9.3.0(@types/node@25.6.2)(@yeoman/adapter@3.1.1(@types/node@25.6.2))(@yeoman/types@1.11.1(@types/node@25.6.2)(@yeoman/adapter@3.1.1(@types/node@25.6.2))(mem-fs@4.1.4))
 
 packages:
 
@@ -1187,8 +1187,8 @@ packages:
     resolution: {integrity: sha512-uCbIa8jWWmQZt4dSnEStkVC6gdakiinAm4PiGsywIkguF0eWMdcjDz0ECYhUolFU3pFLOev9VNPCEygydXnddg==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
-  mega-linter-runner@9.4.0:
-    resolution: {integrity: sha512-7GAU9uu9LV7b8dj0fBp2L4GWfSw8PuUi9euu3gEqg04ZRSGEHy8q5DLOWm+NcNGYNMFtPKqUc4QbLySrBr92ug==}
+  mega-linter-runner@9.3.0:
+    resolution: {integrity: sha512-iF9ysp7Q7QcmqYq+S9d+SC/h48XXooHDsC7ijrwicg0wNlxSQceeDq+yV0AY79pU1DZoEfVb7bj1o+qXkoS5Mw==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
@@ -2817,7 +2817,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  mega-linter-runner@9.4.0(@types/node@25.6.2)(@yeoman/adapter@3.1.1(@types/node@25.6.2))(@yeoman/types@1.11.1(@types/node@25.6.2)(@yeoman/adapter@3.1.1(@types/node@25.6.2))(mem-fs@4.1.4)):
+  mega-linter-runner@9.3.0(@types/node@25.6.2)(@yeoman/adapter@3.1.1(@types/node@25.6.2))(@yeoman/types@1.11.1(@types/node@25.6.2)(@yeoman/adapter@3.1.1(@types/node@25.6.2))(mem-fs@4.1.4)):
     dependencies:
       chalk: 5.6.2
       find-package-json: 1.2.0

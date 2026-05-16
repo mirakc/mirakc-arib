@@ -23,7 +23,7 @@ set -eu
 # The digest and the version comment below are kept up to date by Renovate (.github/renovate.json).
 #
 # editorconfig-checker-disable-next-line
-readonly IMAGE='ghcr.io/oxsecurity/megalinter-c_cpp@sha256:8fdb50d8bfd42b7f89fbc936598075aa4a3bb9140750ee95b836cae8ef8e6880' # v9.4.0
+readonly IMAGE='ghcr.io/oxsecurity/megalinter-c_cpp@sha256:adc22d5499f3d7a0aed95e7d960c21244fdca61a2ca590dcfa49570b3c2335d6' # v9.3.0
 
 basedir=$(cd "$(dirname "$0")"; pwd)
 projdir=$(cd "${basedir}/.."; pwd)
