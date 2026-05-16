@@ -32,6 +32,7 @@ repos:
         entry: scripts/mega-linter-runner.sh
         language: system
         require_serial: true
+        pass_filenames: false
         args:
           - --containername
           - "megalinter-full"
