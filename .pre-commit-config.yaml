@@ -1,10 +1,47 @@
+---
+# MegaLinter hooks implemented locally instead of pulling them from the
+# oxsecurity/megalinter repository. The definitions mirror its
+# .pre-commit-hooks.yaml so the behaviour is unchanged.
+#
+# scripts/mega-linter-runner.sh installs the pinned mega-linter-runner from
+# pnpm-lock.yaml before running it, so the linter version is fixed.
 repos:
-  - repo: https://github.com/oxsecurity/megalinter
-    rev: v9.4.0
+  - repo: local
     hooks:
       - id: megalinter-incremental
+        name: Run MegaLinter (skipping linters that run in project mode)
+        entry: scripts/mega-linter-runner.sh
+        language: system
+        require_serial: true
+        args:
+          - --containername
+          - "megalinter-incremental"
+          - --remove-container
+          - --fix
+          - --env
+          - "'APPLY_FIXES=all'"
+          - --env
+          - "'CLEAR_REPORT_FOLDER=true'"
+          - --env
+          - "'LOG_LEVEL=warning'"
+          - --filesonly
         stages:
           - pre-commit
       - id: megalinter-full
+        name: Run MegaLinter
+        entry: scripts/mega-linter-runner.sh
+        language: system
+        require_serial: true
+        args:
+          - --containername
+          - "megalinter-full"
+          - --remove-container
+          - --fix
+          - --env
+          - "'APPLY_FIXES=all'"
+          - --env
+          - "'CLEAR_REPORT_FOLDER=true'"
+          - --env
+          - "'LOG_LEVEL=warning'"
         stages:
           - pre-push

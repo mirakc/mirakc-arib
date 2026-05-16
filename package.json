@@ -1,0 +1,14 @@
+{
+  "name": "mirakc-arib",
+  "private": true,
+  "devDependencies": {
+    "mega-linter-runner": "9.4.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": ">=11.0.0",
+      "onFail": "download"
+    }
+  }
+}
