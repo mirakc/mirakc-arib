@@ -9,5 +9,8 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 max_line_length = 99
 
+[.github/renovate.json]
+max_line_length = unset
+
 [Makefile]
 indent_style = tab

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["custom.regex", "npm"],
+  "schedule": ["after 1am and before 2am"],
+  "timezone": "UTC",
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Automerge MegaLinter minor and patch updates only when runner and image are both updated",
+      "groupName": "MegaLinter",
+      "matchManagers": ["npm", "custom.regex"],
+      "matchDepNames": [
+        "mega-linter-runner",
+        "ghcr.io/oxsecurity/megalinter-c_cpp"
+      ],
+      "matchUpdateTypes": ["minor", "patch"],
+      "minimumGroupSize": 3,
+      "automerge": true
+    },
+    {
+      "description": "Create MegaLinter major update PRs without automerge only when runner and image are both updated",
+      "groupName": "MegaLinter",
+      "matchManagers": ["npm", "custom.regex"],
+      "matchDepNames": [
+        "mega-linter-runner",
+        "ghcr.io/oxsecurity/megalinter-c_cpp"
+      ],
+      "matchUpdateTypes": ["major"],
+      "minimumGroupSize": 3,
+      "automerge": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "MegaLinter image digest + version comment in the workflow",
+      "managerFilePatterns": [".github/workflows/mega-linter.yml"],
+      "matchStrings": [
+        "uses: docker://(?<depName>[^\\s@]+)@(?<currentDigest>sha256:[0-9a-f]+) +# (?<currentValue>v.+)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "MegaLinter image digest + version comment in scripts/mega-linter-runner.sh",
+      "managerFilePatterns": ["scripts/mega-linter-runner.sh"],
+      "matchStrings": [
+        "IMAGE='(?<depName>[^'@]+)@(?<currentDigest>sha256:[0-9a-f]+)' +# (?<currentValue>v.+)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver"
+    }
+  ]
+}
