@@ -63,54 +63,15 @@ jobs:
       # MegaLinter
       - name: MegaLinter
 
-        # You can override MegaLinter flavor used to have faster performances
-        # More info at https://megalinter.io/latest/flavors/
-        uses: oxsecurity/megalinter/flavors/c_cpp@8fbdead70d1409964ab3d5afa885e18ee85388bb # v9.4.0
-
-        id: ml
+        # Reference the image by digest directly: the oxsecurity/megalinter
+        # action pins only the action, not the image it runs.
+        uses: docker://ghcr.io/oxsecurity/megalinter-c_cpp@sha256:8fdb50d8bfd42b7f89fbc936598075aa4a3bb9140750ee95b836cae8ef8e6880 # v9.4.0
 
         # All available variables are described in documentation
         # https://megalinter.io/latest/config-file/
         env:
-          # Validates all source when push on main, else just the git diff with
-          # main. Override with true if you always want to lint all sources
-          #
-          # To validate the entire codebase, set to:
-          # VALIDATE_ALL_CODEBASE: true
-          #
-          # To validate only diff with main, set to:
-          # VALIDATE_ALL_CODEBASE: >-
-          #   ${{
-          #     github.event_name == 'push' &&
-          #     github.ref == 'refs/heads/main'
-          #   }}
           VALIDATE_ALL_CODEBASE: true
-
-          # Disable LLM Advisor for bot PRs (dependabot, renovate, etc.)
-          # LLM_ADVISOR_ENABLED: >-
-          #   ${{
-          #     github.event_name != 'pull_request' ||
-          #     (github.event.pull_request.user.login != 'dependabot[bot]' &&
-          #      github.event.pull_request.user.login != 'renovate[bot]' &&
-          #      github.event.pull_request.user.login != 'github-actions[bot]' &&
-          #      !startsWith(github.event.pull_request.user.login, 'dependabot') &&
-          #      !startsWith(github.event.pull_request.user.login, 'renovate'))
-          #   }}
-
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # Uncomment to use ApiReporter (Grafana)
-          # API_REPORTER: true
-          # API_REPORTER_URL: ${{ secrets.API_REPORTER_URL }}
-          # API_REPORTER_BASIC_AUTH_USERNAME: ${{ secrets.API_REPORTER_BASIC_AUTH_USERNAME }}
-          # API_REPORTER_BASIC_AUTH_PASSWORD: ${{ secrets.API_REPORTER_BASIC_AUTH_PASSWORD }}
-          # API_REPORTER_METRICS_URL: ${{ secrets.API_REPORTER_METRICS_URL }}
-          # API_REPORTER_METRICS_BASIC_AUTH_USERNAME: ${{ secrets.API_REPORTER_METRICS_BASIC_AUTH_USERNAME }}
-          # API_REPORTER_METRICS_BASIC_AUTH_PASSWORD: ${{ secrets.API_REPORTER_METRICS_BASIC_AUTH_PASSWORD }}
-          # API_REPORTER_DEBUG: false
-
-          # ADD YOUR CUSTOM ENV VARIABLES HERE TO OVERRIDE VALUES OF
-          # .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
 
       # Upload MegaLinter artifacts
       - name: Archive production artifacts
