@@ -35,6 +35,49 @@ ninja -C build
 build/bin/mirakc-arib -h
 ```
 
+## How to set up Git hooks (optional)
+
+This repository provides [pre-commit] hooks for local development. The hooks run
+MegaLinter with the same configuration as the GitHub Actions workflow. Installing
+them is optional. However, if you wish to contribute changes, enabling them is
+highly recommended to catch lint and formatting errors before you commit and push.
+
+These hooks require Docker and [pre-commit]. MegaLinter runs in Docker using
+`scripts/mega-linter.sh` and `compose.mega-linter.yml`. We recommend [Docker
+Rootless mode] for local runs to prevent the directories and files in
+`megalinter-reports` from being owned by `root`.
+
+Once Docker and pre-commit are installed, run the following to enable the hooks:
+
+```shell
+pre-commit install
+pre-commit install --hook-type pre-push
+```
+
+### Running MegaLinter manually
+
+You can also run MegaLinter directly through `scripts/mega-linter.sh`.
+Run it without arguments to lint the whole repository with all linters:
+
+```shell
+./scripts/mega-linter.sh
+```
+
+Pass file paths as arguments to lint only those files:
+
+```shell
+./scripts/mega-linter.sh README.md
+```
+
+Set `ENABLE_LINTERS` to run only a specific linter:
+
+```shell
+ENABLE_LINTERS=EDITORCONFIG_EDITORCONFIG_CHECKER ./scripts/mega-linter.sh README.md
+```
+
+See `compose.mega-linter.yml` for the full list of environment variables that can
+be overridden.
+
 ### Cross compilation
 
 Use a CMake toolchain file like below:
@@ -174,3 +217,5 @@ Licensed under:
 [epgdump]: https://github.com/Piro77/epgdump
 [ariblib]: https://github.com/youzaka/ariblib
 [LICENSE]: ./LICENSE
+[pre-commit]: https://pre-commit.com/
+[Docker Rootless mode]: https://docs.docker.com/engine/security/rootless/

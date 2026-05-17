@@ -1,10 +1,18 @@
 repos:
-  - repo: https://github.com/oxsecurity/megalinter
-    rev: v9.4.0
+  - repo: local
     hooks:
       - id: megalinter-incremental
+        name: Run MegaLinter
+        entry: env MEGALINTER_PRE_COMMIT=1 scripts/mega-linter.sh
+        language: system
+        require_serial: true
         stages:
           - pre-commit
       - id: megalinter-full
+        name: Run MegaLinter
+        entry: env MEGALINTER_PRE_COMMIT=1 scripts/mega-linter.sh
+        language: system
+        require_serial: true
+        pass_filenames: false
         stages:
           - pre-push
