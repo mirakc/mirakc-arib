@@ -2,12 +2,14 @@
 # More info at https://megalinter.io
 name: MegaLinter
 
-# Trigger mega-linter at every push. Action will also be visible from
+# Trigger mega-linter at every push on those branches. Action will also be visible from
 # Pull Requests to main
 on:
-  # Comment this line to trigger action only on pull-requests
-  # (not recommended if you don't pay for GH Actions)
   push:
+    branches:
+      - main
+      - release
+      - trial-*
 
   pull_request:
     branches:
