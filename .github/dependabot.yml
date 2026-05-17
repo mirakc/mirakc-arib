@@ -7,3 +7,8 @@ updates:
       time: '01:01'  # UTC
     cooldown:
       default-days: 7
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: daily
+      time: '01:01'  # UTC
