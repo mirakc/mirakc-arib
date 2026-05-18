@@ -2,8 +2,6 @@
 # More info at https://megalinter.io
 name: MegaLinter
 
-# Trigger mega-linter at every push on those branches. Action will also be visible from
-# Pull Requests to main
 on:
   push:
     branches:
