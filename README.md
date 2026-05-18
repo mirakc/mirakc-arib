@@ -43,9 +43,11 @@ them is optional. However, if you wish to contribute changes, enabling them is
 highly recommended to catch lint and formatting errors before you commit and push.
 
 These hooks require Docker and [pre-commit]. MegaLinter runs in Docker using
-`scripts/mega-linter.sh` and `compose.mega-linter.yml`. We recommend [Docker
-Rootless mode] for local runs to prevent the directories and files in
-`megalinter-reports` from being owned by `root`.
+`scripts/mega-linter.sh` and `compose.mega-linter.yml`. On Linux, we recommend
+[Docker Rootless mode] for local runs to prevent the directories and files in
+`megalinter-reports` from being owned by `root`. This is not a concern in
+environments where file ownership inside the container does not map to the host
+filesystem, such as Docker Desktop on macOS.
 
 Once Docker and pre-commit are installed, run the following to enable the hooks:
 
