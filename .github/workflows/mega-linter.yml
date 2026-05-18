@@ -60,4 +60,3 @@ jobs:
           include-hidden-files: "true"
           path: |
             megalinter-reports
-            mega-linter.log
