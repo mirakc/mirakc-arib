@@ -22,16 +22,17 @@ cd "$(dirname "$0")/.."
 
 envs=()
 
-# On pre-commit runs, always apply available fixes and keep the output focused on
-# warnings and errors.
+# Tweak the run for pre-commit:
+# - Ignore any local ENABLE_LINTERS override so that all linters specified in
+#   .mega-linter.yml always run.
+# - Lower the log level to keep the output focused on warnings and errors.
+# - Apply fixes so they can be staged into the commit.
 if [ "${MEGALINTER_PRE_COMMIT:-}" = 1 ]; then
-  # Ignore any local ENABLE_LINTERS override,
-  # so that pre-commit always runs all linters specified in .mega-linter.yml.
   unset ENABLE_LINTERS
 
   envs+=(
-    -e "APPLY_FIXES=all"
     -e "LOG_LEVEL=warning"
+    -e "APPLY_FIXES=all"
   )
 fi
 
