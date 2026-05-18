@@ -51,10 +51,9 @@ if [ "$#" -gt 0 ]; then
   )
 fi
 
-# Pull the image only when it is missing locally.
-# `docker compose pull` always prints a "Skipped" line for an already-present
-# image, so check for the image ourselves and pull only when missing. This keeps
-# the output of the pull command empty unless an actual download happens.
+# `docker compose pull` always prints a "Skipped" line for an already-present image.
+# To keep the output of the pull command empty unless an actual download happens,
+# we check for the image ourselves and pull only when missing locally.
 image=$(docker compose -f compose.mega-linter.yml config --images megalinter 2>/dev/null)
 if ! docker image inspect "${image}" >/dev/null 2>&1; then
   docker compose \
