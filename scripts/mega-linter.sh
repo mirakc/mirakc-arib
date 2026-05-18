@@ -26,7 +26,7 @@ envs=()
 # - Ignore any local ENABLE_LINTERS override so that all linters specified in
 #   .mega-linter.yml always run.
 # - Lower the log level to keep the output focused on warnings and errors.
-# - Apply fixes so they can be staged into the commit.
+# - Apply fixes so they can be staged for the commit.
 if [ "${MEGALINTER_PRE_COMMIT:-}" = 1 ]; then
   unset ENABLE_LINTERS
 
@@ -53,7 +53,7 @@ if [ "$#" -gt 0 ]; then
 fi
 
 # `docker compose pull` always prints a "Skipped" line for an already-present image.
-# To keep the output of the pull command empty unless an actual download happens,
+# To keep the pull command's output empty unless an actual download happens,
 # we check for the image ourselves and pull only when missing locally.
 image=$(docker compose -f compose.mega-linter.yml config --images megalinter 2>/dev/null)
 if ! docker image inspect "${image}" >/dev/null 2>&1; then
@@ -62,9 +62,9 @@ if ! docker image inspect "${image}" >/dev/null 2>&1; then
     pull \
     megalinter
 fi
-# `${envs[@]+"${envs[@]}"}` expands to nothing when `envs` is empty, instead of
-# tripping `set -u` with an unbound-variable error as a plain `"${envs[@]}"`
-# would on bash older than 4.4 (e.g. the bash 3.2 shipped with macOS).
+# On bash older than 4.4 (e.g. the bash 3.2 shipped with macOS), a plain
+# `"${envs[@]}"` on an empty array triggers an unbound-variable error under `set -u`.
+# The `${envs[@]+...}` form avoids this: it expands to nothing when `envs` is empty.
 exec docker compose \
   --progress quiet \
   -f compose.mega-linter.yml \
