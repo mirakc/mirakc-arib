@@ -82,13 +82,13 @@ Run it without arguments to lint the whole repository with all linters:
 Pass file paths as arguments to lint only those files:
 
 ```shell
-./scripts/mega-linter.sh README.md
+./scripts/mega-linter.sh compose.mega-linter.yml
 ```
 
 Set `ENABLE_LINTERS` to run only a specific linter:
 
 ```shell
-ENABLE_LINTERS=EDITORCONFIG_EDITORCONFIG_CHECKER ./scripts/mega-linter.sh README.md
+ENABLE_LINTERS=EDITORCONFIG_EDITORCONFIG_CHECKER ./scripts/mega-linter.sh compose.mega-linter.yml
 ```
 
 See `compose.mega-linter.yml` for the full list of environment variables that can
