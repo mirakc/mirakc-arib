@@ -69,6 +69,11 @@ If you need to commit while lint errors remain, pass `--no-verify` to
 
 ### Running MegaLinter manually
 
+> [!WARNING]
+> Do not use `npx mega-linter-runner` to run MegaLinter locally. It may pull a
+> different version of MegaLinter than the one used in the GitHub Actions
+> workflow, which can cause inconsistent results.
+
 You can also run MegaLinter directly through `scripts/mega-linter.sh`.
 Unlike the MegaLinter pre-commit hook, it runs with `APPLY_FIXES=none` by default, so it
 only reports problems without modifying any files.
