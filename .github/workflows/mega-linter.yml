@@ -47,6 +47,7 @@ jobs:
             --progress quiet \
             -f compose.mega-linter.yml \
             run --rm \
+            -e GITHUB_ACTIONS=true \
             megalinter
 
       # Upload MegaLinter artifacts
