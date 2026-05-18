@@ -61,9 +61,12 @@ if ! docker image inspect "${image}" >/dev/null 2>&1; then
     pull \
     megalinter
 fi
+# `${envs[@]+"${envs[@]}"}` expands to nothing when `envs` is empty, instead of
+# tripping `set -u` with an unbound-variable error as a plain `"${envs[@]}"`
+# would on bash older than 4.4 (e.g. the bash 3.2 shipped with macOS).
 exec docker compose \
   --progress quiet \
   -f compose.mega-linter.yml \
   run --rm \
-  "${envs[@]}" \
+  ${envs[@]+"${envs[@]}"} \
   megalinter
