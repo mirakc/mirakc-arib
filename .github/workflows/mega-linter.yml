@@ -1,0 +1,61 @@
+# MegaLinter GitHub Action configuration file
+# More info at https://megalinter.io
+name: MegaLinter
+
+on:
+  push:
+    branches:
+      - main
+      - release
+      - trial-*
+
+  pull_request:
+    branches:
+      - main
+      - release
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  megalinter:
+    name: MegaLinter
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    # MegaLinter only needs repository read access here.  Write permissions for
+    # issues and pull requests are intentionally omitted because this workflow
+    # doesn't use MegaLinter's GitHub Comments Reporter, which doesn't work for
+    # pull requests from forks where write permissions are restricted.
+    permissions:
+      contents: read
+
+    steps:
+      # Git Checkout
+      - name: Checkout Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      # MegaLinter
+      - name: MegaLinter
+        run: |
+          docker compose \
+            --progress quiet \
+            -f compose.mega-linter.yml \
+            run --rm \
+            -e GITHUB_ACTIONS=true \
+            megalinter
+
+      # Upload MegaLinter artifacts
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: success() || failure()
+        with:
+          name: MegaLinter reports
+          include-hidden-files: "true"
+          path: |
+            megalinter-reports

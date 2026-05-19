@@ -7,3 +7,12 @@ updates:
       time: '01:01'  # UTC
     cooldown:
       default-days: 7
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: daily
+      time: '01:01'  # UTC
+    # No `cooldown` here on purpose. With `cooldown` enabled, Dependabot fails
+    # with a 404 error while verifying the publication date of the ghcr.io-hosted
+    # MegaLinter image referenced by compose.mega-linter.yml.
+    # See https://github.com/dependabot/dependabot-core/issues/14611

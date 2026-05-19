@@ -1,0 +1,13 @@
+services:
+  megalinter:
+    image: ghcr.io/oxsecurity/megalinter-c_cpp:v9.5.0@sha256:48367743ee1b34b2ff4db2a6af4907aee255e5885e19ce7db459aba6d0cf58fa # editorconfig-checker-disable-line
+    # Every variable below can be overridden from the host environment except
+    # DEFAULT_WORKSPACE, which must match the volume mount path below.
+    environment:
+      - APPLY_FIXES
+      - ENABLE_LINTERS
+      - LOG_LEVEL
+      - CLEAR_REPORT_FOLDER=${CLEAR_REPORT_FOLDER:-true}
+      - DEFAULT_WORKSPACE=/tmp/lint
+    volumes:
+      - .:/tmp/lint
