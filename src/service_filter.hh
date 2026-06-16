@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdlib>
 #include <memory>
 #include <optional>
@@ -43,6 +44,8 @@ struct ServiceFilterOption final {
   uint16_t sid = 0;
   std::optional<ts::Time> time_limit = std::nullopt;  // JST
 };
+
+class ServiceFilterTestAccessor;
 
 class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface {
  public:
@@ -132,6 +135,37 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
     return true;
   }
 
+  static constexpr std::array<ts::PID, 9> kReservedPsiPids = {
+      ts::PID_PAT,
+      ts::PID_CAT,
+      ts::PID_NIT,
+      ts::PID_SDT,
+      ts::PID_EIT,
+      ts::PID_RST,
+      ts::PID_TOT,
+      ts::PID_BIT,
+      ts::PID_CDT,
+  };
+
+  static bool IsSafeDynamicPid(ts::PID pid) {
+    // Returns true if this dynamic PID is safe to add to a filter set.
+    // PID_NULL must never reach the downstream sink.
+    if (pid == ts::PID_NULL) {
+      return false;
+    }
+
+    // Reserved PSI/SI PIDs are already registered in psi_filter_, so re-adding them to a
+    // dynamic filter set is redundant.  (Rejecting them here also keeps a reserved PID from
+    // ever becoming pmt_pid_, which would corrupt demux_ on the next removePID.)
+    for (auto reserved_pid : kReservedPsiPids) {
+      if (pid == reserved_pid) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   void handleTable(ts::SectionDemux&, const ts::BinaryTable& table) override {
     switch (table.tableId()) {
       case ts::TID_PAT:
@@ -169,17 +203,24 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
       return;
     }
 
-    if (pat.pmts.find(option_.sid) == pat.pmts.end()) {
+    auto new_pmt_it = pat.pmts.find(option_.sid);
+
+    if (new_pmt_it == pat.pmts.end()) {
       MIRAKC_ARIB_SERVICE_FILTER_ERROR("SID#{:04X} not found in PAT", option_.sid);
       done_ = true;
       error_ = true;
       return;
     }
 
+    auto new_pmt_pid = new_pmt_it->second;
+
+    if (!IsSafeDynamicPid(new_pmt_pid)) {
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("Unsafe PMT PID#{:04X}, skip", new_pmt_pid);
+      return;
+    }
+
     psi_filter_.clear();
     MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Clear PSI/SI filter");
-
-    auto new_pmt_pid = pat.pmts[option_.sid];
 
     if (pmt_pid_ != ts::PID_NULL) {
       MIRAKC_ARIB_SERVICE_FILTER_INFO(
@@ -211,15 +252,10 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
     pat_packetizer_.removeAll();
     pat_packetizer_.addTable(context_, pat);
 
-    psi_filter_.insert(ts::PID_PAT);
-    psi_filter_.insert(ts::PID_CAT);
-    psi_filter_.insert(ts::PID_NIT);
-    psi_filter_.insert(ts::PID_SDT);
-    psi_filter_.insert(ts::PID_EIT);
-    psi_filter_.insert(ts::PID_RST);
-    psi_filter_.insert(ts::PID_TOT);
-    psi_filter_.insert(ts::PID_BIT);
-    psi_filter_.insert(ts::PID_CDT);
+    for (auto pid : kReservedPsiPids) {
+      psi_filter_.insert(pid);
+    }
+
     psi_filter_.insert(pmt_pid_);
     MIRAKC_ARIB_SERVICE_FILTER_DEBUG(
         "PSI/SI filter += PAT CAT NIT SDT EIT RST TOT BIT CDT PMT#{:04X}", pmt_pid_);
@@ -239,8 +275,14 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
     auto i = cat.descs.search(ts::DID_CA);
     while (i < cat.descs.size()) {
       ts::CADescriptor desc(context_, *cat.descs[i]);
-      emm_filter_.insert(desc.ca_pid);
-      MIRAKC_ARIB_SERVICE_FILTER_DEBUG("EMM filter += EMM#{:04X}", desc.ca_pid);
+
+      if (IsSafeDynamicPid(desc.ca_pid)) {
+        emm_filter_.insert(desc.ca_pid);
+        MIRAKC_ARIB_SERVICE_FILTER_DEBUG("EMM filter += EMM#{:04X}", desc.ca_pid);
+      } else {
+        MIRAKC_ARIB_SERVICE_FILTER_WARN("Unsafe EMM PID#{:04X}, skip", desc.ca_pid);
+      }
+
       i = cat.descs.search(ts::DID_CA, i + 1);
     }
   }
@@ -261,19 +303,35 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
     content_filter_.clear();
     MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Clear content filter");
 
-    content_filter_.insert(pmt.pcr_pid);
-    MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += PCR#{:04X}", pmt.pcr_pid);
+    if (IsSafeDynamicPid(pmt.pcr_pid)) {
+      content_filter_.insert(pmt.pcr_pid);
+      MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += PCR#{:04X}", pmt.pcr_pid);
+    } else {
+      MIRAKC_ARIB_SERVICE_FILTER_WARN("Unsafe PCR PID#{:04X}, skip", pmt.pcr_pid);
+    }
 
     auto i = pmt.descs.search(ts::DID_CA);
     while (i < pmt.descs.size()) {
       ts::CADescriptor desc(context_, *pmt.descs[i]);
-      content_filter_.insert(desc.ca_pid);
-      MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += ECM#{:04X}", desc.ca_pid);
+
+      if (IsSafeDynamicPid(desc.ca_pid)) {
+        content_filter_.insert(desc.ca_pid);
+        MIRAKC_ARIB_SERVICE_FILTER_DEBUG("Content filter += ECM#{:04X}", desc.ca_pid);
+      } else {
+        MIRAKC_ARIB_SERVICE_FILTER_WARN("Unsafe ECM PID#{:04X}, skip", desc.ca_pid);
+      }
+
       i = pmt.descs.search(ts::DID_CA, i + 1);
     }
 
     for (auto it = pmt.streams.begin(); it != pmt.streams.end(); ++it) {
       ts::PID pid = it->first;
+
+      if (!IsSafeDynamicPid(pid)) {
+        MIRAKC_ARIB_SERVICE_FILTER_WARN("Unsafe stream PID#{:04X}, skip", pid);
+        continue;
+      }
+
       content_filter_.insert(pid);
 
       const auto& stream = it->second;
@@ -325,6 +383,8 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
   ts::PID pmt_pid_ = ts::PID_NULL;
   bool done_ = false;
   bool error_ = false;
+
+  friend class ServiceFilterTestAccessor;
 
   MIRAKC_ARIB_NON_COPYABLE(ServiceFilter);
 };
