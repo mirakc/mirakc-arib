@@ -17,8 +17,8 @@
 
 #include <cstdlib>
 #include <memory>
+#include <unordered_set>
 
-#include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <tsduck/tsduck.h>
@@ -28,7 +28,277 @@
 #include "test_helper.hh"
 
 namespace {
+
 const ServiceFilterOption kOption{0x0001};
+
+class ServiceFilterTestAccessor final {
+ public:
+  static const std::unordered_set<ts::PID>& ContentFilter(const ServiceFilter& filter) {
+    return filter.content_filter_;
+  }
+
+  static const std::unordered_set<ts::PID>& EmmFilter(const ServiceFilter& filter) {
+    return filter.emm_filter_;
+  }
+
+  static const std::unordered_set<ts::PID>& PsiFilter(const ServiceFilter& filter) {
+    return filter.psi_filter_;
+  }
+
+  static bool IsSafeDynamicPid(ts::PID pid) {
+    return ServiceFilter::IsSafeDynamicPid(pid);
+  }
+
+  static const ts::SectionDemux& Demux(const ServiceFilter& filter) {
+    return filter.demux_;
+  }
+};
+
+}  // namespace
+
+TEST(ServiceFilterTest, IsSafeDynamicPid) {
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_NULL));
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_PAT));
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_CAT));
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_NIT));
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_SDT));
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_EIT));
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_RST));
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_TOT));
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_BIT));
+  EXPECT_FALSE(ServiceFilterTestAccessor::IsSafeDynamicPid(ts::PID_CDT));
+
+  EXPECT_TRUE(ServiceFilterTestAccessor::IsSafeDynamicPid(0x0030));
+  EXPECT_TRUE(ServiceFilterTestAccessor::IsSafeDynamicPid(0x1FFE));
+}
+
+TEST(ServiceFilterTest, RejectUnsafePmtPidFromPat) {
+  TableSource src;
+  auto filter = std::make_unique<ServiceFilter>(kOption);
+  auto* filter_ptr = filter.get();
+  auto sink = std::make_unique<MockSink>();
+
+  // The 1st PAT advertises ts::PID_NULL (0x1FFF) as a PMT PID.
+  // The 2nd PAT advertises 0x0101 as a PMT PID.
+  // Only 0x0101 must be added to psi_filter_ and demux_.
+  // ts::PID_NULL must never be added to psi_filter_ or demux_.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x1FFF" />
+      </PAT>
+      <PAT version="2" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000" test-cc="1">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
+
+  EXPECT_THAT(ServiceFilterTestAccessor::PsiFilter(*filter_ptr),
+      testing::UnorderedElementsAre(ts::PID_PAT, ts::PID_CAT, ts::PID_NIT, ts::PID_SDT,
+          ts::PID_EIT, ts::PID_RST, ts::PID_TOT, ts::PID_BIT, ts::PID_CDT, 0x0101));
+
+  // demux_ must retain PIDs added in the constructor and now include the safe PMT PID.
+  EXPECT_TRUE(ServiceFilterTestAccessor::Demux(*filter_ptr).hasPID(ts::PID_PAT));
+  EXPECT_TRUE(ServiceFilterTestAccessor::Demux(*filter_ptr).hasPID(ts::PID_CAT));
+  EXPECT_TRUE(ServiceFilterTestAccessor::Demux(*filter_ptr).hasPID(0x0101));
+  // The unsafe PMT PID must never be added to demux_.
+  EXPECT_FALSE(ServiceFilterTestAccessor::Demux(*filter_ptr).hasPID(ts::PID_NULL));
+}
+
+TEST(ServiceFilterTest, RejectUnsafeEmmPidsFromCatDescriptors) {
+  TableSource src;
+  auto filter = std::make_unique<ServiceFilter>(kOption);
+  auto* filter_ptr = filter.get();
+  auto sink = std::make_unique<MockSink>();
+
+  // This CAT advertises 0x0101 and ts::PID_EIT (0x0012) as CA PIDs.
+  // Only 0x0101 must be added to emm_filter_.
+  // ts::PID_EIT must never be added to emm_filter_.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <CAT version="1" current="true" test-pid="0x0001">
+        <CA_descriptor CA_system_id="0x0005" CA_PID="0x0101" />
+        <CA_descriptor CA_system_id="0x0005" CA_PID="0x0012" />
+      </CAT>
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
+  }
+
+  // Only a CAT is fed, and ServiceFilter consumes it without forwarding,
+  // so no packets reach the sink.
+  EXPECT_CALL(*sink, HandlePacket).Times(0);
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
+
+  EXPECT_THAT(
+      ServiceFilterTestAccessor::EmmFilter(*filter_ptr), testing::UnorderedElementsAre(0x0101));
+}
+
+TEST(ServiceFilterTest, RejectUnsafePcrPidFromPmt) {
+  TableSource src;
+  auto filter = std::make_unique<ServiceFilter>(kOption);
+  auto* filter_ptr = filter.get();
+  auto sink = std::make_unique<MockSink>();
+
+  // This PMT advertises ts::PID_NULL (0x1FFF) as a PCR PID and 0x0103 as a stream PID.
+  // Only 0x0103 must be added to content_filter_.
+  // ts::PID_NULL must never be added to content_filter_.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x1FFF"
+           test-pid="0x0101">
+        <component elementary_PID="0x0103" stream_type="0x02" />
+      </PMT>
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
+
+  EXPECT_THAT(ServiceFilterTestAccessor::ContentFilter(*filter_ptr),
+      testing::UnorderedElementsAre(0x0103));
+}
+
+TEST(ServiceFilterTest, RejectUnsafeEcmPidsFromPmtDescriptors) {
+  TableSource src;
+  auto filter = std::make_unique<ServiceFilter>(kOption);
+  auto* filter_ptr = filter.get();
+  auto sink = std::make_unique<MockSink>();
+
+  // This PMT advertises 0x0103 and ts::PID_NIT (0x0010) as ECM PIDs.
+  // Only 0x0103 must be added to content_filter_.
+  // ts::PID_NIT must never be added to content_filter_.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x0102"
+           test-pid="0x0101">
+        <CA_descriptor CA_system_id="0x0005" CA_PID="0x0103" />
+        <CA_descriptor CA_system_id="0x0005" CA_PID="0x0010" />
+      </PMT>
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
+
+  EXPECT_THAT(ServiceFilterTestAccessor::ContentFilter(*filter_ptr),
+      testing::UnorderedElementsAre(0x0102, 0x0103));
+}
+
+TEST(ServiceFilterTest, RejectUnsafeStreamPidsFromPmtStreams) {
+  TableSource src;
+  auto filter = std::make_unique<ServiceFilter>(kOption);
+  auto* filter_ptr = filter.get();
+  auto sink = std::make_unique<MockSink>();
+
+  // This PMT advertises 0x0103 and ts::PID_NULL (0x1FFF) as stream PIDs.
+  // Only 0x0103 must be added to content_filter_.
+  // ts::PID_NULL must never be added to content_filter_.
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x1234"
+           test-pid="0x0000">
+        <service service_id="0x0001" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0001" PCR_PID="0x0102"
+           test-pid="0x0101">
+        <component elementary_PID="0x0103" stream_type="0x02" />
+        <component elementary_PID="0x1FFF" stream_type="0x06" />
+      </PMT>
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(ts::PID_PAT, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, HandlePacket).WillOnce([](const ts::TSPacket& packet) {
+      EXPECT_EQ(0x0101, packet.getPID());
+      return true;
+    });
+    EXPECT_CALL(*sink, End).WillOnce(testing::Return());
+    EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
+  }
+
+  filter->Connect(std::move(sink));
+  src.Connect(std::move(filter));
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
+
+  EXPECT_THAT(ServiceFilterTestAccessor::ContentFilter(*filter_ptr),
+      testing::UnorderedElementsAre(0x0102, 0x0103));
 }
 
 TEST(ServiceFilterTest, NoPacket) {
