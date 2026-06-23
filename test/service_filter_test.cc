@@ -76,7 +76,7 @@ TEST(ServiceFilterTest, IsSafeDynamicPid) {
   EXPECT_TRUE(ServiceFilterTestAccessor::IsSafeDynamicPid(0x1FFE));
 }
 
-TEST(ServiceFilterTest, RejectUnsafePmtPidFromPat) {
+TEST(ServiceFilterTest, IgnoreUnsafePmtPidFromPat) {
   TableSource src;
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto* filter_ptr = filter.get();
@@ -84,7 +84,7 @@ TEST(ServiceFilterTest, RejectUnsafePmtPidFromPat) {
 
   // The 1st PAT advertises ts::PID_NULL (0x1FFF) as a PMT PID.
   // The 2nd PAT advertises 0x0101 as a PMT PID.
-  // Only 0x0101 must be added to psi_filter_ and demux_.
+  // Of the two advertised PMT PIDs, only 0x0101 must be added to psi_filter_ and demux_.
   // ts::PID_NULL must never be added to psi_filter_ or demux_.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -119,7 +119,8 @@ TEST(ServiceFilterTest, RejectUnsafePmtPidFromPat) {
       testing::UnorderedElementsAre(ts::PID_PAT, ts::PID_CAT, ts::PID_NIT, ts::PID_SDT,
           ts::PID_EIT, ts::PID_RST, ts::PID_TOT, ts::PID_BIT, ts::PID_CDT, 0x0101));
 
-  // demux_ must retain PIDs added in the constructor and now include the safe PMT PID.
+  // demux_ must still contain the PIDs added in the constructor, in addition to the safe PMT PID
+  // (0x0101).
   EXPECT_TRUE(ServiceFilterTestAccessor::Demux(*filter_ptr).hasPID(ts::PID_PAT));
   EXPECT_TRUE(ServiceFilterTestAccessor::Demux(*filter_ptr).hasPID(ts::PID_CAT));
   EXPECT_TRUE(ServiceFilterTestAccessor::Demux(*filter_ptr).hasPID(0x0101));
@@ -127,13 +128,13 @@ TEST(ServiceFilterTest, RejectUnsafePmtPidFromPat) {
   EXPECT_FALSE(ServiceFilterTestAccessor::Demux(*filter_ptr).hasPID(ts::PID_NULL));
 }
 
-TEST(ServiceFilterTest, RejectUnsafeEmmPidsFromCatDescriptors) {
+TEST(ServiceFilterTest, IgnoreUnsafeEmmPidsFromCatDescriptors) {
   TableSource src;
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto* filter_ptr = filter.get();
   auto sink = std::make_unique<MockSink>();
 
-  // This CAT advertises 0x0101 and ts::PID_EIT (0x0012) as CA PIDs.
+  // This CAT advertises 0x0101 and ts::PID_EIT (0x0012) as EMM PIDs in CA descriptors.
   // Only 0x0101 must be added to emm_filter_.
   // ts::PID_EIT must never be added to emm_filter_.
   src.LoadXml(R"(
@@ -153,8 +154,7 @@ TEST(ServiceFilterTest, RejectUnsafeEmmPidsFromCatDescriptors) {
     EXPECT_CALL(*sink, GetExitCode).WillOnce(testing::Return(EXIT_SUCCESS));
   }
 
-  // Only a CAT is fed, and ServiceFilter consumes it without forwarding,
-  // so no packets reach the sink.
+  // Since no PAT is fed, psi_filter_ remains empty, so the CAT packet does not reach the sink.
   EXPECT_CALL(*sink, HandlePacket).Times(0);
 
   filter->Connect(std::move(sink));
@@ -165,7 +165,7 @@ TEST(ServiceFilterTest, RejectUnsafeEmmPidsFromCatDescriptors) {
       ServiceFilterTestAccessor::EmmFilter(*filter_ptr), testing::UnorderedElementsAre(0x0101));
 }
 
-TEST(ServiceFilterTest, RejectUnsafePcrPidFromPmt) {
+TEST(ServiceFilterTest, IgnoreUnsafePcrPidFromPmt) {
   TableSource src;
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto* filter_ptr = filter.get();
@@ -211,14 +211,14 @@ TEST(ServiceFilterTest, RejectUnsafePcrPidFromPmt) {
       testing::UnorderedElementsAre(0x0103));
 }
 
-TEST(ServiceFilterTest, RejectUnsafeEcmPidsFromPmtDescriptors) {
+TEST(ServiceFilterTest, IgnoreUnsafeEcmPidsFromPmtDescriptors) {
   TableSource src;
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto* filter_ptr = filter.get();
   auto sink = std::make_unique<MockSink>();
 
   // This PMT advertises 0x0103 and ts::PID_NIT (0x0010) as ECM PIDs.
-  // Only 0x0103 must be added to content_filter_.
+  // Of the two advertised ECM PIDs, only 0x0103 must be added to content_filter_.
   // ts::PID_NIT must never be added to content_filter_.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
@@ -258,14 +258,14 @@ TEST(ServiceFilterTest, RejectUnsafeEcmPidsFromPmtDescriptors) {
       testing::UnorderedElementsAre(0x0102, 0x0103));
 }
 
-TEST(ServiceFilterTest, RejectUnsafeStreamPidsFromPmtStreams) {
+TEST(ServiceFilterTest, IgnoreUnsafeStreamPidsFromPmtStreams) {
   TableSource src;
   auto filter = std::make_unique<ServiceFilter>(kOption);
   auto* filter_ptr = filter.get();
   auto sink = std::make_unique<MockSink>();
 
   // This PMT advertises 0x0103 and ts::PID_NULL (0x1FFF) as stream PIDs.
-  // Only 0x0103 must be added to content_filter_.
+  // Of the two advertised stream PIDs, only 0x0103 must be added to content_filter_.
   // ts::PID_NULL must never be added to content_filter_.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
