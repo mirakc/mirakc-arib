@@ -61,4 +61,4 @@ jobs:
             git push --tags
           fi
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
