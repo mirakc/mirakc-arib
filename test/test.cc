@@ -15,6 +15,10 @@
 // not, write to the Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301, USA.
 
+#ifndef MIRAKC_ARIB_ENABLE_TESTING
+#error "MIRAKC_ARIB_ENABLE_TESTING must be defined"
+#endif
+
 #include <gmock/gmock.h>
 #include <tsduck/tsduck.h>
 #include <spdlog/cfg/env.h>

@@ -881,6 +881,11 @@ if(MIRAKC_ARIB_TEST)
     test/tsduck_helper_test.cc
   )
 
+  target_compile_definitions(mirakc-arib-test
+    PRIVATE
+      MIRAKC_ARIB_ENABLE_TESTING
+  )
+
   target_include_directories(mirakc-arib-test
     PRIVATE
       src
