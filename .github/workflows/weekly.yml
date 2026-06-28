@@ -56,9 +56,10 @@ jobs:
           then
             echo "Not changed, skip to create new release"
           else
+            gh auth setup-git
             ./scripts/release patch
-            git push
-            git push --tags
+            git push origin HEAD:main
+            git push origin --tags
           fi
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
