@@ -1,4 +1,4 @@
-#!/bin/sh -eu
+#!/usr/bin/env bash
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -17,12 +17,14 @@
 # not, write to the Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+set -euo pipefail
+
 PROGNAME="$(basename $0)"
 BASEDIR="$(cd $(dirname $0); pwd)"
 PROJDIR="$(cd $BASEDIR/..; pwd)"
 
 CURRENT=$(git describe --abbrev=0)
-COMMIT=yes
+COMMIT=1
 BUILD_DIR=
 
 help() {
@@ -71,7 +73,7 @@ do
       help
       ;;
     '--no-commit')
-      COMMIT=no
+      COMMIT=0
       shift
       ;;
     'major' | 'minor' | 'patch')
@@ -87,8 +89,13 @@ trap cleanup EXIT
 
 VERSION=$(deno run npm:semver $CURRENT -i $1)
 
-log "Pulling changes from origin..."
-git pull
+if [ "${CI:-}" = 'true' ]
+then
+  log "Running in CI environment, skipping git pull"
+else
+  log "Pulling changes from origin..."
+  git pull
+fi
 
 log "Bumping the version to $VERSION..."
 sed -i'.sed.backup' -r \
@@ -101,7 +108,7 @@ cmake -S . -B $BUILD_DIR -D CMAKE_BUILD_TYPE=Release
 
 # TODO: Genereate CHANGELOG.md
 
-if [ "$COMMIT" = yes ]
+if [ "$COMMIT" = 1 ]
 then
   git add $PROJDIR/CMakeLists.txt
   git commit -m "misc: bump version to $VERSION"
