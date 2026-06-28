@@ -5,6 +5,11 @@ rules:
   concurrency-limits:
     # https://docs.zizmor.sh/audits/#concurrency-limits
     disable: true
+  dependabot-cooldown:
+    # https://docs.zizmor.sh/audits/#dependabot-cooldown
+    ignore:
+      # See comments in dependabot.yml for details.
+      - dependabot.yml:10:5
   secrets-outside-env:
     # https://docs.zizmor.sh/audits/#secrets-outside-env
     disable: true
