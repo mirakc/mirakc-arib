@@ -135,7 +135,7 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
     return true;
   }
 
-  static constexpr std::array<ts::PID, 9> kReservedPsiPids = {
+  static constexpr std::array<ts::PID, 9> kPsiFilterPids = {
       ts::PID_PAT,
       ts::PID_CAT,
       ts::PID_NIT,
@@ -154,11 +154,14 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
       return false;
     }
 
-    // Reserved PSI/SI PIDs are already registered in psi_filter_, so re-adding them to a
-    // dynamic filter set is redundant.  (Rejecting them here also keeps a reserved PID from
-    // ever becoming pmt_pid_, which would corrupt demux_ on the next removePID.)
-    for (auto reserved_pid : kReservedPsiPids) {
-      if (pid == reserved_pid) {
+    // After a valid PAT is accepted, PSI/SI PIDs in kPsiFilterPids are already registered in
+    // psi_filter_.  Adding these PIDs to another filter set would serve no purpose.
+    //
+    // Rejecting them here also keeps a PID already registered in demux_ (PAT, CAT, or TOT if
+    // time_limit is set) from becoming pmt_pid_; otherwise, a later PMT PID change would then
+    // remove that PID from demux_ via `removePID()`.
+    for (auto psi_pid : kPsiFilterPids) {
+      if (pid == psi_pid) {
         return false;
       }
     }
@@ -252,7 +255,7 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
     pat_packetizer_.removeAll();
     pat_packetizer_.addTable(context_, pat);
 
-    for (auto pid : kReservedPsiPids) {
+    for (auto pid : kPsiFilterPids) {
       psi_filter_.insert(pid);
     }
 
@@ -353,6 +356,10 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
   }
 
   void HandleTot(const ts::BinaryTable& table) {
+    if (!option_.time_limit.has_value()) {
+      return;
+    }
+
     ts::TOT tot(context_, table);
 
     if (!tot.isValid()) {
