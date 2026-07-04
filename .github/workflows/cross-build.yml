@@ -10,18 +10,17 @@ jobs:
     strategy:
       matrix:
         arch:
-          # Temporarily disabled
-          # - i686
+          - i686
           # Disabled because there is no linux/arm/v5 image of ubuntu.
           # - armel
           - armhf
           - arm64
         include:
-          # - arch: i686
-          #   host-triple: i686-linux-gnu
-          #   elf-machine: 'Intel 80386'
-          #   elf-flags: '0x0'
-          #   docker-platform: linux/386
+          - arch: i686
+            host-triple: i686-linux-gnu
+            elf-machine: 'Intel 80386'
+            elf-flags: '0x0'
+            docker-platform: linux/386
           # - arch: armel
           #   host-triple: arm-linux-gnueabi
           #   elf-machine: 'ARM'
