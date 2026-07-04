@@ -10,18 +10,17 @@ jobs:
     strategy:
       matrix:
         arch:
-          # Temporarily disabled
-          # - i686
+          - i686
           # Disabled because there is no linux/arm/v5 image of ubuntu.
           # - armel
           - armhf
           - arm64
         include:
-          # - arch: i686
-          #   host-triple: i686-linux-gnu
-          #   elf-machine: 'Intel 80386'
-          #   elf-flags: '0x0'
-          #   docker-platform: linux/386
+          - arch: i686
+            host-triple: i686-linux-gnu
+            elf-machine: 'Intel 80386'
+            elf-flags: '0x0'
+            docker-platform: linux/386
           # - arch: armel
           #   host-triple: arm-linux-gnueabi
           #   elf-machine: 'ARM'
@@ -73,14 +72,13 @@ jobs:
         uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
       - name: Show help and version
         run: |
-          sudo apt-get install -y --no-install-recommends lsb-release
-          docker run --rm -v $(pwd)/build:/build --platform $PLATFORM ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib -h
-          docker run --rm -v $(pwd)/build:/build --platform $PLATFORM ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib --version
+          docker run --rm -v $(pwd)/build:/build --platform $PLATFORM debian:stable-slim /build/bin/mirakc-arib -h
+          docker run --rm -v $(pwd)/build:/build --platform $PLATFORM debian:stable-slim /build/bin/mirakc-arib --version
         env:
           PLATFORM: ${{ matrix.docker-platform }}
       - name: Run tests
         run: |
-          docker run --rm -e CI=$CI -v $(pwd)/build:/build --platform $PLATFORM ubuntu:$(lsb_release -cs) /build/bin/mirakc-arib-test --gtest_shuffle
-          docker run --rm -e CI=$CI -v $(pwd)/build:/build -v $(pwd)/test:/test --platform $PLATFORM ubuntu:$(lsb_release -cs) sh /test/cli_tests.sh /build/bin/mirakc-arib
+          docker run --rm -e CI=$CI -v $(pwd)/build:/build --platform $PLATFORM debian:stable-slim /build/bin/mirakc-arib-test --gtest_shuffle
+          docker run --rm -e CI=$CI -v $(pwd)/build:/build -v $(pwd)/test:/test --platform $PLATFORM debian:stable-slim sh /test/cli_tests.sh /build/bin/mirakc-arib
         env:
           PLATFORM: ${{ matrix.docker-platform }}
