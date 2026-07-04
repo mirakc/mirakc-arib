@@ -5,6 +5,7 @@ pull_request_rules:
           - author = dependabot[bot]
           - author = mirakc-ci[bot]
       - check-success = build / build
+      - check-success = cross-build / cross-build (i686)
       - check-success = cross-build / cross-build (armhf)
       - check-success = cross-build / cross-build (arm64)
     actions:
