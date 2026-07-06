@@ -27,10 +27,8 @@
 #include "test_helper.hh"
 
 namespace {
-constexpr size_t kNumBuffers = 2;
+constexpr size_t kChunkSize = 4096 * 4;  // 16KB
 constexpr size_t kNumChunks = 2;
-constexpr size_t kChunkSize = RingFileSink::kBufferSize * kNumBuffers;
-constexpr uint64_t kRingSize = kChunkSize * kNumChunks;
 const ServiceRecorderOption kOption{"/dev/null", 3, kChunkSize, kNumChunks};
 
 class ServiceRecorderTestAccessor final {
@@ -49,11 +47,12 @@ TEST(ServiceRecorderTest, NoPacket) {
   ServiceRecorderOption option = kOption;
 
   MockSource src;
-  auto file = std::make_unique<MockFile>();
+  auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
   auto json_sink = std::make_unique<MockJsonlSink>();
 
   {
     testing::InSequence seq;
+    EXPECT_CALL(*ring_sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
       return true;
@@ -62,14 +61,13 @@ TEST(ServiceRecorderTest, NoPacket) {
       EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
       return true;
     });
+    EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
   }
 
   EXPECT_CALL(src, GetNextPacket).WillOnce(testing::Return(false));  // EOF
 
-  auto ring =
-      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
-  recorder->ServiceRecorder::Connect(std::move(ring));
+  recorder->ServiceRecorder::Connect(std::move(ring_sink));
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
@@ -113,7 +111,7 @@ TEST(ServiceRecorderTest, EventStart) {
   ServiceRecorderOption option = kOption;
 
   TableSource src;
-  auto file = std::make_unique<MockFile>();
+  auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
   auto json_sink = std::make_unique<MockJsonlSink>();
 
   // <generic_short_table> elements are used for emulating PES and PCR packets.
@@ -146,6 +144,7 @@ TEST(ServiceRecorderTest, EventStart) {
 
   {
     testing::InSequence seq;
+    EXPECT_CALL(*ring_sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
       return true;
@@ -181,17 +180,11 @@ TEST(ServiceRecorderTest, EventStart) {
       EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
       return true;
     });
+    EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
   }
 
-  EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
-  EXPECT_CALL(*file, Sync).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
-
-  auto ring =
-      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
-  recorder->ServiceRecorder::Connect(std::move(ring));
+  recorder->ServiceRecorder::Connect(std::move(ring_sink));
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
@@ -341,7 +334,7 @@ TEST(ServiceRecorderTest, EventEnd) {
   ServiceRecorderOption option = kOption;
 
   TableSource src;
-  auto file = std::make_unique<MockFile>();
+  auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
   auto json_sink = std::make_unique<MockJsonlSink>();
 
   // <generic_short_table> elements are used for emulating PES and PCR packets.
@@ -384,6 +377,7 @@ TEST(ServiceRecorderTest, EventEnd) {
 
   {
     testing::InSequence seq;
+    EXPECT_CALL(*ring_sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
       return true;
@@ -459,17 +453,11 @@ TEST(ServiceRecorderTest, EventEnd) {
       EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
       return true;
     });
+    EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
   }
 
-  EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
-  EXPECT_CALL(*file, Sync).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
-
-  auto ring =
-      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
-  recorder->ServiceRecorder::Connect(std::move(ring));
+  recorder->ServiceRecorder::Connect(std::move(ring_sink));
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
@@ -480,7 +468,7 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
   ServiceRecorderOption option = kOption;
 
   TableSource src;
-  auto file = std::make_unique<MockFile>();
+  auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
   auto json_sink = std::make_unique<MockJsonlSink>();
 
   // <generic_short_table> elements are used for emulating PES and PCR packets.
@@ -522,6 +510,7 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
 
   {
     testing::InSequence seq;
+    EXPECT_CALL(*ring_sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
       return true;
@@ -597,17 +586,11 @@ TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
       EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
       return true;
     });
+    EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
   }
 
-  EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
-  EXPECT_CALL(*file, Sync).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
-
-  auto ring =
-      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
-  recorder->ServiceRecorder::Connect(std::move(ring));
+  recorder->ServiceRecorder::Connect(std::move(ring_sink));
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
@@ -618,7 +601,7 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
   ServiceRecorderOption option = kOption;
 
   TableSource src;
-  auto file = std::make_unique<MockFile>();
+  auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
   auto json_sink = std::make_unique<MockJsonlSink>();
 
   // <generic_short_table> elements are used for emulating PES and PCR packets.
@@ -660,6 +643,7 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
 
   {
     testing::InSequence seq;
+    EXPECT_CALL(*ring_sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
       return true;
@@ -695,17 +679,11 @@ TEST(ServiceRecorderTest, FirstEventAlreadyEnded) {
       EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
       return true;
     });
+    EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
   }
 
-  EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
-  EXPECT_CALL(*file, Sync).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
-
-  auto ring =
-      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
-  recorder->ServiceRecorder::Connect(std::move(ring));
+  recorder->ServiceRecorder::Connect(std::move(ring_sink));
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
@@ -716,7 +694,7 @@ TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
   ServiceRecorderOption option = kOption;
 
   TableSource src;
-  auto file = std::make_unique<MockFile>();
+  auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
   auto json_sink = std::make_unique<MockJsonlSink>();
 
   // <generic_short_table> elements are used for emulating PES and PCR packets.
@@ -762,6 +740,7 @@ TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
 
   {
     testing::InSequence seq;
+    EXPECT_CALL(*ring_sink, Start).WillOnce(testing::Return(true));
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"start"})", MockJsonlSink::Stringify(doc));
       return true;
@@ -837,17 +816,11 @@ TEST(ServiceRecorderTest, UnspecifiedEventEnd) {
       EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
       return true;
     });
+    EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
   }
 
-  EXPECT_CALL(*file, Write).WillRepeatedly(testing::Return(RingFileSink::kBufferSize));
-  EXPECT_CALL(*file, Sync).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Trunc).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*file, Seek).WillRepeatedly(testing::Return(0));
-
-  auto ring =
-      std::make_unique<RingFileSink>(std::move(file), option.chunk_size, option.num_chunks);
   auto recorder = std::make_unique<ServiceRecorder>(kOption);
-  recorder->ServiceRecorder::Connect(std::move(ring));
+  recorder->ServiceRecorder::Connect(std::move(ring_sink));
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
