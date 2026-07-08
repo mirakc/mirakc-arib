@@ -47,6 +47,8 @@ struct ServiceRecorderOption final {
   uint64_t start_pos = 0;
 };
 
+class ServiceRecorderTestAccessor;
+
 class ServiceRecorder final : public PacketSink,
                               public JsonlSource,
                               public PacketRingObserver,
@@ -101,8 +103,10 @@ class ServiceRecorder final : public PacketSink,
     auto pid = packet.getPID();
     if (clock_.HasPid() && clock_.pid() == pid && packet.hasPCR()) {
       auto pcr = packet.getPCR();
-      if (pcr != ts::INVALID_PCR) {
+      if (IsValidPcr(pcr)) {
         clock_.UpdatePcr(pcr);
+      } else {
+        MIRAKC_ARIB_SERVICE_RECORDER_WARN("Ignore invalid PCR: {:011X}", pcr);
       }
     }
 
@@ -472,6 +476,8 @@ class ServiceRecorder final : public PacketSink,
   ts::PID pmt_pid_ = ts::PID_NULL;
   State state_ = State::kPreparing;
   bool event_started_ = false;
+
+  friend class ServiceRecorderTestAccessor;
 
   MIRAKC_ARIB_NON_COPYABLE(ServiceRecorder);
 };

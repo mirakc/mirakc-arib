@@ -32,6 +32,17 @@ constexpr size_t kNumChunks = 2;
 constexpr size_t kChunkSize = RingFileSink::kBufferSize * kNumBuffers;
 constexpr uint64_t kRingSize = kChunkSize * kNumChunks;
 const ServiceRecorderOption kOption{"/dev/null", 3, kChunkSize, kNumChunks};
+
+class ServiceRecorderTestAccessor final {
+ public:
+  static void SetClockPid(ServiceRecorder& recorder, ts::PID pid) {
+    recorder.clock_.SetPid(pid);
+  }
+
+  static bool ClockIsReady(const ServiceRecorder& recorder) {
+    return recorder.clock_.IsReady();
+  }
+};
 }  // namespace
 
 TEST(ServiceRecorderTest, NoPacket) {
@@ -62,6 +73,40 @@ TEST(ServiceRecorderTest, NoPacket) {
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
+}
+
+TEST(ServiceRecorderTest, IgnoreInvalidPcr) {
+  TableSource src;
+  auto ring_sink = std::make_unique<MockRingSink>(kOption.chunk_size, kOption.num_chunks);
+  auto json_sink = std::make_unique<MockJsonlSink>();
+  auto recorder = std::make_unique<ServiceRecorder>(kOption);
+  auto* recorder_ptr = recorder.get();
+
+  // An invalid PCR (PCR_ext > 299, possible only with invalid TS) must not
+  // abort the recorder.  The value must be ignored, leaving the clock unready.
+  ServiceRecorderTestAccessor::SetClockPid(*recorder_ptr, 0x0901);
+
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <generic_short_table table_id="0xFF" test-pid="0x0901"
+           test-pcr="2576980377600" />
+    </tsduck>
+  )");
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*ring_sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
+  }
+  EXPECT_CALL(*json_sink, HandleDocument).WillRepeatedly(testing::Return(true));
+
+  recorder->ServiceRecorder::Connect(std::move(ring_sink));
+  recorder->JsonlSource::Connect(std::move(json_sink));
+  src.Connect(std::move(recorder));
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
+
+  EXPECT_FALSE(ServiceRecorderTestAccessor::ClockIsReady(*recorder_ptr));
 }
 
 TEST(ServiceRecorderTest, EventStart) {

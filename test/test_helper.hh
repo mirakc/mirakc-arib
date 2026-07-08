@@ -168,6 +168,24 @@ class TableSource final : public PacketSource {
           packet.b[5] |= 0x10;
           assert(packet.hasPCR());
           assert(packet.getPCR() == ts::INVALID_PCR);
+        } else if (pcr > ts::MAX_PCR) {
+          // Craft an out-of-range (invalid) PCR to test how the code under test handles
+          // invalid TS.  ts::TSPacket::setPCR() asserts that the
+          // value is valid, so we encode the PCR field directly into the packet
+          // bytes here.
+          //
+          // PCR_ext is encoded in 9 bits, so values up to 511 can be
+          // represented even though valid PCR_ext values are limited to 0..299.
+          // This extra range lets us encode a PCR slightly above ts::MAX_PCR.
+          assert(pcr <= ts::MAX_PCR + (0x1FF - (ts::SYSTEM_CLOCK_SUBFACTOR - 1)));
+          packet.setPayloadSize(0);
+          packet.setPCR(ts::MAX_PCR);
+          auto pcr_ext =
+              static_cast<uint16_t>((ts::SYSTEM_CLOCK_SUBFACTOR - 1) + (pcr - ts::MAX_PCR));
+          packet.b[10] = static_cast<uint8_t>((packet.b[10] & 0xFE) | ((pcr_ext >> 8) & 0x01));
+          packet.b[11] = static_cast<uint8_t>(pcr_ext & 0xFF);
+          assert(packet.hasPCR());
+          assert(packet.getPCR() == pcr);
         } else {
           packet.setPayloadSize(0);
           packet.setPCR(pcr);
