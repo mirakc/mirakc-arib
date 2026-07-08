@@ -713,8 +713,8 @@ TEST(ServiceFilterTest, IgnoreTotWhenTimeLimitIsUnset) {
   auto* filter_ptr = filter.get();
   auto sink = std::make_unique<MockSink>();
 
-  // When `option_.time_limit` is unset, HandleTot must ignore the TOT; done_ must
-  // remain false so that streaming continues.
+  // When `option_.time_limit` is unset, CheckTimeLimit must ignore the TOT time;
+  // done_ must remain false so that streaming continues.
   src.LoadXml(R"(
     <?xml version="1.0" encoding="utf-8"?>
     <tsduck>

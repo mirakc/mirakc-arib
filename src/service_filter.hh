@@ -356,10 +356,6 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
   }
 
   void HandleTot(const ts::BinaryTable& table) {
-    if (!option_.time_limit.has_value()) {
-      return;
-    }
-
     ts::TOT tot(context_, table);
 
     if (!tot.isValid()) {
@@ -371,6 +367,10 @@ class ServiceFilter final : public PacketSink, public ts::TableHandlerInterface 
   }
 
   void CheckTimeLimit(const ts::Time& jst_time) {
+    if (!option_.time_limit.has_value()) {
+      return;
+    }
+
     if (jst_time < option_.time_limit.value()) {
       return;
     }
