@@ -27,7 +27,8 @@ touch $LOG_MD_FILE
 
 FMT_CURRENT=$(git -C "$PROJDIR/vendor/fmt" describe --tags)
 FMT_VERSION="$(gh api repos/fmtlib/fmt/releases/latest --jq '.tag_name')"
-if [ "$FMT_CURRENT" != "$FMT_VERSION" ]
+# fmt/12.2.0 fails to build for linux/i386.
+if [ "$FMT_CURRENT" != "$FMT_VERSION" ] && [ "$FMT_VERSION" != '12.2.0' ]
 then
   echo "- Bumps vendor/fmt from $FMT_CURRENT to $FMT_VERSION" | \
     tee -a $LOG_MD_FILE
