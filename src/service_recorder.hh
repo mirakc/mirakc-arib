@@ -130,12 +130,16 @@ class ServiceRecorder final : public PacketSink,
     if (pos == sink_->ring_size()) {
       pos = 0;
     }
-    // The `event-update` message must be sent before the `chunk` message.
-    // The application may purge expired programs in the message handler for
-    // the `chunk` message.  So, the program data must be updated before that.
-    if (event_started_) {
-      SendEventUpdateMessage(eit_, now, pos);
-    }
+    // An `event-update` message MUST be sent before a `chunk` message.
+    //
+    // The application may purge expired TV programs in the message handler for
+    // the `chunk` message.  So, the TV program data must be updated before the
+    // purge occurs.
+    //
+    // The `event-update` message is ALWAYS sent to maintain the application's
+    // internal consistency even if no TV program starts.  In this case, the end
+    // time of the record for the last TV program (held by `eit_`) is extended.
+    SendEventUpdateMessage(eit_, now, pos);
     SendChunkMessage(now, pos);
   }
 
