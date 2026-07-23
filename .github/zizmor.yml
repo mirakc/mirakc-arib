@@ -7,9 +7,9 @@ rules:
     disable: true
   dependabot-cooldown:
     # https://docs.zizmor.sh/audits/#dependabot-cooldown
-    ignore:
-      # See comments in dependabot.yml for details.
-      - dependabot.yml:10:5
+    # The default cooldown period is 3 days.
+    # See https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#cooldown-
+    disable: true
   secrets-outside-env:
     # https://docs.zizmor.sh/audits/#secrets-outside-env
     disable: true
