@@ -15,6 +15,10 @@
 // not, write to the Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301, USA.
 
+#ifdef MIRAKC_ARIB_ENABLE_TESTING
+#error "MIRAKC_ARIB_ENABLE_TESTING must not be defined"
+#endif
+
 #include <cerrno>
 #include <cstddef>
 #include <cstring>
