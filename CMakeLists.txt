@@ -587,6 +587,17 @@ if((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND (${CMAKE_BUILD_TYPE} STREQUAL Debug
   endif()
 endif()
 
+check_cxx_compiler_flag(-Wunused-result HAVE_UNUSED_RESULT_WARNING)
+if(HAVE_UNUSED_RESULT_WARNING)
+  # Keep unused-result a warning instead of an error.
+  #
+  # GetPluginList() in tsApplicationSharedLibrary.cpp incorrectly discards the return value of
+  # std::unique(), which is [[nodiscard]] since GCC 15.  While mirakc-arib does not
+  # use the plugin feature of tsduck-arib, tsApplicationSharedLibrary.cpp is compiled anyway,
+  # breaking the build.
+  string(APPEND MIRAKC_ARIB_TSDUCK_ARIB_CXXFLAGS_EXTRA " -Wno-error=unused-result")
+endif()
+
 check_cxx_compiler_flag(-Wdocumentation-unknown-command HAVE_DOCUMENTATION_UNKNOWN_COMMAND_WARNING)
 if(HAVE_DOCUMENTATION_UNKNOWN_COMMAND_WARNING)
   # Disable -Wdocumentation-unknown-command
