@@ -690,12 +690,12 @@ JSON Messages:
         "type": "start"
       }}
 
-  end
-    The `end` message is sent when `record-service` ends.  The message structure
-    is like below:
+  stop
+    The `stop` message is sent when `record-service` ends.  The message
+    structure is like below:
 
       {{
-        "type": "end",
+        "type": "stop",
         "data": {{
           "reset": false,
         }}
