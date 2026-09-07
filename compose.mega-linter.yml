@@ -1,6 +1,6 @@
 services:
   megalinter:
-    image: ghcr.io/oxsecurity/megalinter-c_cpp:v10.0.0@sha256:75fd2753d62533c26d903a23d679dcec01036eaebb3fc3313d36766ee040396c # editorconfig-checker-disable-line
+    image: ghcr.io/oxsecurity/megalinter-c_cpp:v10.1.0@sha256:6828af1074f28053d81285c4bfbf6e6cff0986b4802cf10b002955767ace1ccc # editorconfig-checker-disable-line
     # Every variable below can be overridden from the host environment except
     # DEFAULT_WORKSPACE, which must match the volume mount path below.
     environment:
