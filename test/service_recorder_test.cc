@@ -16,6 +16,8 @@
 // 02110-1301, USA.
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,6 +43,8 @@ class ServiceRecorderTestAccessor final {
     return recorder.clock_.IsReady();
   }
 };
+
+struct ServiceRecorderTest : testing::TestWithParam<ServiceRecorderOption> {};
 }  // namespace
 
 TEST(ServiceRecorderTest, NoPacket) {
@@ -191,8 +195,8 @@ TEST(ServiceRecorderTest, EventStart) {
   EXPECT_TRUE(src.IsEmpty());
 }
 
-TEST(ServiceRecorderTest, EventProgress) {
-  ServiceRecorderOption option = kOption;
+TEST_P(ServiceRecorderTest, EventProgress) {
+  ServiceRecorderOption option = GetParam();
 
   TableSource src;
   auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
@@ -281,6 +285,20 @@ TEST(ServiceRecorderTest, EventProgress) {
           MockJsonlSink::Stringify(doc));
       return true;
     });
+    if (option.packet_stats) {
+      EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+        EXPECT_EQ(R"({"type":"packet-stats","data":{)"
+                  R"("errorPackets":0,)"
+                  R"("scrambledPackets":0,)"
+                  R"("droppedPackets":{)"
+                  R"("video":0,"audio":0,"subtitle":0,"pmt":0)"
+                  R"(})"
+                  R"(})"
+                  R"(})",
+            MockJsonlSink::Stringify(doc));
+        return true;
+      });
+    }
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":16384)"
@@ -308,6 +326,20 @@ TEST(ServiceRecorderTest, EventProgress) {
           MockJsonlSink::Stringify(doc));
       return true;
     });
+    if (option.packet_stats) {
+      EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+        EXPECT_EQ(R"({"type":"packet-stats","data":{)"
+                  R"("errorPackets":0,)"
+                  R"("scrambledPackets":0,)"
+                  R"("droppedPackets":{)"
+                  R"("video":0,"audio":0,"subtitle":0,"pmt":0)"
+                  R"(})"
+                  R"(})"
+                  R"(})",
+            MockJsonlSink::Stringify(doc));
+        return true;
+      });
+    }
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"chunk","data":{"chunk":{)"
                 R"("timestamp":1609426800000,"pos":0)"
@@ -315,6 +347,20 @@ TEST(ServiceRecorderTest, EventProgress) {
           MockJsonlSink::Stringify(doc));
       return true;
     });
+    if (option.packet_stats) {
+      EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+        EXPECT_EQ(R"({"type":"packet-stats","data":{)"
+                  R"("errorPackets":0,)"
+                  R"("scrambledPackets":0,)"
+                  R"("droppedPackets":{)"
+                  R"("video":0,"audio":0,"subtitle":0,"pmt":0)"
+                  R"(})"
+                  R"(})"
+                  R"(})",
+            MockJsonlSink::Stringify(doc));
+        return true;
+      });
+    }
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
       return true;
@@ -322,7 +368,7 @@ TEST(ServiceRecorderTest, EventProgress) {
     EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
   }
 
-  auto recorder = std::make_unique<ServiceRecorder>(kOption);
+  auto recorder = std::make_unique<ServiceRecorder>(option);
   recorder->ServiceRecorder::Connect(std::move(ring_sink));
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
@@ -330,8 +376,8 @@ TEST(ServiceRecorderTest, EventProgress) {
   EXPECT_TRUE(src.IsEmpty());
 }
 
-TEST(ServiceRecorderTest, EventEnd) {
-  ServiceRecorderOption option = kOption;
+TEST_P(ServiceRecorderTest, EventEnd) {
+  ServiceRecorderOption option = GetParam();
 
   TableSource src;
   auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
@@ -409,6 +455,21 @@ TEST(ServiceRecorderTest, EventEnd) {
           MockJsonlSink::Stringify(doc));
       return true;
     });
+    if (option.packet_stats) {
+      // Sent from HandleEventEnd().
+      EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+        EXPECT_EQ(R"({"type":"packet-stats","data":{)"
+                  R"("errorPackets":0,)"
+                  R"("scrambledPackets":0,)"
+                  R"("droppedPackets":{)"
+                  R"("video":0,"audio":0,"subtitle":0,"pmt":0)"
+                  R"(})"
+                  R"(})"
+                  R"(})",
+            MockJsonlSink::Stringify(doc));
+        return true;
+      });
+    }
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"event-end","data":{)"
                 R"("originalNetworkId":1,)"
@@ -449,6 +510,21 @@ TEST(ServiceRecorderTest, EventEnd) {
           MockJsonlSink::Stringify(doc));
       return true;
     });
+    if (option.packet_stats) {
+      // Sent from End().
+      EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
+        EXPECT_EQ(R"({"type":"packet-stats","data":{)"
+                  R"("errorPackets":0,)"
+                  R"("scrambledPackets":0,)"
+                  R"("droppedPackets":{)"
+                  R"("video":0,"audio":0,"subtitle":0,"pmt":0)"
+                  R"(})"
+                  R"(})"
+                  R"(})",
+            MockJsonlSink::Stringify(doc));
+        return true;
+      });
+    }
     EXPECT_CALL(*json_sink, HandleDocument).WillOnce([](const rapidjson::Document& doc) {
       EXPECT_EQ(R"({"type":"stop","data":{"reset":false}})", MockJsonlSink::Stringify(doc));
       return true;
@@ -456,12 +532,90 @@ TEST(ServiceRecorderTest, EventEnd) {
     EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
   }
 
-  auto recorder = std::make_unique<ServiceRecorder>(kOption);
+  auto recorder = std::make_unique<ServiceRecorder>(option);
   recorder->ServiceRecorder::Connect(std::move(ring_sink));
   recorder->JsonlSource::Connect(std::move(json_sink));
   src.Connect(std::move(recorder));
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
+}
+
+// The `packet-stats` message sent before the `event-end` message must exclude the current TS
+// packet because `sink_->HandlePacket()` has not yet written the packet to the ring buffer.
+TEST(ServiceRecorderTest, EventEndDoesNotIncludeItsTriggeringPacketInPacketStats) {
+  ServiceRecorderOption option{"/dev/null", 3, kChunkSize, kNumChunks, 0, true};
+
+  TableSource src;
+  auto ring_sink = std::make_unique<MockRingSink>(option.chunk_size, option.num_chunks);
+  auto json_sink = std::make_unique<MockJsonlSink>();
+
+  src.LoadXml(R"(
+    <?xml version="1.0" encoding="utf-8"?>
+    <tsduck>
+      <PAT version="1" current="true" transport_stream_id="0x0002"
+           test-pid="0x0000">
+        <service service_id="0x0003" program_map_PID="0x0101" />
+      </PAT>
+      <PMT version="1" current="true" service_id="0x0003" PCR_PID="0x901"
+           test-pid="0x0101">
+        <component elementary_PID="0x0901" stream_type="0x02" />
+      </PMT>
+      <TOT UTC_time="2021-01-01 00:00:00" test-pid="0x0014" />
+      <!-- This PCR packet makes the clock ready with the preceding TOT. -->
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="0" />
+      <EIT type="pf" version="1" current="true" actual="true"
+           service_id="0x0003" transport_stream_id="0x0002"
+           original_network_id="0x0001" last_table_id="0x4E"
+           test-pid="0x0012">
+        <event event_id="4" start_time="2021-01-01 00:00:00"
+               duration="00:00:01" running_status="undefined" CA_mode="true" />
+      </EIT>
+      <!-- This PCR packet establishes the CC baseline after recording starts. -->
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="1" test-cc="0" />
+      <!-- This PCR value advances the clock to event#4's end time.  CC 5 causes the recorder to
+           record four dropped `video` packets. -->
+      <generic_short_table table_id="0xFF" test-pid="0x0901" test-pcr="27000000" test-cc="5" />
+    </tsduck>
+  )");
+
+  std::vector<std::string> message_types;
+  std::vector<uint64_t> dropped_video_packet_counts;
+  EXPECT_CALL(*json_sink, HandleDocument)
+      .WillRepeatedly(
+          [&message_types, &dropped_video_packet_counts](const rapidjson::Document& doc) {
+            const std::string type = doc["type"].GetString();
+
+            // Accept every message, but record only `packet-stats` and `event-end` messages
+            // to verify their order and dropped-packet counts later with EXPECT_THAT calls.
+            if (type == "packet-stats") {
+              message_types.emplace_back(type);
+              dropped_video_packet_counts.emplace_back(
+                  doc["data"]["droppedPackets"]["video"].GetUint64());
+            } else if (type == "event-end") {
+              message_types.emplace_back(type);
+            }
+
+            return true;
+          });
+
+  {
+    testing::InSequence seq;
+    EXPECT_CALL(*ring_sink, Start).WillOnce(testing::Return(true));
+    EXPECT_CALL(*ring_sink, End).WillOnce(testing::Return());
+  }
+
+  auto recorder = std::make_unique<ServiceRecorder>(option);
+  recorder->ServiceRecorder::Connect(std::move(ring_sink));
+  recorder->JsonlSource::Connect(std::move(json_sink));
+  src.Connect(std::move(recorder));
+
+  EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
+  EXPECT_TRUE(src.IsEmpty());
+  EXPECT_THAT(message_types, testing::ElementsAre("packet-stats", "event-end", "packet-stats"));
+
+  // The first `packet-stats` message must report zero dropped `video` packets because the final
+  // PCR packet has not been written to the ring buffer yet.
+  EXPECT_THAT(dropped_video_packet_counts, testing::ElementsAre(0, 4));
 }
 
 TEST(ServiceRecorderTest, EventStartBeforeEventEnd) {
@@ -991,3 +1145,7 @@ TEST(ServiceRecorderTest, EndOfChunkBeforeNextEvent) {
   EXPECT_EQ(EXIT_SUCCESS, src.FeedPackets());
   EXPECT_TRUE(src.IsEmpty());
 }
+
+INSTANTIATE_TEST_SUITE_P(EventTestWithPacketStats, ServiceRecorderTest,
+    testing::Values(ServiceRecorderOption{"/dev/null", 3, kChunkSize, kNumChunks, 0, false},
+        ServiceRecorderOption{"/dev/null", 3, kChunkSize, kNumChunks, 0, true}));
