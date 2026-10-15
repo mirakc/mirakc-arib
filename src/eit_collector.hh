@@ -99,7 +99,9 @@ class TableProgress {
 
   void UpdateUnused(const ts::Time& timestamp) {
     size_t segment = ((ts::Time::Fields)(timestamp)).hour / 3;
-    for (size_t i = 0; i < segment; ++i) {
+    // Keep the previous 3-hour slot. Events that started there may still be on air.
+    size_t keep = (segment == 0) ? 0 : segment - 1;
+    for (size_t i = 0; i < keep; ++i) {
       unused_[i] = 0xFF;
     }
 
