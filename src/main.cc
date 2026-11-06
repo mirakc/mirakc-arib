@@ -94,7 +94,7 @@ Usage:
     [--pre-streaming] [<file>]
   mirakc-arib filter-program-metadata [--sid=<sid>] [<file>]
   mirakc-arib record-service --sid=<sid> --file=<file>
-    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [<file>]
+    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [--packet-stats] [<file>]
   mirakc-arib track-airtime --sid=<sid> --eid=<eid> [<file>]
   mirakc-arib seek-start --sid=<sid>
     [--max-duration=<ms>] [--max-packets=<num>] [<file>]
@@ -651,7 +651,7 @@ Record a service stream into a ring buffer file
 
 Usage:
   mirakc-arib record-service --sid=<sid> --file=<file>
-    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [<file>]
+    --chunk-size=<bytes> --num-chunks=<num> [--start-pos=<pos>] [--packet-stats] [<file>]
 
 Options:
   -h --help
@@ -674,6 +674,9 @@ Options:
     A file position to start recoring.
     The value must be a multiple of the chunk size.
 
+  --packet-stats
+    Collect statistics on TS packets and send `packet-stats` messages.
+
 Arguments:
   <file>
     Path to a TS file.
@@ -690,12 +693,12 @@ JSON Messages:
         "type": "start"
       }}
 
-  end
-    The `end` message is sent when `record-service` ends.  The message structure
-    is like below:
+  stop
+    The `stop` message is sent when `record-service` ends.  The message
+    structure is like below:
 
       {{
-        "type": "end",
+        "type": "stop",
         "data": {{
           "reset": false,
         }}
@@ -760,6 +763,51 @@ JSON Messages:
   event-end
     The `event-end` message is sent when ended recoring a program.  The message
     structure is the same as the `event-start` message.
+
+  packet-stats
+    The `packet-stats` message is sent when `--packet-stats` is specified.
+    The message is sent immediately before each `chunk`, `event-end`, and `stop`
+    message, except for the first `chunk` message which is sent when recording
+    starts.  Each message reports statistics for the packets recorded since the
+    previous `packet-stats` message, or since recording started in the case of
+    the first message.  The counters are reset each time the message is sent.
+    The message structure is like below:
+
+      {{
+        "type": "packet-stats",
+        "data": {{
+          "errorPackets": 0,
+          "scrambledPackets": 0,
+          "droppedPackets": {{
+            "video": 0,
+            "audio": 0,
+            "subtitle": 0,
+            "pmt": 0
+          }}
+        }}
+      }}
+
+    where:
+      errorPackets
+        The number of TS packets with TEI (transport_error_indicator) set to 1.
+        Only packets retained by service filtering are counted.
+
+      scrambledPackets
+        The number of TS packets with TSC (transport_scrambling_control) set to
+        a nonzero value.  Only packets retained by service filtering are
+        counted.  Null packets and packets with TEI set are excluded because
+        their TSC value is not meaningful.
+
+      droppedPackets
+        The estimated number of missing TS packets, calculated from continuity
+        counter discontinuities and broken down by category.  Only packets
+        belonging to the selected service are counted.
+
+          video    PES packets carrying video.
+          audio    PES packets carrying audio.
+          subtitle PES packets carrying subtitles, including ARIB subtitles and
+                   superimposed text.
+          pmt      Packets carrying the selected service's PMT.
 
 Environment Variables:
   MIRAKC_ARIB_KEEP_UNICODE_SYMBOLS
@@ -1243,6 +1291,7 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
   static const std::string kChunkSize = "--chunk-size";
   static const std::string kNumChunks = "--num-chunks";
   static const std::string kStartPos = "--start-pos";
+  static const std::string kPacketStats = "--packet-stats";
 
   opt->sid = static_cast<uint16_t>(args.at(kSid).asLong());
   opt->file = args.at(kFile).asString();
@@ -1280,9 +1329,11 @@ void LoadOption(const Args& args, ServiceRecorderOption* opt) {
       std::abort();
     }
   }
+  opt->packet_stats = args.at(kPacketStats).asBool();
   MIRAKC_ARIB_INFO(
-      "ServiceRecorderOptions: sid={:04X} file={} chunk-size={} num-chunks={} start-pos={}",
-      opt->sid, opt->file, opt->chunk_size, opt->num_chunks, opt->start_pos);
+      "ServiceRecorderOptions: sid={:04X} file={} chunk-size={} num-chunks={} start-pos={} "
+      "packet-stats={}",
+      opt->sid, opt->file, opt->chunk_size, opt->num_chunks, opt->start_pos, opt->packet_stats);
 }
 
 void LoadOption(const Args& args, AirtimeTrackerOption* opt) {
