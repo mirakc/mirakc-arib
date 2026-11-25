@@ -807,6 +807,7 @@ add_executable(mirakc-arib
   src/main.cc
   src/packet_sink.hh
   src/packet_source.hh
+  src/packet_stats_collector.hh
   src/pcr_synchronizer.hh
   src/pes_printer.hh
   src/program_filter.hh
@@ -880,6 +881,7 @@ if(MIRAKC_ARIB_TEST)
     test/eitpf_collector_test.cc
     test/logo_collector_test.cc
     test/packet_source_test.cc
+    test/packet_stats_collector_test.cc
     test/pcr_synchronizer_test.cc
     test/program_filter_test.cc
     test/ring_file_sink_test.cc
